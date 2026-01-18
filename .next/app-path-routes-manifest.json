@@ -1,0 +1,9 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/feedback/page": "/feedback",
+  "/insights/page": "/insights",
+  "/page": "/",
+  "/products/page": "/products",
+  "/settings/page": "/settings"
+}
