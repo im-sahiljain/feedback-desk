@@ -3,8 +3,8 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata = {
-    title: "Lovable Project",
-    description: "A Lovable Project",
+    title: "Feedback Desk AI",
+    description: "A Feedback Platform",
 };
 
 export default function RootLayout({

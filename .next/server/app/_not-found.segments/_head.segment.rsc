@@ -1,5 +1,0 @@
-1:"$Sreact.fragment"
-2:I[97367,["/_next/static/chunks/b2d58c1e0e666ee5.js","/_next/static/chunks/202b956bc838ef27.js","/_next/static/chunks/331cb51d4dfb9c5a.js","/_next/static/chunks/55ec20458967437c.js"],"ViewportBoundary"]
-3:I[97367,["/_next/static/chunks/b2d58c1e0e666ee5.js","/_next/static/chunks/202b956bc838ef27.js","/_next/static/chunks/331cb51d4dfb9c5a.js","/_next/static/chunks/55ec20458967437c.js"],"MetadataBoundary"]
-4:"$Sreact.suspense"
-0:{"buildId":"Vm4hHMm-aRcHsEsMrN74d","rsc":["$","$1","h",{"children":[["$","meta",null,{"name":"robots","content":"noindex"}],["$","$L2",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]}],["$","div",null,{"hidden":true,"children":["$","$L3",null,{"children":["$","$4",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"Lovable Project"}],["$","meta","1",{"name":"description","content":"A Lovable Project"}]]}]}]}],null]}],"loading":null,"isPartial":false}
