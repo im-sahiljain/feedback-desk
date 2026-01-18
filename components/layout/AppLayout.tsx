@@ -6,6 +6,8 @@ import { AppSidebar } from './AppSidebar';
 import { useApp } from '@/context/AppContext';
 import { INDUSTRY_ICONS, INDUSTRY_LABELS } from '@/types';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '../ui/button';
+import { Moon, Sun } from 'lucide-react';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -14,7 +16,7 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children, title, description }: AppLayoutProps) {
-  const { currentProduct, userRole } = useApp();
+  const { currentProduct, userRole, toggleDarkMode, isDarkMode } = useApp();
 
   return (
     <SidebarProvider>
@@ -54,6 +56,14 @@ export function AppLayout({ children, title, description }: AppLayoutProps) {
               >
                 {userRole}
               </Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleDarkMode}
+                className="h-8 w-8 p-0"
+              >
+                {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </Button>
             </div>
           </header>
 

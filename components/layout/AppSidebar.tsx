@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 const navItems = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard },
@@ -40,14 +41,17 @@ export function AppSidebar() {
 
   return (
     <Sidebar className="border-r border-sidebar-border">
-      <SidebarHeader className="border-b border-sidebar-border p-4">
+      <SidebarHeader className="p-4">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm">
-            AI
-          </div>
+          <Image
+            src="/chat.png"
+            alt="Feedback Desk AI"
+            width={40}
+            height={40}
+          />
           <div className="flex flex-col">
-            <span className="font-semibold text-sm">FeedbackAI</span>
-            <span className="text-xs text-muted-foreground">Insights Platform</span>
+            <span className="font-semibold text-sm">Feedback Desk AI</span>
+            <span className="text-xs text-muted-foreground">Feedback Platform</span>
           </div>
         </div>
       </SidebarHeader>
@@ -162,7 +166,7 @@ export function AppSidebar() {
         </div>
 
         {/* Theme Toggle */}
-        <div className="flex items-center justify-between">
+        {/* <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground">Theme:</span>
           <Button
             variant="ghost"
@@ -172,7 +176,7 @@ export function AppSidebar() {
           >
             {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
-        </div>
+        </div> */}
       </SidebarFooter>
     </Sidebar>
   );
