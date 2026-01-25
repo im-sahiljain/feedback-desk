@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +18,10 @@ export default function Settings() {
   const { currentProduct, updateProduct, userRole } = useApp();
   const [editedProduct, setEditedProduct] = useState(currentProduct);
   const [newCategory, setNewCategory] = useState('');
+
+  useEffect(() => {
+    setEditedProduct(currentProduct);
+  }, [currentProduct]);
 
   if (!currentProduct || !editedProduct) {
     return (
@@ -197,7 +201,7 @@ export default function Settings() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-wrap gap-2">
-              {editedProduct.config.categories.map(category => (
+              {(editedProduct.config?.categories || editedProduct.settings?.categories || []).map(category => (
                 <Badge
                   key={category}
                   variant="secondary"
@@ -243,7 +247,7 @@ export default function Settings() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="aiPrompt">AI Analysis Prompt</Label>
               <Textarea
                 id="aiPrompt"
@@ -260,7 +264,7 @@ export default function Settings() {
               <p className="text-xs text-muted-foreground">
                 This prompt guides how AI interprets and categorizes feedback for this product
               </p>
-            </div>
+            </div> */}
 
             <div className="p-4 rounded-lg bg-muted/50 space-y-2">
               <p className="text-sm font-medium">Current Industry Context</p>

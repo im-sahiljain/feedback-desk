@@ -1,6 +1,7 @@
-import { LayoutDashboard, Package, MessageSquare, BarChart3, Settings, Moon, Sun, ChevronDown } from 'lucide-react';
+import { LayoutDashboard, Package, MessageSquare, BarChart3, Settings, ChevronDown, Plus } from 'lucide-react';
+import { DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import { INDUSTRY_ICONS, INDUSTRY_LABELS } from '@/types';
 import {
@@ -23,9 +24,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
+// import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { api } from '@/lib/api';
 
 const navItems = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard },
@@ -37,6 +39,7 @@ const navItems = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { products, currentProduct, setCurrentProduct, userRole, setUserRole, isDarkMode, toggleDarkMode } = useApp();
 
   return (
@@ -60,7 +63,7 @@ export function AppSidebar() {
         {/* Product Switcher */}
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground">
-            Workspace
+            Product
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <DropdownMenu>
@@ -86,7 +89,7 @@ export function AppSidebar() {
                       </>
                     )}
                     {!currentProduct && (
-                      <span className="text-sm text-muted-foreground">Select workspace</span>
+                      <span className="text-sm text-muted-foreground">Select product</span>
                     )}
                   </div>
                   <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
@@ -113,6 +116,11 @@ export function AppSidebar() {
                     )}
                   </DropdownMenuItem>
                 ))}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => router.push('/products?action=create')}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  <span>Create Product</span>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarGroupContent>
@@ -153,7 +161,7 @@ export function AppSidebar() {
 
       <SidebarFooter className="border-t border-sidebar-border p-4 space-y-4">
         {/* Role Switcher */}
-        <div className="flex items-center justify-between">
+        {/* <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground">View as:</span>
           <div className="flex items-center gap-2">
             <span className={cn('text-xs', userRole === 'user' && 'font-medium')}>User</span>
@@ -163,7 +171,7 @@ export function AppSidebar() {
             />
             <span className={cn('text-xs', userRole === 'admin' && 'font-medium')}>Admin</span>
           </div>
-        </div>
+        </div> */}
 
         {/* Theme Toggle */}
         {/* <div className="flex items-center justify-between">
@@ -177,6 +185,14 @@ export function AppSidebar() {
             {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
         </div> */}
+
+        <Button variant="ghost" onClick={() => {
+          api.auth.logout();
+          localStorage.removeItem('user_data');
+          router.push('/login');
+        }}>
+          Logout
+        </Button>
       </SidebarFooter>
     </Sidebar>
   );

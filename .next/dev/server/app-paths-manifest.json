@@ -1,6 +1,0 @@
-{
-  "/feedback/page": "app/feedback/page.js",
-  "/insights/page": "app/insights/page.js",
-  "/page": "app/page.js",
-  "/products/page": "app/products/page.js"
-}

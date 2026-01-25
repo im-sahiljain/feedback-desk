@@ -1,45 +1,30 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { INDUSTRY_ICONS, INDUSTRY_LABELS, Industry, DEFAULT_CATEGORIES, DEFAULT_AI_PROMPTS } from '@/types';
-import { Plus, Trash2, Edit, Package } from 'lucide-react';
+import { INDUSTRY_ICONS, INDUSTRY_LABELS, Product } from '@/types';
+import { Plus, Trash2, Package, Link } from 'lucide-react';
+import { CreateProductDialog } from '@/components/products/create-product-dialog';
+import { toast } from '@/hooks/use-toast';
 
-export default function Products() {
-  const { products, currentProduct, setCurrentProduct, addProduct, deleteProduct, userRole } = useApp();
+function ProductsContent() {
+  const { products, currentProduct, setCurrentProduct, deleteProduct, userRole, user } = useApp();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [newProduct, setNewProduct] = useState({
-    name: '',
-    description: '',
-    industry: 'tech' as Industry,
-  });
 
-  const handleCreate = () => {
-    if (!newProduct.name.trim()) return;
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const action = searchParams.get('action');
 
-    addProduct({
-      name: newProduct.name,
-      description: newProduct.description,
-      industry: newProduct.industry,
-      config: {
-        categories: DEFAULT_CATEGORIES[newProduct.industry],
-        aiPrompt: DEFAULT_AI_PROMPTS[newProduct.industry],
-        focusAreas: [],
-      },
-    });
-
-    setNewProduct({ name: '', description: '', industry: 'tech' });
-    setIsCreateOpen(false);
-  };
+  useEffect(() => {
+    if (action === 'create') {
+      setIsCreateOpen(true);
+    }
+  }, [action]);
 
   const handleDelete = (id: string) => {
     if (window.confirm('Are you sure you want to delete this product? All feedback will be lost.')) {
@@ -47,76 +32,69 @@ export default function Products() {
     }
   };
 
+  const handleCreateOpenChange = (open: boolean) => {
+    setIsCreateOpen(open);
+    if (!open && action === 'create') {
+      // Remove query param when closing
+      router.push('/products');
+    }
+  };
+
+  const handleCopyLink = async (userId: string | number | null | undefined, product: Product) => {
+    if (!userId) {
+      alert("Please log in again to copy the feedback link.");
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/products/sign-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: product.id,
+          userId: userId,
+          industry: product.industry
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to sign link');
+
+      const { signature } = await response.json();
+      const url = `${window.location.origin}/submit-feedback/${product.id}/${userId}/${product.industry}?sig=${signature}`;
+
+      await navigator.clipboard.writeText(url);
+
+      toast({
+        title: "Link copied",
+        description: "The feedback link has been copied to your clipboard.",
+      });
+
+    } catch (error) {
+      console.error("Failed to copy signed link:", error);
+      alert("Failed to generate secure link. Please try again.");
+    }
+  };
+
   return (
-    <AppLayout title="Products" description="Manage your product workspaces">
+    <AppLayout title="Products" description="Manage your products">
       <div className="space-y-6">
         {/* Header Actions */}
         {userRole === 'admin' && (
           <div className="flex justify-end">
-            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Product
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Create New Product</DialogTitle>
-                  <DialogDescription>
-                    Add a new product workspace to collect and analyze feedback.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Product Name</Label>
-                    <Input
-                      id="name"
-                      placeholder="e.g., My SaaS App"
-                      value={newProduct.name}
-                      onChange={e => setNewProduct(prev => ({ ...prev, name: e.target.value }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      placeholder="Brief description of your product..."
-                      value={newProduct.description}
-                      onChange={e => setNewProduct(prev => ({ ...prev, description: e.target.value }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="industry">Industry</Label>
-                    <Select
-                      value={newProduct.industry}
-                      onValueChange={value => setNewProduct(prev => ({ ...prev, industry: value as Industry }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select industry" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(INDUSTRY_LABELS).map(([key, label]) => (
-                          <SelectItem key={key} value={key}>
-                            <span className="flex items-center gap-2">
-                              {INDUSTRY_ICONS[key as Industry]} {label}
-                            </span>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleCreate} disabled={!newProduct.name.trim()}>
-                    Create Product
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            <Button onClick={() => setIsCreateOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Product
+            </Button>
+            <CreateProductDialog
+              open={isCreateOpen}
+              onOpenChange={handleCreateOpenChange}
+              onSuccess={() => {
+                // Optional: maybe refresh or just close? 
+                // Dialog closes itself in onSubmit success, checking prop usage
+                // The component calls onOpenChange(false), so we might get double close if we also do it here?
+                // Let's rely on onOpenChange.
+              }}
+            />
           </div>
         )}
 
@@ -141,11 +119,22 @@ export default function Products() {
                         <Badge variant="outline" className="mt-1 text-xs">
                           {INDUSTRY_LABELS[product.industry]}
                         </Badge>
+                        {/* <Button className="text-xs text-muted-foreground mt-1 cursor-pointer" onClick={(e) => {
+                          e.stopPropagation();
+                          handleCopyLink(user?.id, product);
+                        }}>Copy feedback link</Button> */}
+
                       </div>
                     </div>
-                    {isActive && (
-                      <Badge className="shrink-0">Active</Badge>
-                    )}
+                    <div className="flex items-center gap-2">
+
+
+                      {isActive && (
+                        <Badge className="shrink-0">Active</Badge>
+                      )} <Link onClick={(e) => {
+                        e.stopPropagation();
+                        handleCopyLink(user?.id, product);
+                      }} className="cursor-pointer" /></div>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -195,5 +184,13 @@ export default function Products() {
         )}
       </div>
     </AppLayout>
+  );
+}
+
+export default function Products() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ProductsContent />
+    </Suspense>
   );
 }

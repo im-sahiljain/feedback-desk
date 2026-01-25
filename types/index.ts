@@ -1,4 +1,4 @@
-export type Industry = 'tech' | 'healthcare' | 'infrastructure' | 'custom';
+export type Industry = 'tech' | 'healthcare' | 'infrastructure' | 'custom' | string;
 
 export type Sentiment = 'positive' | 'neutral' | 'negative';
 
@@ -24,8 +24,8 @@ export interface Feedback {
 
 export interface ProductConfig {
   categories: string[];
-  aiPrompt: string;
-  focusAreas: string[];
+  aiPrompt?: string;
+  focusAreas?: string[];
 }
 
 export interface Product {
@@ -33,8 +33,9 @@ export interface Product {
   name: string;
   description: string;
   industry: Industry;
-  config: ProductConfig;
-  createdAt: Date;
+  config?: ProductConfig;
+  settings?: any; // To support API response
+  createdAt?: Date; // API might not return this immediately in list
 }
 
 export interface InsightStats {
