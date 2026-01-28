@@ -34,7 +34,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { api } from "@/lib/api"
-import { useApp } from "@/context/AppContext"
+import { Product } from "@/types"
 
 const formSchema = z.object({
     name: z.string().min(2, {
@@ -54,12 +54,11 @@ const formSchema = z.object({
 interface CreateProductDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
-    onSuccess?: () => void
+    onSuccess?: (product: Product) => void
 }
 
 export function CreateProductDialog({ open, onOpenChange, onSuccess }: CreateProductDialogProps) {
     const { toast } = useToast()
-    const { addProduct } = useApp()
     const [isLoading, setIsLoading] = useState(false)
     const [industries, setIndustries] = useState<string[]>([])
     const [labels, setLabels] = useState<string[]>([])
@@ -97,9 +96,9 @@ export function CreateProductDialog({ open, onOpenChange, onSuccess }: CreatePro
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setIsLoading(true)
         try {
-            await addProduct({
+            const newProduct = await api.products.create({
                 name: values.name,
-                industry: values.industry as any, // Type cast if necessary as industry string comes from API
+                industry: values.industry as any,
                 description: values.description || "",
                 config: {
                     categories: values.categories,
@@ -113,7 +112,7 @@ export function CreateProductDialog({ open, onOpenChange, onSuccess }: CreatePro
             })
             form.reset()
             onOpenChange(false)
-            if (onSuccess) onSuccess()
+            if (onSuccess) onSuccess(newProduct)
         } catch (error: any) {
             toast({
                 variant: "destructive",

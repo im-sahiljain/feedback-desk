@@ -1,214 +1,130 @@
+"use client";
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
-import { Product, Feedback } from '@/types';
-import { api } from '@/lib/api';
+import { useTheme } from 'next-themes';
+import { usePathname } from 'next/navigation';
+import { Product } from '@/types';
 
-type UserRole = 'admin' | 'user';
+interface User {
+  id: number;
+  email: string;
+  name: string;
+}
 
 interface AppContextType {
-  // Products
-  products: Product[];
-  currentProduct: Product | null;
-  setCurrentProduct: (product: Product | null) => void;
-  addProduct: (product: Omit<Product, 'id' | 'createdAt'>) => Promise<void>;
-  updateProduct: (id: string, updates: Partial<Product>) => void;
-  deleteProduct: (id: string) => void;
-
-  // Feedback
-  feedback: Feedback[];
-  getProductFeedback: (productId: string) => Feedback[];
-  addFeedback: (feedback: Omit<Feedback, 'id' | 'createdAt' | 'analysis' | 'isAnalyzing'>) => Promise<void>;
-
-  // Role
-  userRole: UserRole;
-  setUserRole: (role: UserRole) => void;
-
-  // User
-  user: { id: string | number; email: string; name?: string } | null;
-  setUser: (user: { id: string | number; email: string; name?: string } | null) => void;
-
   // Theme
   isDarkMode: boolean;
   toggleDarkMode: () => void;
+
+  // Product Selection
+  currentProduct: Product | null;
+  setCurrentProduct: (product: Product | null) => void;
+  isLoadingProduct: boolean;
+  setIsLoadingProduct: (loading: boolean) => void;
+
+  // Products List
+  products: Product[];
+
+  // User
+  user: User | null;
+  refetchUser: () => void;
+  refreshProducts: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
+
+  const { setTheme, resolvedTheme } = useTheme();
+  const pathname = usePathname();
+
+  // Use resolvedTheme to correctly identify if we are in dark mode (handles system preference)
+  const isDarkMode = resolvedTheme === 'dark';
+
   const [products, setProducts] = useState<Product[]>([]);
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
-  const [feedback, setFeedback] = useState<Feedback[]>([]);
-  const [userRole, setUserRole] = useState<UserRole>('admin');
-  const [user, setUser] = useState<{ id: string | number; email: string; name?: string } | null>(null);
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return document.documentElement.classList.contains('dark');
-    }
-    return false;
-  });
+  const [isLoadingProduct, setIsLoadingProduct] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
 
-  // Load user from localStorage on mount
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedUser = localStorage.getItem('user_data');
-      if (storedUser) {
-        try {
-          setUser(JSON.parse(storedUser));
-        } catch (e) {
-          console.error('Failed to parse user data', e);
-        }
-      }
-    }
-  }, []);
-
-  // Fetch products on load
-  useEffect(() => {
-    // Don't fetch if no user (e.g. public page)
-    if (!user) return;
-
-    api.products.list()
+  const fetchUser = useCallback(() => {
+    fetch('/api/auth/me')
+      .then(res => res.json())
       .then(data => {
-        setProducts(data);
-        if (data.length > 0 && !currentProduct) {
-          // Try to restore from localStorage or default to first
-          setCurrentProduct(data[0]);
+        if (data.user) {
+          setUser(data.user);
+        } else {
+          setUser(null);
         }
       })
-      .catch((error: any) => {
-        console.error(error);
-        if (error.status === 401) {
-          setUser(null);
-          localStorage.removeItem('user_data');
-        }
+      .catch(err => {
+        console.error('Failed to fetch user:', err);
+        setUser(null);
       });
-  }, [user]);
-  // Fetch feedback when current product changes
-  useEffect(() => {
-    if (currentProduct && user) {
-      api.feedbacks.list(currentProduct.id)
-        .then(data => {
-          const mappedFeedback = data.map((f: any) => ({
-            id: f.id.toString(),
-            productId: currentProduct.id,
-            text: f.feedback,
-            rating: f.rating || 0,
-            email: f.email,
-            createdAt: new Date(f.created_at),
-            analysis: {
-              sentiment: f.sentiment?.label?.toLowerCase() || 'neutral',
-              category: f.category?.label || 'General',
-              priority: f.priority?.label?.toLowerCase() || 'medium',
-              summary: f.feedback.substring(0, 50) + '...',
-            },
-            isAnalyzing: f.status === 'Pending',
-          }));
-          setFeedback(mappedFeedback);
-        })
-        .catch(console.error);
-    } else {
-      setFeedback([]);
-    }
-  }, [currentProduct, user]);
+  }, []);
 
+  // Fetch user data once on mount only (excluding public auth pages)
+  useEffect(() => {
+    if (pathname === '/login' || pathname === '/signup') {
+      return;
+    }
+    fetchUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const refreshProducts = useCallback(() => {
+    setIsLoadingProduct(true);
+    fetch('/api/products')
+      .then(res => res.json())
+      .then(data => {
+        // Ensure data is an array before setting
+        if (Array.isArray(data)) {
+          setProducts(data);
+
+          // Only set first product if none selected
+          setCurrentProduct(prev => {
+            if (!prev && data.length > 0) {
+              return data[0];
+            }
+            return prev;
+          });
+        } else {
+          console.error('Products API did not return an array:', data);
+          setProducts([]); // Ensure products is always an array
+        }
+      })
+      .catch(err => {
+        console.error('Failed to fetch products:', err);
+        setProducts([]); // Ensure products is always an array even on error
+      })
+      .finally(() => {
+        setIsLoadingProduct(false);
+      });
+  }, []);
+
+  // Fetch products when user is set
+  useEffect(() => {
+    if (user) {
+      refreshProducts();
+    } else {
+      setProducts([]);
+      setCurrentProduct(null);
+    }
+  }, [user, refreshProducts]);
 
   const toggleDarkMode = useCallback(() => {
-    setIsDarkMode(prev => {
-      const newValue = !prev;
-      if (newValue) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-      return newValue;
-    });
-  }, []);
-
-  const addProduct = useCallback(async (productData: Omit<Product, 'id' | 'createdAt'>) => {
-    try {
-      const newProduct = await api.products.create(productData);
-      setProducts(prev => [...prev, newProduct]);
-      setCurrentProduct(newProduct);
-    } catch (error) {
-      console.error("Failed to create product:", error);
-      throw error;
-    }
-  }, []);
-
-  const updateProduct = useCallback((id: string, updates: Partial<Product>) => {
-    setProducts(prev =>
-      prev.map(p => (p.id === id ? { ...p, ...updates } : p))
-    );
-    setCurrentProduct(prev =>
-      prev?.id === id ? { ...prev, ...updates } : prev
-    );
-  }, []);
-
-  const deleteProduct = useCallback((id: string) => {
-    setProducts(prev => prev.filter(p => p.id !== id));
-    setFeedback(prev => prev.filter(f => f.productId !== id));
-    setCurrentProduct(prev => (prev?.id === id ? null : prev));
-  }, []);
-
-  const getProductFeedback = useCallback(
-    (productId: string) => feedback.filter(f => f.productId === productId),
-    [feedback]
-  );
-
-  const addFeedback = useCallback(
-    async (feedbackData: Omit<Feedback, 'id' | 'createdAt' | 'analysis' | 'isAnalyzing'>) => {
-      try {
-        const payload = {
-          product_id: feedbackData.productId,
-          feedback: feedbackData.text,
-          email: feedbackData.email,
-          rating: feedbackData.rating
-        };
-
-        const response = await api.feedbacks.submit(payload);
-
-        if (currentProduct && currentProduct.id === feedbackData.productId) {
-          const data = await api.feedbacks.list(currentProduct.id);
-          const mappedFeedback = data.map((f: any) => ({
-            id: f.id.toString(),
-            productId: currentProduct.id,
-            text: f.feedback,
-            rating: f.rating || 0,
-            email: f.email,
-            createdAt: new Date(f.created_at),
-            analysis: {
-              sentiment: f.sentiment?.label?.toLowerCase() || 'neutral',
-              category: f.category?.label || 'General',
-              priority: f.priority?.label?.toLowerCase() || 'medium',
-              summary: f.feedback.substring(0, 50) + '...',
-            },
-            isAnalyzing: f.status === 'Pending',
-          }));
-          setFeedback(mappedFeedback);
-        }
-
-      } catch (error) {
-        console.error("Failed to submit feedback:", error);
-        throw error;
-      }
-    },
-    [currentProduct]
-  );
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+  }, [resolvedTheme, setTheme]);
 
   const value: AppContextType = {
-    products,
-    currentProduct,
-    setCurrentProduct,
-    addProduct,
-    updateProduct,
-    deleteProduct,
-    feedback,
-    getProductFeedback,
-    addFeedback,
-    userRole,
-    setUserRole,
-    user,
-    setUser,
     isDarkMode,
     toggleDarkMode,
+    currentProduct,
+    setCurrentProduct,
+    isLoadingProduct,
+    setIsLoadingProduct,
+    products,
+    user,
+    refetchUser: fetchUser,
+    refreshProducts,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,16 +8,65 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { TrendingUp, TrendingDown, AlertTriangle, ThumbsUp, ThumbsDown, Minus, BarChart3, Star } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, AreaChart, Area } from 'recharts';
+import { Feedback } from '@/types';
+import { Loader } from '@/components/loader';
 
 export default function Insights() {
-  const { currentProduct, getProductFeedback } = useApp();
+  const { currentProduct } = useApp();
+  const [feedback, setFeedback] = useState<Feedback[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const productFeedback = currentProduct ? getProductFeedback(currentProduct.id) : [];
-  const analyzedFeedback = productFeedback.filter(f => f.analysis);
+  // Fetch feedback when currentProduct changes
+  useEffect(() => {
+    if (currentProduct) {
+      setIsLoading(true);
+      fetch(`/api/feedbacks?product_id=${currentProduct.id}`)
+        .then(res => res.json())
+        .then(data => {
+          const mappedFeedback = data.map((f: any) => {
+            // Handle priority - normalize "Low Priority" → "low", "High Priority" → "high", etc.
+            let priorityValue = 'medium';
+            const priorityLabel = typeof f.priority === 'string' ? f.priority : f.priority?.label || '';
+            if (priorityLabel.toLowerCase().includes('high')) {
+              priorityValue = 'high';
+            } else if (priorityLabel.toLowerCase().includes('low')) {
+              priorityValue = 'low';
+            } else if (priorityLabel.toLowerCase().includes('medium')) {
+              priorityValue = 'medium';
+            }
+
+            return {
+              id: f.id.toString(),
+              productId: currentProduct.id,
+              text: f.feedback,
+              rating: f.rating || 0,
+              email: f.email,
+              createdAt: new Date(f.created_at),
+              sentiment: f.sentiment?.label?.toLowerCase() || 'neutral',
+              category: f.category?.label || 'general',
+              impact: f.impact || 'medium',
+              status: f.status || 'new',
+              analysis: {
+                sentiment: f.sentiment?.label?.toLowerCase() || 'neutral',
+                category: f.category?.label || 'Uncategorized',
+                priority: priorityValue,
+                summary: f.feedback.substring(0, 50) + '...',
+              },
+              isAnalyzing: f.status === 'Pending',
+            };
+          });
+          setFeedback(mappedFeedback);
+        })
+        .catch(console.error)
+        .finally(() => setIsLoading(false));
+    }
+  }, [currentProduct]); // Refetch when currentProduct changes
+
+  const analyzedFeedback = feedback.filter(f => f.analysis);
 
   // Stats calculations
   const stats = {
-    total: productFeedback.length,
+    total: feedback.length,
     analyzed: analyzedFeedback.length,
     positive: analyzedFeedback.filter(f => f.analysis?.sentiment === 'positive').length,
     negative: analyzedFeedback.filter(f => f.analysis?.sentiment === 'negative').length,
@@ -24,9 +74,9 @@ export default function Insights() {
     highPriority: analyzedFeedback.filter(f => f.analysis?.priority === 'high').length,
     mediumPriority: analyzedFeedback.filter(f => f.analysis?.priority === 'medium').length,
     lowPriority: analyzedFeedback.filter(f => f.analysis?.priority === 'low').length,
-    avgRating: productFeedback.filter(f => f.rating).length > 0
-      ? productFeedback.filter(f => f.rating).reduce((acc, f) => acc + (f.rating || 0), 0) /
-      productFeedback.filter(f => f.rating).length
+    avgRating: feedback.filter(f => f.rating).length > 0
+      ? feedback.filter(f => f.rating).reduce((acc, f) => acc + (f.rating || 0), 0) /
+      feedback.filter(f => f.rating).length
       : 0,
   };
 
@@ -69,7 +119,7 @@ export default function Insights() {
   const trendData = Array.from({ length: 7 }, (_, i) => {
     const date = new Date();
     date.setDate(date.getDate() - (6 - i));
-    const dayFeedback = productFeedback.filter(f => {
+    const dayFeedback = feedback.filter(f => {
       const fbDate = new Date(f.createdAt);
       return fbDate.toDateString() === date.toDateString();
     });
@@ -109,24 +159,34 @@ export default function Insights() {
           <Card>
             <CardContent className="pt-6">
               <div className="text-center">
-                <p className="text-3xl font-bold">{stats.total}</p>
+                {isLoading ? (
+                  <div className="h-9 w-16 bg-muted animate-pulse rounded mx-auto mb-1" />
+                ) : (
+                  <p className="text-3xl font-bold">{stats.total}</p>
+                )}
                 <p className="text-sm text-muted-foreground">Total Feedback</p>
               </div>
             </CardContent>
           </Card>
 
-          <Card className={Number(sentimentScore) >= 0 ? 'border-success/30 bg-success/5' : 'border-destructive/30 bg-destructive/5'}>
+          <Card className={!isLoading && Number(sentimentScore) >= 0 ? 'border-success/30 bg-success/5' : ''}>
             <CardContent className="pt-6">
               <div className="text-center">
                 <div className="flex items-center justify-center gap-1">
-                  {Number(sentimentScore) >= 0 ? (
-                    <TrendingUp className="h-5 w-5 text-success" />
+                  {isLoading ? (
+                    <div className="h-9 w-20 bg-muted animate-pulse rounded" />
                   ) : (
-                    <TrendingDown className="h-5 w-5 text-destructive" />
+                    <>
+                      {Number(sentimentScore) >= 0 ? (
+                        <TrendingUp className="h-5 w-5 text-success" />
+                      ) : (
+                        <TrendingDown className="h-5 w-5 text-destructive" />
+                      )}
+                      <p className={`text-3xl font-bold ${Number(sentimentScore) >= 0 ? 'text-success' : 'text-destructive'}`}>
+                        {sentimentScore}%
+                      </p>
+                    </>
                   )}
-                  <p className={`text-3xl font-bold ${Number(sentimentScore) >= 0 ? 'text-success' : 'text-destructive'}`}>
-                    {sentimentScore}%
-                  </p>
                 </div>
                 <p className="text-sm text-muted-foreground">Sentiment Score</p>
               </div>
@@ -138,7 +198,11 @@ export default function Insights() {
               <div className="text-center">
                 <div className="flex items-center justify-center gap-1">
                   <Star className="h-5 w-5 text-warning fill-warning" />
-                  <p className="text-3xl font-bold">{stats.avgRating.toFixed(1)}</p>
+                  {isLoading ? (
+                    <div className="h-9 w-12 bg-muted animate-pulse rounded" />
+                  ) : (
+                    <p className="text-3xl font-bold">{stats.avgRating.toFixed(1)}</p>
+                  )}
                 </div>
                 <p className="text-sm text-muted-foreground">Avg Rating</p>
               </div>
@@ -148,26 +212,37 @@ export default function Insights() {
           <Card>
             <CardContent className="pt-6">
               <div className="text-center">
-                <p className="text-3xl font-bold text-success">{stats.positive}</p>
+                {isLoading ? (
+                  <div className="h-9 w-12 bg-muted animate-pulse rounded mx-auto mb-1" />
+                ) : (
+                  <p className="text-3xl font-bold text-success">{stats.positive}</p>
+                )}
                 <p className="text-sm text-muted-foreground">Positive</p>
               </div>
             </CardContent>
           </Card>
 
-          <Card className={stats.highPriority > 0 ? 'border-destructive/30 bg-destructive/5' : ''}>
+          <Card className={!isLoading && stats.highPriority > 0 ? 'border-destructive/30 bg-destructive/5' : ''}>
             <CardContent className="pt-6">
               <div className="text-center">
                 <div className="flex items-center justify-center gap-1">
-                  {stats.highPriority > 0 && <AlertTriangle className="h-5 w-5 text-destructive" />}
-                  <p className={`text-3xl font-bold ${stats.highPriority > 0 ? 'text-destructive' : ''}`}>
-                    {stats.highPriority}
-                  </p>
+                  {isLoading ? (
+                    <div className="h-9 w-12 bg-muted animate-pulse rounded" />
+                  ) : (
+                    <>
+                      {stats.highPriority > 0 && <AlertTriangle className="h-5 w-5 text-destructive" />}
+                      <p className={`text-3xl font-bold ${stats.highPriority > 0 ? 'text-destructive' : ''}`}>
+                        {stats.highPriority}
+                      </p>
+                    </>
+                  )}
                 </div>
                 <p className="text-sm text-muted-foreground">High Priority</p>
               </div>
             </CardContent>
           </Card>
         </div>
+
 
         {/* Charts Row */}
         <div className="grid md:grid-cols-3 gap-6">
@@ -177,41 +252,55 @@ export default function Insights() {
               <CardTitle className="text-base">Sentiment Breakdown</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-[200px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={sentimentData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={45}
-                      outerRadius={70}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {sentimentData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="flex justify-center gap-3 mt-2">
-                {sentimentData.map(item => (
-                  <div key={item.name} className="flex items-center gap-1.5 text-xs">
-                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                    <span className="text-muted-foreground">{item.name}</span>
-                    <span className="font-medium">{item.value}</span>
+              {isLoading ? (
+                <div className="h-[200px] flex items-center justify-center">
+                  <div className="h-24 w-24 bg-muted animate-pulse rounded-full" />
+                </div>
+              ) : stats.analyzed === 0 ? (
+                <div className="h-[200px] flex items-center justify-center">
+                  <p className="text-sm text-muted-foreground">No data available</p>
+                </div>
+              ) : (
+                <>
+                  <div className="h-[200px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={sentimentData.filter(d => d.value > 0)}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={45}
+                          outerRadius={70}
+                          paddingAngle={5}
+                          dataKey="value"
+                          animationDuration={500}
+                          animationBegin={0}
+                        >
+                          {sentimentData.filter(d => d.value > 0).map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: 'hsl(var(--card))',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px'
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
                   </div>
-                ))}
-              </div>
+                  <div className="flex justify-center gap-3 mt-2">
+                    {sentimentData.map(item => (
+                      <div key={item.name} className="flex items-center gap-1.5 text-xs">
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+                        <span className="text-muted-foreground">{item.name}</span>
+                        <span className="font-medium">{item.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
 
@@ -221,41 +310,55 @@ export default function Insights() {
               <CardTitle className="text-base">Priority Distribution</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-[200px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={priorityData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={45}
-                      outerRadius={70}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {priorityData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="flex justify-center gap-3 mt-2">
-                {priorityData.map(item => (
-                  <div key={item.name} className="flex items-center gap-1.5 text-xs">
-                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                    <span className="text-muted-foreground">{item.name}</span>
-                    <span className="font-medium">{item.value}</span>
+              {isLoading ? (
+                <div className="h-[200px] flex items-center justify-center">
+                  <div className="h-24 w-24 bg-muted animate-pulse rounded-full" />
+                </div>
+              ) : stats.analyzed === 0 ? (
+                <div className="h-[200px] flex items-center justify-center">
+                  <p className="text-sm text-muted-foreground">No data available</p>
+                </div>
+              ) : (
+                <>
+                  <div className="h-[200px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={priorityData.filter(d => d.value > 0)}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={45}
+                          outerRadius={70}
+                          paddingAngle={5}
+                          dataKey="value"
+                          animationDuration={500}
+                          animationBegin={0}
+                        >
+                          {priorityData.filter(d => d.value > 0).map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: 'hsl(var(--card))',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px'
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
                   </div>
-                ))}
-              </div>
+                  <div className="flex justify-center gap-3 mt-2">
+                    {priorityData.map(item => (
+                      <div key={item.name} className="flex items-center gap-1.5 text-xs">
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+                        <span className="text-muted-foreground">{item.name}</span>
+                        <span className="font-medium">{item.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
 
@@ -265,28 +368,34 @@ export default function Insights() {
               <CardTitle className="text-base">7-Day Trend</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-[200px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={trendData}>
-                    <XAxis dataKey="day" tick={{ fontSize: 12 }} />
-                    <YAxis hide />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="total"
-                      stroke="hsl(var(--primary))"
-                      fill="hsl(var(--primary) / 0.2)"
-                      strokeWidth={2}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
+              {isLoading ? (
+                <div className="h-[200px] flex items-center justify-center">
+                  <div className="h-16 w-full bg-muted animate-pulse rounded" />
+                </div>
+              ) : (
+                <div className="h-[200px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={trendData}>
+                      <XAxis dataKey="day" tick={{ fontSize: 12 }} />
+                      <YAxis hide />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px'
+                        }}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="total"
+                        stroke="hsl(var(--primary))"
+                        fill="hsl(var(--primary) / 0.2)"
+                        strokeWidth={2}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -298,41 +407,52 @@ export default function Insights() {
             <CardDescription>Feedback distribution by category with sentiment</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {categoryData.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  No categorized feedback yet
-                </p>
-              ) : (
-                categoryData.map(cat => (
-                  <div key={cat.name} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-sm">{cat.name}</span>
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs text-success flex items-center gap-1">
-                          <ThumbsUp className="h-3 w-3" /> {cat.positive}
-                        </span>
-                        <span className="text-xs text-destructive flex items-center gap-1">
-                          <ThumbsDown className="h-3 w-3" /> {cat.negative}
-                        </span>
-                        <Badge variant="secondary" className="text-xs">
-                          {cat.count} total
-                        </Badge>
-                      </div>
-                    </div>
-                    <Progress
-                      value={(cat.count / stats.analyzed) * 100}
-                      className="h-2"
-                    />
+            {isLoading ? (
+              <div className="space-y-4 py-4">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="space-y-2">
+                    <div className="h-4 w-32 bg-muted animate-pulse rounded" />
+                    <div className="h-2 w-full bg-muted animate-pulse rounded" />
                   </div>
-                ))
-              )}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {categoryData.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">
+                    No categorized feedback yet
+                  </p>
+                ) : (
+                  categoryData.map((cat, index) => (
+                    <div key={`${cat.name}-${index}`} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-sm">{cat.name}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs text-success flex items-center gap-1">
+                            <ThumbsUp className="h-3 w-3" /> {cat.positive}
+                          </span>
+                          <span className="text-xs text-destructive flex items-center gap-1">
+                            <ThumbsDown className="h-3 w-3" /> {cat.negative}
+                          </span>
+                          <Badge variant="secondary" className="text-xs">
+                            {cat.count} total
+                          </Badge>
+                        </div>
+                      </div>
+                      <Progress
+                        value={(cat.count / stats.analyzed) * 100}
+                        className="h-2"
+                      />
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
         {/* Top Issues */}
-        {topIssues.length > 0 && (
+        {!isLoading && topIssues.length > 0 && (
           <Card className="border-destructive/30">
             <CardHeader>
               <div className="flex items-center gap-2">
@@ -375,3 +495,4 @@ export default function Insights() {
     </AppLayout>
   );
 }
+

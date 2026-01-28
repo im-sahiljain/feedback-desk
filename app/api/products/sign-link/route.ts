@@ -2,10 +2,10 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { signParams } from '@/lib/crypto';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
+
 export async function POST(request: Request) {
     try {
-        // Authenticate the user (Admin only)
-        // We check for the token cookie as done in other routes
         const cookieStore = await cookies();
         const token = cookieStore.get('token')?.value;
 
@@ -13,10 +13,24 @@ export async function POST(request: Request) {
             return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
         }
 
-        const body = await request.json();
-        const { productId, userId, industry } = body;
+        // Get user from backend using token
+        const userResponse = await fetch(`${API_BASE_URL}/api/auth/me`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
 
-        if (!productId || !userId || !industry) {
+        if (!userResponse.ok) {
+            return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+        }
+
+        const userData = await userResponse.json();
+        const userId = userData.id;
+
+        const body = await request.json();
+        const { productId, industry } = body;
+
+        if (!productId || !industry) {
             return NextResponse.json(
                 { message: 'Missing required parameters' },
                 { status: 400 }
@@ -25,7 +39,7 @@ export async function POST(request: Request) {
 
         const signature = signParams({ productId, userId, industry });
 
-        return NextResponse.json({ signature });
+        return NextResponse.json({ signature, userId });
 
     } catch (error) {
         console.error('Signing Error:', error);

@@ -35,7 +35,6 @@ const formSchema = z.object({
 
 export function LoginForm() {
     const { toast } = useToast()
-    const { setUser } = useApp()
     const [isLoading, setIsLoading] = useState(false)
 
     const form = useForm<z.infer<typeof formSchema>>({
@@ -46,17 +45,16 @@ export function LoginForm() {
         },
     })
 
+    const { refetchUser } = useApp()
     const router = useRouter()
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setIsLoading(true)
         try {
-            const response = await api.auth.login(values)
+            await api.auth.login(values)
 
-            if (response.user) {
-                setUser(response.user)
-                localStorage.setItem('user_data', JSON.stringify(response.user))
-            }
+            // Refresh user data immediately which will trigger product fetch
+            refetchUser()
 
             toast({
                 title: "Success",

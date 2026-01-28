@@ -69,12 +69,12 @@ export async function POST(request: Request) {
             let errorMessage = 'Failed to create product';
             try {
                 const error = await response.json();
-                console.log("Backend Error Response:", JSON.stringify(error, null, 2));
+                // console.log("Backend Error Response:", JSON.stringify(error, null, 2));
                 errorMessage = error.message || errorMessage;
             } catch (e) {
                 console.error("Failed to parse backend error json:", e);
                 const text = await response.text();
-                console.log("Backend Error Text:", text);
+                // console.log("Backend Error Text:", text);
             }
 
             return NextResponse.json(

@@ -10,17 +10,21 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { INDUSTRY_ICONS, INDUSTRY_LABELS, Industry, DEFAULT_CATEGORIES, DEFAULT_AI_PROMPTS } from '@/types';
+import { INDUSTRY_ICONS, INDUSTRY_LABELS, Industry, DEFAULT_CATEGORIES, DEFAULT_AI_PROMPTS, Product } from '@/types';
 import { Save, Plus, X, RotateCcw } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { api } from '@/lib/api';
 
 export default function Settings() {
-  const { currentProduct, updateProduct, userRole } = useApp();
-  const [editedProduct, setEditedProduct] = useState(currentProduct);
+  const { currentProduct } = useApp();
+  const [editedProduct, setEditedProduct] = useState<Product | null>(null);
   const [newCategory, setNewCategory] = useState('');
 
+  // Update editedProduct when currentProduct changes
   useEffect(() => {
-    setEditedProduct(currentProduct);
+    if (currentProduct) {
+      setEditedProduct(currentProduct);
+    }
   }, [currentProduct]);
 
   if (!currentProduct || !editedProduct) {
@@ -39,27 +43,12 @@ export default function Settings() {
     );
   }
 
-  if (userRole !== 'admin') {
-    return (
-      <AppLayout title="Settings">
-        <div className="flex items-center justify-center h-[60vh]">
-          <div className="text-center space-y-4">
-            <div className="text-6xl">🔒</div>
-            <h2 className="text-xl font-semibold">Admin Access Required</h2>
-            <p className="text-muted-foreground">
-              Switch to Admin role to access settings
-            </p>
-          </div>
-        </div>
-      </AppLayout>
-    );
-  }
-
-  const handleSave = () => {
-    updateProduct(currentProduct.id, editedProduct);
+  const handleSave = async () => {
+    // TODO: Backend /api/products/:id endpoint needed for updates
     toast({
-      title: 'Settings Saved',
-      description: 'Product configuration has been updated.',
+      title: 'Settings Not Saved',
+      description: 'Backend update endpoint not yet implemented.',
+      variant: 'destructive',
     });
   };
 

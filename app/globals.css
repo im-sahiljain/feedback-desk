@@ -128,22 +128,111 @@
   .scrollbar-thin {
     scrollbar-width: thin;
   }
-  
+
   .scrollbar-thin::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
-  
+
   .scrollbar-thin::-webkit-scrollbar-track {
     background: transparent;
   }
-  
+
   .scrollbar-thin::-webkit-scrollbar-thumb {
     background: hsl(var(--muted-foreground) / 0.3);
     border-radius: 3px;
   }
-  
+
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--muted-foreground) / 0.5);
+  }
+}
+
+@layer components {
+  .testimonial-card {
+    position: absolute;
+    width: 100%;
+    max-width: 28rem;
+    transition: all 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+    will-change: transform, opacity;
+  }
+
+  .glass-effect {
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 24px;
+    z-index: 10;
+  }
+
+  /* Make sure text is readable on glass */
+  .glass-effect h3,
+  .glass-effect p,
+  .glass-effect blockquote {
+    color: white;
+    /* or inherit if handled by classes */
+  }
+
+  .glass-effect .text-card-foreground {
+    color: white;
+  }
+
+  .glass-effect .text-muted-foreground {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .pagination-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: none;
+    padding: 0;
+  }
+
+  .pagination-dot.active {
+    width: 24px;
+    background-color: white;
+    border-radius: 4px;
+  }
+
+  .is-dragging {
+    cursor: grabbing;
+    transition: none !important;
+  }
+}
+
+.gradient-background {
+  background: linear-gradient(313deg,
+      #7fcfc7,
+      /* teal */
+      #f2ecd6,
+      /* soft cream */
+      #f6b35f,
+      /* golden orange */
+      #ffad5a61,
+      /* coral red */
+      #f59bb3
+      /* pink */
+    );
+  background-size: 300% 300%;
+  animation: gradient-animation 6s ease infinite;
+}
+
+@keyframes gradient-animation {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
   }
 }

@@ -3,11 +3,9 @@
 import { ReactNode } from 'react';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
-import { useApp } from '@/context/AppContext';
-import { INDUSTRY_ICONS, INDUSTRY_LABELS } from '@/types';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '../ui/button';
-import { Moon, Sun } from 'lucide-react';
+import { LoadingBackdrop } from './LoadingBackdrop';
+import { ModeToggle } from '@/components/mode-toggle';
+import { UserProfile } from './UserProfile';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -16,10 +14,10 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children, title, description }: AppLayoutProps) {
-  const { currentProduct, userRole, toggleDarkMode, isDarkMode } = useApp();
 
   return (
     <SidebarProvider>
+      <LoadingBackdrop />
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         <main className="flex-1 flex flex-col min-w-0">
@@ -41,29 +39,8 @@ export function AppLayout({ children, title, description }: AppLayoutProps) {
             </div>
 
             <div className="flex items-center gap-3">
-              {currentProduct && (
-                <div className="hidden md:flex items-center gap-2 text-sm">
-                  <span>{INDUSTRY_ICONS[currentProduct.industry]}</span>
-                  <span className="font-medium">{currentProduct.name}</span>
-                  <Badge variant="outline" className="text-xs">
-                    {INDUSTRY_LABELS[currentProduct.industry]}
-                  </Badge>
-                </div>
-              )}
-              <Badge
-                variant={userRole === 'admin' ? 'default' : 'secondary'}
-                className="capitalize"
-              >
-                {userRole}
-              </Badge>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleDarkMode}
-                className="h-8 w-8 p-0"
-              >
-                {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              </Button>
+              <ModeToggle />
+              <UserProfile />
             </div>
           </header>
 

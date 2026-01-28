@@ -48,17 +48,23 @@ export interface InsightStats {
 }
 
 export const INDUSTRY_LABELS: Record<Industry, string> = {
-  tech: 'Technology',
-  healthcare: 'Healthcare',
-  infrastructure: 'Infrastructure',
-  custom: 'Custom',
+  Technology: 'Technology',
+  Healthcare: 'Healthcare',
+  Infrastructure: 'Infrastructure',
+  Education: 'Education',
+  Retail: 'Retail',
+  Hospitality: 'Hospitality',
+  Custom: 'Custom',
 };
 
 export const INDUSTRY_ICONS: Record<Industry, string> = {
-  tech: '💻',
-  healthcare: '🏥',
-  infrastructure: '🏗️',
-  custom: '⚙️',
+  Technology: '💻',
+  Healthcare: '🏥',
+  Infrastructure: '🏗️',
+  Education: '🎓',
+  Retail: '🛒',
+  Hospitality: '🏨',
+  Custom: '⚙️',
 };
 
 export const DEFAULT_CATEGORIES: Record<Industry, string[]> = {

@@ -7,7 +7,7 @@ export async function POST(request: Request) {
     try {
         const body = await request.json();
 
-        console.log('Feedback Submit Request:', body);
+        // console.log('Feedback Submit Request:', body);
 
         // Transform payload to match backend schema exactly
         const backendPayload = {
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
         // If the backend actually supports user_id and industry, we should add them. 
         // But the user curl didn't show them. Let's start with strict adherence to curl.
 
-        console.log('Sending to Backend:', backendPayload);
+        // console.log('Sending to Backend:', backendPayload);
 
         const response = await fetch(`${API_BASE_URL}/api/feedbacks/submit`, {
             method: 'POST',

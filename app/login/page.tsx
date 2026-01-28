@@ -1,12 +1,11 @@
 import { Metadata } from "next"
 import Link from "next/link"
-
+import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 import { LoginForm } from "@/components/auth/login-form"
 import { ModeToggle } from "@/components/mode-toggle"
-import { LayeredText } from "@/components/layered-text"
-import Image from "next/image"
+
 
 export const metadata: Metadata = {
     title: "Login - Feedback Desk AI",
@@ -15,43 +14,44 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
     return (
-        <div className="container relative h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-2 lg:px-0">
-            <div className="absolute right-4 top-4 md:right-8 md:top-8 flex items-center gap-2">
-                <Link
-                    href="/signup"
-                    className={cn(
-                        buttonVariants({ variant: "ghost" }),
-                    )}
-                >
-                    Sign Up
-                </Link>
-                <ModeToggle />
-            </div>
-            <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r">
-                <div className="absolute inset-0 bg-primary" />
-                <div className="relative z-20 flex items-center text-lg font-medium bg-gray-100 dark:bg-gray-800 rounded-lg px-4 py-2 w-fit">
+        <div className="w-full relative h-[100dvh] flex flex-col items-center justify-center overflow-hidden">
+            {/* <div
+                className="absolute inset-0 bg-cover bg-bottom bg-no-repeat opacity-50 scale-[1.6]"
+                // style={{ backgroundImage: 'url("https://res.cloudinary.com/drhx7imeb/image/upload/v1756215257/gradient-optimized_nfrakk.svg")' }}
+                style={{ backgroundImage: 'url("/bg1.jpg")' }}
+                
+            /> */}
+            <div
+                className="absolute inset-0 bg-bottom bg-no-repeat opacity-50 scale-[1.6] gradient-background"
+            />
+
+
+            <div className="w-full flex items-center justify-between z-20 p-4">
+                <div className="flex items-center gap-2">
                     <Image src="/chat.png" alt="Logo" width={24} height={24} />
-                    <span className="ml-2 text-black dark:text-white text-base">Feedback Desk AI</span>
+                    <span className="text-foreground text-lg font-medium leading-none">
+                        Feedback Desk AI
+                    </span>
                 </div>
 
-                <div className="relative z-20 flex-1 flex items-center justify-center">
-                    <LayeredText className="text-white dark:text-white" />
+                <div className="flex items-center gap-2">
+                    <Link
+                        href="/signup"
+                        className={cn(buttonVariants({ variant: "ghost" }))}
+                    >
+                        Sign Up
+                    </Link>
+                    <ModeToggle />
                 </div>
-
-                {/* <div className="relative z-20 mt-auto">
-                    <blockquote className="space-y-2">
-                        <p className="text-lg">
-                            &ldquo;This library has saved me countless hours of work and
-                            helped me deliver stunning designs to my clients faster than
-                            ever before.&rdquo;
-                        </p>
-                        <footer className="text-sm">Sofia Davis</footer>
-                    </blockquote>
-                </div> */}
             </div>
-            <div className="lg:p-8">
-                <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+
+            <div className="relative z-10 lg:p-8 flex items-center justify-center h-full w-full">
+                <div className="mx-auto flex flex-col justify-center space-y-6 w-[350px] md:w-[400px] lg:w-[500px] bg-white/20 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-8">
                     <div className="flex flex-col space-y-2 text-center">
+                        {/* <div className="flex items-center justify-center gap-2 mb-2">
+                            <Image src="/chat.png" alt="Logo" width={24} height={24} />
+                            <span className="text-foreground text-lg font-medium">Feedback Desk AI</span>
+                        </div> */}
                         <h1 className="text-2xl font-semibold tracking-tight">
                             Login to your account
                         </h1>
@@ -60,11 +60,11 @@ export default function LoginPage() {
                         </p>
                     </div>
                     <LoginForm />
-                    <p className="px-8 text-center text-sm text-muted-foreground">
+                    {/* <p className="px-8 text-center text-sm text-muted-foreground">
                         By clicking continue, you agree to our{" "}
                         <Link
                             href="/terms"
-                            className="underline underline-offset-4 hover:text-primary"
+                            className="underline underline-offset-4 hover:text-primary transition-colors duration-500"
                         >
                             Terms of Service
                         </Link>{" "}
@@ -76,7 +76,7 @@ export default function LoginPage() {
                             Privacy Policy
                         </Link>
                         .
-                    </p>
+                    </p> */}
                 </div>
             </div>
         </div>
