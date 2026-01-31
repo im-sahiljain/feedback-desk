@@ -1,73 +1,50 @@
-# Welcome to your Lovable project
+# Feedback Desk AI
 
-## Project info
+A robust, full-stack customer feedback management platform designed to help businesses collect, organize, and analyze feedback across multiple products. Powered by real-time AI insights, Feedback Desk AI transforms raw user feedback into actionable data, enabling faster and smarter product decisions.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## 🚀 Key Features
 
-## How can I edit this code?
+### 🧠 AI-Driven Feedback Classification
+Automatically tag and categorize incoming feedback using advanced AI algorithms.
+- **Sentiment Analysis**: Instantly gauge user sentiment (Positive, Negative, Neutral).
+- **Smart Categorization**: Automatically routing feedback to the right area (Bug, Feature Request, Usability).
+- **Priority Triage**: AI-assigned priority levels to ensure critical issues are addressed first.
 
-There are several ways of editing your application.
+### 📊 Interactive Analytics Dashboards
+Visualize data trends and gain deep insights through dynamic, interactive charts.
+- **Sentiment Distribution**: Understand the overall mood of your user base.
+- **Category Breakdowns**: See which areas of your product receive the most attention.
+- **Trend Analysis**: Track feedback volume and sentiment over the last 7 days.
+- **Powered by Recharts**: Beautiful, responsive data visualization.
 
-**Use Lovable**
+### 🏢 Scalable Multi-Product System
+Designed for growth, Feedback Desk AI supports managing multiple products from a single dashboard.
+- **Role-Based Authentication**: Secure access control for Admins, Managers, and Viewers.
+- **React Context State**: Seamless global state management for a smooth user experience.
+- **CRUD Operations**: Efficient handling of feedback data via RESTful APIs.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## 🛠️ Tech Stack
 
-Changes made via Lovable will be committed automatically to this repo.
+**Frontend**
+- **Framework**: Next.js 16 (React)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS, shadcn/ui
+- **Animation**: Framer Motion
+- **Visualization**: Recharts
 
-**Use your preferred IDE**
+**Backend**
+- **API**: Node.js
+- **Database**: Supabase (PostgreSQL)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
-Follow these steps:
+# ⚠️ Private License Notice
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+This repository is public for **portfolio and evaluation purposes only**.
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+🚫 You are NOT permitted to:
+- Use this code in personal or commercial projects
+- Deploy this project
+- Copy or modify any part of this repository
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+✅ To request permission, contact repo owner
