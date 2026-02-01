@@ -182,10 +182,10 @@ export default function Settings() {
                 <CardTitle className="text-base">Feedback Categories</CardTitle>
                 <CardDescription>Categories for organizing feedback</CardDescription>
               </div>
-              <Button variant="outline" size="sm" onClick={handleResetCategories}>
+              {/* <Button variant="outline" size="sm" onClick={handleResetCategories}>
                 <RotateCcw className="h-4 w-4 mr-2" />
                 Reset
-              </Button>
+              </Button> */}
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -197,12 +197,12 @@ export default function Settings() {
                   className="flex items-center gap-1 pr-1"
                 >
                   {category}
-                  <button
+                  {/* <button
                     onClick={() => handleRemoveCategory(category)}
                     className="ml-1 p-0.5 hover:bg-background/50 rounded"
                   >
                     <X className="h-3 w-3" />
-                  </button>
+                  </button> */}
                 </Badge>
               ))}
             </div>
@@ -214,9 +214,9 @@ export default function Settings() {
                 onChange={e => setNewCategory(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleAddCategory()}
               />
-              <Button onClick={handleAddCategory} disabled={!newCategory.trim()}>
+              {/* <Button onClick={handleAddCategory} disabled={!newCategory.trim()}>
                 <Plus className="h-4 w-4" />
-              </Button>
+              </Button> */}
             </div>
           </CardContent>
         </Card>
@@ -229,10 +229,10 @@ export default function Settings() {
                 <CardTitle className="text-base">AI Configuration</CardTitle>
                 <CardDescription>Customize how AI analyzes feedback</CardDescription>
               </div>
-              <Button variant="outline" size="sm" onClick={handleResetPrompt}>
+              {/* <Button variant="outline" size="sm" onClick={handleResetPrompt}>
                 <RotateCcw className="h-4 w-4 mr-2" />
                 Reset
-              </Button>
+              </Button> */}
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -274,12 +274,12 @@ export default function Settings() {
         </Card>
 
         {/* Save Button */}
-        <div className="flex justify-end">
+        {/* <div className="flex justify-end">
           <Button onClick={handleSave} size="lg">
             <Save className="h-4 w-4 mr-2" />
             Save Changes
           </Button>
-        </div>
+        </div> */}
       </div>
     </AppLayout>
   );

@@ -208,7 +208,8 @@ function ProductsContent() {
                   </CardContent>
                   <CardFooter className="pt-0 flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">
-                      Created {new Date(product.createdAt).toLocaleDateString('en-US')}
+                      Created {new Date(product.created_at).toLocaleDateString()}
+
                     </span>
                     <Button
                       variant="ghost"

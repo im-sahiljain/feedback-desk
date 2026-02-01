@@ -36,6 +36,7 @@ export interface Product {
   config?: ProductConfig;
   settings?: any; // To support API response
   createdAt?: Date; // API might not return this immediately in list
+  created_at?: Date;
 }
 
 export interface InsightStats {
