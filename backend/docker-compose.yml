@@ -1,0 +1,24 @@
+# docker-compose.yml
+# ⚠️ Used for LOCAL DEVELOPMENT ONLY
+# Not used in production or on Render
+
+
+version: '3.8'
+
+services:
+  db:
+    image: postgres:14-alpine
+    container_name: feedback_desk_db
+    restart: always
+    environment:
+      POSTGRES_USER: sahil
+      POSTGRES_PASSWORD: Sahil2001
+      POSTGRES_DB: feedback_desk
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  pgdata:

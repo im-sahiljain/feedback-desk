@@ -1,0 +1,66 @@
+API Implementation Plan for Feedback Desk
+Goal Description
+The goal is to design a comprehensive backend API to support the features of the "Feedback Desk" application. The current backend only supports a single api/classify endpoint. We need to expand this to support authentication, workspace management, public feedback submission, and detailed analytics.
+
+Proposed API Structure
+1. Authentication
+POST /api/auth/register - Register a new user (Admin).
+POST /api/auth/login - Login with email/password.
+GET /api/auth/me - Get current user profile.
+2. Workspaces (Products)
+Each user can manage multiple products (Workspaces).
+
+GET /api/workspaces - List all workspaces for the logged-in user.
+POST /api/workspaces - Create a new workspace (Product).
+GET /api/workspaces/:id - Get details of a specific workspace.
+PUT /api/workspaces/:id - Update workspace settings (e.g., categories, AI prompts).
+DELETE /api/workspaces/:id - Delete a workspace.
+3. Feedback Management
+POST /api/feedbacks/submit - Public endpoint for users to submit feedback.
+Body: { workspace_id, text, email, rating }
+Note: This should trigger the AI classification asynchronously or synchronously depending on load.
+GET /api/feedbacks - List feedbacks for a workspace (Admin only).
+Query Params: workspace_id, search, sentiment, priority, category.
+GET /api/feedbacks/:id - Get single feedback details with analysis.
+PUT /api/feedbacks/:id - Update feedback status (e.g., "In Progress", "Resolved").
+DELETE /api/feedbacks/:id - Delete feedback.
+4. Analytics & Insights
+GET /api/analytics/summary - Get high-level metrics (Total, Sentiment Score, High Priority Count).
+Query Params: workspace_id.
+GET /api/analytics/trends - Get feedback volume/sentiment over time.
+Query Params: workspace_id, range (7d, 30d).
+5. Existing Integation
+Refactor /api/classify -> /api/internal/classify or integrate logic into POST /api/feedbacks/submit.
+The existing logic uses 
+classifyImpactSingle
+ and saves to feedbacks table.
+We will modify the feedbacks table to include workspace_id, status, user_email, rating.
+Data Model Updates (PostgreSQL)
+Table: users (New)
+id (PK), email, password_hash, name, created_at
+Relationship: One User can have multiple Workspaces.
+Table: workspaces (New)
+id (PK), user_id (FK), name, description, settings (JSON - categories, prompts), created_at
+Relationship: One Workspace belongs to one User.
+Relationship: One Workspace can have multiple Feedbacks.
+Table: feedbacks (Update)
+Existing: id, feedback, labels, category, sentiment, priority, impact, scope
+Relationship: One Feedback belongs to one Workspace.
+Add:
+workspace_id (FK)
+status (default: 'New')
+email (User contact)
+rating (1-5)
+created_at
+Verification Plan
+Manual Verification
+Auth: Test registration and login using Postman or curl.
+Workspaces: Create a workspace and verify it appears in the list.
+Feedback Flow:
+Submit feedback via POST /api/feedbacks/submit.
+Verify the AI classification runs and populates the DB (category, sentiment, etc.).
+Verify the feedback appears in GET /api/feedbacks.
+Analytics: Submit multiple feedbacks and check if GET /api/analytics/summary returns correct aggregates.
+
+Comment
+Ctrl+Alt+M
