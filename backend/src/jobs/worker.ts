@@ -1,15 +1,47 @@
 import { randomUUID } from 'node:crypto';
 import { getPool } from '../db.js';
 import { getConfig } from '../config/env.js';
-import { claimNextJob, completeJob, failJob, getQueueDepth } from './queue.js';
+import { claimNextJob, completeJob, failJob, getQueueDepth, reclaimStaleLocks } from './queue.js';
 import { classifyImpactSingle, ANALYSIS_VERSION, SCHEMA_VERSION, PROMPT_VERSION } from '../ai/classify.js';
 import { sanitizeForAi } from '../ai/sanitize.js';
 import { logger } from '../logging/logger.js';
 
 export const JOB_ANALYZE_FEEDBACK = 'analyze_feedback';
 
+/** How often idle workers attempt stale-lock reclaim (ms). */
+const RECLAIM_POLL_INTERVAL_MS = 60_000;
+
 let shuttingDown = false;
 let activeWorkers = 0;
+let lastReclaimAt = 0;
+let reclaimInFlight: Promise<void> | null = null;
+
+async function runStaleLockReclaim(force = false): Promise<void> {
+  const now = Date.now();
+  if (!force && now - lastReclaimAt < RECLAIM_POLL_INTERVAL_MS) {
+    return;
+  }
+  if (reclaimInFlight) {
+    await reclaimInFlight;
+    return;
+  }
+
+  lastReclaimAt = now;
+  const timeoutSeconds = getConfig().jobLockTimeoutSeconds;
+  reclaimInFlight = (async () => {
+    try {
+      await reclaimStaleLocks(getPool(), timeoutSeconds);
+    } catch (err) {
+      logger.error('Stale lock reclaim failed', {
+        error: err instanceof Error ? err.message : 'unknown',
+      });
+    } finally {
+      reclaimInFlight = null;
+    }
+  })();
+
+  await reclaimInFlight;
+}
 
 export async function processAnalyzeFeedbackJob(job: {
   id: string;
@@ -196,6 +228,9 @@ async function workerLoop(workerId: string): Promise<void> {
   const pool = getPool();
   while (!shuttingDown) {
     try {
+      // Reclaim abandoned locks before claiming — especially important after restarts
+      await runStaleLockReclaim(false);
+
       const job = await claimNextJob(pool, workerId, [JOB_ANALYZE_FEEDBACK]);
       if (!job) {
         await sleep(1500);
@@ -230,7 +265,14 @@ function sleep(ms: number) {
 export function startWorkers(): () => Promise<void> {
   const concurrency = getConfig().workerConcurrency;
   const ids = Array.from({ length: concurrency }, () => `worker-${randomUUID().slice(0, 8)}`);
-  logger.info('Starting background workers', { concurrency });
+  logger.info('Starting background workers', {
+    concurrency,
+    jobLockTimeoutSeconds: getConfig().jobLockTimeoutSeconds,
+  });
+
+  // Immediate reclaim so crashed locks from a prior process are recoverable ASAP
+  void runStaleLockReclaim(true);
+
   for (const id of ids) {
     void workerLoop(id);
   }

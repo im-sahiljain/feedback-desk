@@ -34,6 +34,10 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { api } from "@/lib/api"
+import {
+    INDUSTRY_OPTIONS,
+    getCategoriesForIndustry,
+} from "@/lib/industryCatalog"
 import { Product } from "@/types"
 
 const MAX_CATEGORIES = 10;
@@ -62,8 +66,6 @@ interface CreateProductDialogProps {
 export function CreateProductDialog({ open, onOpenChange, onSuccess }: CreateProductDialogProps) {
     const { toast } = useToast()
     const [isLoading, setIsLoading] = useState(false)
-    const [industries, setIndustries] = useState<string[]>([])
-    const [labels, setLabels] = useState<string[]>([])
     const [customLabels, setCustomLabels] = useState<string[]>([])
     const [customInput, setCustomInput] = useState('')
 
@@ -78,22 +80,13 @@ export function CreateProductDialog({ open, onOpenChange, onSuccess }: CreatePro
 
     const selectedIndustry = form.watch("industry")
     const watchedCategories = form.watch("categories") || []
+    const labels = selectedIndustry ? getCategoriesForIndustry(selectedIndustry) : []
 
     useEffect(() => {
-        if (open) {
-            api.products.getIndustries().then(setIndustries).catch(console.error)
-        }
-    }, [open])
-
-    useEffect(() => {
-        if (selectedIndustry) {
-            api.products.getLabels(selectedIndustry).then(fetchedLabels => {
-                setLabels(fetchedLabels)
-                setCustomLabels([])
-                form.setValue("categories", [], { shouldValidate: true })
-            }).catch(console.error)
-        }
-    }, [selectedIndustry])
+        if (!selectedIndustry) return
+        setCustomLabels([])
+        form.setValue("categories", [], { shouldValidate: true })
+    }, [selectedIndustry, form])
 
     const toggleCategory = (category: string) => {
         const current = form.getValues("categories") || []
@@ -212,7 +205,7 @@ export function CreateProductDialog({ open, onOpenChange, onSuccess }: CreatePro
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            {industries.map(ind => (
+                                            {INDUSTRY_OPTIONS.map(ind => (
                                                 <SelectItem key={ind} value={ind}>
                                                     {ind}
                                                 </SelectItem>

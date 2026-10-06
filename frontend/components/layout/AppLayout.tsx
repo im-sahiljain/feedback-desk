@@ -6,14 +6,22 @@ import { AppNavRail } from "./AppNavRail";
 import { LoadingBackdrop } from "./LoadingBackdrop";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
 interface AppLayoutProps {
   children: ReactNode;
   title?: string;
   description?: string;
+  /** Fill remaining viewport; child owns scrolling (e.g. split panes). */
+  fill?: boolean;
 }
 
-export function AppLayout({ children, title, description }: AppLayoutProps) {
+export function AppLayout({
+  children,
+  title,
+  description,
+  fill = false,
+}: AppLayoutProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
@@ -64,8 +72,20 @@ export function AppLayout({ children, title, description }: AppLayoutProps) {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto overflow-x-hidden">
-          <div className="mx-auto w-full max-w-7xl animate-fade-in px-4 py-4 md:px-7 md:py-6">
+        <div
+          className={cn(
+            "min-h-0 flex-1 overflow-x-hidden",
+            fill ? "flex flex-col overflow-hidden" : "overflow-y-auto",
+          )}
+        >
+          <div
+            className={cn(
+              "mx-auto w-full max-w-7xl animate-fade-in",
+              fill
+                ? "flex min-h-0 flex-1 flex-col px-4 pb-4 pt-3 md:px-7 md:pb-6 md:pt-4"
+                : "px-4 py-4 md:px-7 md:py-6",
+            )}
+          >
             {children}
           </div>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useApp } from "@/context/AppContext";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -22,7 +22,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { INDUSTRY_ICONS, INDUSTRY_LABELS, Product } from "@/types";
-import { Plus, Package, Link, QrCode, Share2, Copy, Loader2, RefreshCw } from "lucide-react";
+import {
+  Plus,
+  Package,
+  Link,
+  QrCode,
+  Share2,
+  Copy,
+  Loader2,
+  RefreshCw,
+  Download,
+} from "lucide-react";
 import { CreateProductDialog } from "@/components/products/create-product-dialog";
 import { toast } from "@/hooks/use-toast";
 import { formatFriendlyDate } from "@/lib/dates";
@@ -35,6 +45,8 @@ function ProductsContent() {
   const [qrUrl, setQrUrl] = useState<string>("");
   const [isGeneratingQr, setIsGeneratingQr] = useState<boolean>(false);
   const [isRegenerating, setIsRegenerating] = useState<boolean>(false);
+  const [isDownloadingQr, setIsDownloadingQr] = useState(false);
+  const qrSvgRef = useRef<SVGSVGElement | null>(null);
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -199,12 +211,72 @@ function ProductsContent() {
     }
   };
 
+  const handleDownloadQr = async () => {
+    if (!qrProduct || !qrUrl || !qrSvgRef.current) return;
+
+    setIsDownloadingQr(true);
+    try {
+      const svg = qrSvgRef.current;
+      const serializer = new XMLSerializer();
+      const svgString = serializer.serializeToString(svg);
+      const svgBlob = new Blob([svgString], {
+        type: "image/svg+xml;charset=utf-8",
+      });
+      const objectUrl = URL.createObjectURL(svgBlob);
+
+      const size = Math.max(svg.width.baseVal.value, svg.height.baseVal.value, 200);
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Canvas unavailable");
+
+      const image = new Image();
+      await new Promise<void>((resolve, reject) => {
+        image.onload = () => resolve();
+        image.onerror = () => reject(new Error("Failed to render QR image"));
+        image.src = objectUrl;
+      });
+
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(objectUrl);
+
+      const filename = `${qrProduct.name
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "") || "product"}-qr.png`;
+
+      const pngUrl = canvas.toDataURL("image/png");
+      const anchor = document.createElement("a");
+      anchor.href = pngUrl;
+      anchor.download = filename;
+      anchor.click();
+
+      toast({
+        title: "QR downloaded",
+        description: "PNG image saved to your device.",
+      });
+    } catch (error) {
+      console.error("Failed to download QR code:", error);
+      toast({
+        title: "Error",
+        description: "Failed to download QR image.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloadingQr(false);
+    }
+  };
+
   return (
     <AppLayout title="Products" description="Manage your products">
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Header Actions */}
         <div className="flex justify-end">
-          <Button onClick={() => setIsCreateOpen(true)}>
+          <Button onClick={() => setIsCreateOpen(true)} className="max-sm:w-full">
             <Plus className="h-4 w-4 mr-2" />
             Create Product
           </Button>
@@ -217,10 +289,10 @@ function ProductsContent() {
 
         {/* Products Grid */}
         {isLoadingProduct ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {[1, 2, 3].map((i) => (
               <Card key={i}>
-                <CardHeader className="pb-2">
+                <CardHeader className="pb-2 max-sm:p-4 max-sm:pb-2">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <div className="h-8 w-8 bg-muted animate-pulse rounded" />
@@ -231,7 +303,7 @@ function ProductsContent() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="max-sm:px-4 max-sm:pb-4">
                   <div className="h-4 w-full bg-muted animate-pulse rounded" />
                 </CardContent>
               </Card>
@@ -252,36 +324,36 @@ function ProductsContent() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {products.map((product) => (
               <Card
                 key={product.id}
                 className="transition-all hover:shadow-md border-border"
               >
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between gap-2">
+                <CardHeader className="pb-2 max-sm:space-y-3 max-sm:p-4 max-sm:pb-3">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
                     <div className="flex items-center gap-3 min-w-0">
                       <span className="text-2xl shrink-0">
                         {INDUSTRY_ICONS[product.industry] || '🏢'}
                       </span>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <CardTitle className="text-base font-semibold truncate">
                           {product.name}
                         </CardTitle>
-                        <Badge variant="outline" className="mt-1 text-xs font-normal truncate">
+                        <Badge variant="outline" className="mt-1 max-w-full text-xs font-normal truncate">
                           {INDUSTRY_LABELS[product.industry] || product.industry}
                         </Badge>
                       </div>
                     </div>
 
                     {/* Action buttons: OS Share, QR Code, Copy Link */}
-                    <div className="flex items-center gap-1 shrink-0">
+                    <div className="flex items-center justify-end gap-0.5 sm:gap-1 shrink-0 max-sm:-mx-1 max-sm:border-t max-sm:border-border/60 max-sm:pt-2">
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => handleShareOS(product)}
                         title="Share via OS"
-                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                        className="h-9 w-9 sm:h-8 sm:w-8 text-muted-foreground hover:text-foreground"
                       >
                         <Share2 className="h-4 w-4" />
                       </Button>
@@ -291,7 +363,7 @@ function ProductsContent() {
                         size="icon"
                         onClick={() => handleOpenQr(product)}
                         title="View QR Code"
-                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                        className="h-9 w-9 sm:h-8 sm:w-8 text-muted-foreground hover:text-foreground"
                       >
                         <QrCode className="h-4 w-4" />
                       </Button>
@@ -301,19 +373,19 @@ function ProductsContent() {
                         size="icon"
                         onClick={() => handleCopyLink(product)}
                         title="Copy feedback link"
-                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                        className="h-9 w-9 sm:h-8 sm:w-8 text-muted-foreground hover:text-foreground"
                       >
                         <Link className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="max-sm:px-4 max-sm:pb-3">
                   <p className="text-sm text-muted-foreground line-clamp-2">
                     {product.description || "No description provided"}
                   </p>
                 </CardContent>
-                <CardFooter className="pt-0 flex items-center justify-between text-xs text-muted-foreground">
+                <CardFooter className="pt-0 flex items-center justify-between text-xs text-muted-foreground max-sm:px-4 max-sm:pb-4">
                   <span>
                     Created{" "}
                     {product.created_at
@@ -349,6 +421,7 @@ function ProductsContent() {
                 ) : (
                   <div className="p-4 bg-white rounded-xl shadow-md border border-zinc-200">
                     <QRCodeSVG
+                      ref={qrSvgRef}
                       value={qrUrl}
                       size={200}
                       level="H"
@@ -375,6 +448,20 @@ function ProductsContent() {
                   <Copy className="h-3.5 w-3.5" /> Copy
                 </Button>
               </div>
+
+              <Button
+                size="sm"
+                onClick={handleDownloadQr}
+                disabled={isDownloadingQr || isGeneratingQr || !qrUrl}
+                className="w-full mt-2 text-xs gap-1.5"
+              >
+                {isDownloadingQr ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Download className="h-3.5 w-3.5" />
+                )}
+                Download QR image
+              </Button>
 
               <Button
                 size="sm"

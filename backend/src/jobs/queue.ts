@@ -126,7 +126,8 @@ function backoffSeconds(attempt: number): number {
 export async function completeJob(pool: Pool, jobId: string): Promise<void> {
   await pool.query(
     `UPDATE background_jobs
-     SET status = 'completed', completed_at = now(), updated_at = now(), last_error = NULL, locked_by = NULL
+     SET status = 'completed', completed_at = now(), updated_at = now(), last_error = NULL,
+         locked_by = NULL, locked_at = NULL
      WHERE id = $1`,
     [jobId]
   );
@@ -143,7 +144,8 @@ export async function failJob(pool: Pool, jobId: string, errorMessage: string, a
            error_meta = jsonb_build_object('terminal', true, 'at', now()),
            completed_at = now(),
            updated_at = now(),
-           locked_by = NULL
+           locked_by = NULL,
+           locked_at = NULL
        WHERE id = $1`,
       [jobId, sanitized]
     );
@@ -158,12 +160,181 @@ export async function failJob(pool: Pool, jobId: string, errorMessage: string, a
          last_error = $2,
          available_at = now() + ($3 || ' seconds')::interval,
          updated_at = now(),
-         locked_by = NULL
+         locked_by = NULL,
+         locked_at = NULL
      WHERE id = $1`,
     [jobId, sanitized, String(delay)]
   );
   logger.info('Job scheduled for retry', { jobId, attempts, delaySeconds: delay });
   return 'retrying';
+}
+
+export interface ReclaimStaleLocksResult {
+  jobsReclaimed: number;
+  feedbackReset: number;
+  jobsEnsured: number;
+}
+
+/**
+ * Recover jobs abandoned by crashed workers.
+ * - background_jobs stuck in `processing` past the lock timeout → `queued` (retryable)
+ * - linked feedback still in `analyzing` → `queued`
+ * - orphan feedback rows stuck in `analyzing` past the same timeout → `queued`
+ * - ensure each reset feedback has a claimable analyze job
+ *
+ * Safe to call from multiple workers (idempotent UPDATEs).
+ */
+export async function reclaimStaleLocks(
+  pool: Pool,
+  lockTimeoutSeconds: number
+): Promise<ReclaimStaleLocksResult> {
+  const timeoutSec = Math.max(60, Math.floor(lockTimeoutSeconds));
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const jobsRes = await client.query<{ id: string; resource_id: string | null }>(
+      `UPDATE background_jobs
+       SET status = 'queued',
+           locked_by = NULL,
+           locked_at = NULL,
+           available_at = now(),
+           updated_at = now(),
+           last_error = COALESCE(last_error, 'Reclaimed after stale worker lock')
+       WHERE status = 'processing'
+         AND locked_at IS NOT NULL
+         AND locked_at < now() - make_interval(secs => $1)
+       RETURNING id, resource_id`,
+      [timeoutSec]
+    );
+
+    const resourceIds = new Set<string>();
+    for (const row of jobsRes.rows) {
+      if (row.resource_id) resourceIds.add(row.resource_id);
+    }
+
+    let feedbackReset = 0;
+
+    if (resourceIds.size > 0) {
+      const linked = await client.query<{ id: string }>(
+        `UPDATE feedbacks
+         SET processing_status = 'queued',
+             status = 'queued',
+             queued_at = now(),
+             processing_error = COALESCE(processing_error, 'Recovered from stale worker lock')
+         WHERE id = ANY($1::uuid[])
+           AND deleted_at IS NULL
+           AND processing_status = 'analyzing'
+         RETURNING id`,
+        [[...resourceIds]]
+      );
+      feedbackReset += linked.rowCount ?? linked.rows.length;
+      for (const row of linked.rows) resourceIds.add(row.id);
+    }
+
+    // Orphan analyzing rows (job row missing / never linked) past the same timeout
+    const orphans = await client.query<{ id: string; organization_id: string | null }>(
+      `UPDATE feedbacks
+       SET processing_status = 'queued',
+           status = 'queued',
+           queued_at = now(),
+           processing_error = COALESCE(processing_error, 'Recovered from stale analyzing state')
+       WHERE deleted_at IS NULL
+         AND processing_status = 'analyzing'
+         AND analyzing_at IS NOT NULL
+         AND analyzing_at < now() - make_interval(secs => $1)
+       RETURNING id, organization_id`,
+      [timeoutSec]
+    );
+    feedbackReset += orphans.rowCount ?? orphans.rows.length;
+    for (const row of orphans.rows) resourceIds.add(row.id);
+
+    // Ensure every reset feedback has a claimable analyze job
+    let jobsEnsured = 0;
+    const resetIds = [...resourceIds];
+    if (resetIds.length > 0) {
+      // Revive latest terminal/stale job for each feedback when no active job exists
+      const revived = await client.query(
+        `UPDATE background_jobs bj
+         SET status = 'queued',
+             locked_by = NULL,
+             locked_at = NULL,
+             available_at = now(),
+             completed_at = NULL,
+             updated_at = now(),
+             attempts = LEAST(bj.attempts, GREATEST(bj.max_attempts - 1, 0)),
+             last_error = COALESCE(bj.last_error, 'Requeued after stale lock recovery')
+         FROM (
+           SELECT DISTINCT ON (resource_id) id, resource_id
+           FROM background_jobs
+           WHERE job_type = 'analyze_feedback'
+             AND resource_id = ANY($1::uuid[])
+             AND status NOT IN ('queued', 'retrying', 'processing')
+           ORDER BY resource_id, created_at DESC
+         ) latest
+         WHERE bj.id = latest.id
+           AND NOT EXISTS (
+             SELECT 1 FROM background_jobs active
+             WHERE active.job_type = 'analyze_feedback'
+               AND active.resource_id = latest.resource_id
+               AND active.status IN ('queued', 'retrying', 'processing')
+           )
+         RETURNING bj.id`,
+        [resetIds]
+      );
+      jobsEnsured += revived.rowCount ?? revived.rows.length;
+
+      // Insert missing jobs for feedback with no analyze_feedback row at all
+      const inserted = await client.query(
+        `INSERT INTO background_jobs
+           (job_type, status, payload, organization_id, resource_type, resource_id, idempotency_key, max_attempts, available_at)
+         SELECT
+           'analyze_feedback',
+           'queued',
+           jsonb_build_object('feedbackId', f.id::text),
+           f.organization_id,
+           'feedback',
+           f.id,
+           'analyze:' || f.id::text || ':reclaim:' || extract(epoch from now())::bigint::text,
+           5,
+           now()
+         FROM feedbacks f
+         WHERE f.id = ANY($1::uuid[])
+           AND f.deleted_at IS NULL
+           AND NOT EXISTS (
+             SELECT 1 FROM background_jobs bj
+             WHERE bj.job_type = 'analyze_feedback'
+               AND bj.resource_id = f.id
+               AND bj.status IN ('queued', 'retrying', 'processing')
+           )
+         RETURNING id`,
+        [resetIds]
+      );
+      jobsEnsured += inserted.rowCount ?? inserted.rows.length;
+    }
+
+    await client.query('COMMIT');
+
+    const result: ReclaimStaleLocksResult = {
+      jobsReclaimed: jobsRes.rowCount ?? jobsRes.rows.length,
+      feedbackReset,
+      jobsEnsured,
+    };
+
+    if (result.jobsReclaimed > 0 || result.feedbackReset > 0 || result.jobsEnsured > 0) {
+      logger.warn('Reclaimed stale worker locks', {
+        ...result,
+        lockTimeoutSeconds: timeoutSec,
+      });
+    }
+
+    return result;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 export async function getQueueDepth(pool: Pool): Promise<{ queued: number; processing: number; dead: number }> {

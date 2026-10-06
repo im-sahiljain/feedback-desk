@@ -174,6 +174,14 @@ export const api = {
             }
             return response.json();
         },
+        getDashboard: async (productId: string, period: '7d' | '30d' | '90d' = '30d') => {
+            const url = `/api/analytics/dashboard?product_id=${encodeURIComponent(productId)}&period=${encodeURIComponent(period)}`;
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw await parseErrorResponse(response, 'Failed to fetch dashboard summary');
+            }
+            return response.json();
+        },
         getExecutiveBrief: async (
             productId: string,
             refresh = false,

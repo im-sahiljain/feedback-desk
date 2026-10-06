@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useApp } from "@/context/AppContext";
 import { AppLayout } from "@/components/layout/AppLayout";
 import {
@@ -74,10 +75,19 @@ function formatPeriodLabel(period: PeriodType): string {
   }
 }
 
-export default function Insights() {
+function InsightsContent() {
   const { currentProduct, isBootstrapping } = useApp();
+  const searchParams = useSearchParams();
+  const periodFromUrl = searchParams.get("period");
+  const initialPeriod: PeriodType =
+    periodFromUrl === "7d" ||
+    periodFromUrl === "30d" ||
+    periodFromUrl === "90d" ||
+    periodFromUrl === "today"
+      ? periodFromUrl
+      : "today";
 
-  const [selectedPeriod, setSelectedPeriod] = useState<PeriodType>("today");
+  const [selectedPeriod, setSelectedPeriod] = useState<PeriodType>(initialPeriod);
 
   const [feedback, setFeedback] = useState<Feedback[]>([]);
   const [executiveBrief, setExecutiveBrief] = useState<ExecutiveBrief | null>(
@@ -1185,5 +1195,21 @@ export default function Insights() {
         </>
       </div>
     </AppLayout>
+  );
+}
+
+export default function Insights() {
+  return (
+    <Suspense
+      fallback={
+        <AppLayout title="Insights">
+          <div className="flex h-[40vh] items-center justify-center text-sm text-muted-foreground">
+            Loading insights…
+          </div>
+        </AppLayout>
+      }
+    >
+      <InsightsContent />
+    </Suspense>
   );
 }

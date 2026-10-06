@@ -21,6 +21,20 @@ import { sanitizeForAi } from '../ai/sanitize.js';
 
 const router = express.Router();
 
+/** Accept `category=A`, `category=A,B`, or repeated `category` query params. */
+function parseCategoryFilter(raw: unknown): string[] {
+  if (raw == null) return [];
+  const parts = Array.isArray(raw) ? raw : [raw];
+  const out: string[] = [];
+  for (const part of parts) {
+    for (const piece of String(part).split(',')) {
+      const trimmed = piece.trim();
+      if (trimmed && trimmed.toLowerCase() !== 'all') out.push(trimmed);
+    }
+  }
+  return [...new Set(out)];
+}
+
 /**
  * Public opaque destination submit: POST /api/feedbacks/public/:token
  * Also supports legacy signed URL body for backwards compatibility.
@@ -278,9 +292,10 @@ router.get('/public/:token/meta', feedbackSubmitLimiter, async (req: Request, re
 
 router.get('/date-groups', authenticateUser as any, async (req: AuthenticatedRequest, res: Response) => {
   const productId = req.query.product_id as string;
-  const categoryFilter = req.query.category as string;
+  const categoryFilters = parseCategoryFilter(req.query.category);
   const sentimentFilter = req.query.sentiment as string;
   const priorityFilter = req.query.priority as string;
+  const statusFilter = req.query.status as string;
 
   if (!productId) return res.status(400).json({ error: 'product_id is required' });
 
@@ -293,9 +308,13 @@ router.get('/date-groups', authenticateUser as any, async (req: AuthenticatedReq
     const values: unknown[] = [productId];
     let paramIndex = 2;
 
-    if (categoryFilter && categoryFilter !== 'all') {
-      conditions.push(`($${paramIndex} = ANY(categories) OR category_name = $${paramIndex})`);
-      values.push(categoryFilter);
+    if (categoryFilters.length === 1) {
+      conditions.push(`category_name = $${paramIndex}`);
+      values.push(categoryFilters[0]);
+      paramIndex++;
+    } else if (categoryFilters.length > 1) {
+      conditions.push(`category_name = ANY($${paramIndex}::text[])`);
+      values.push(categoryFilters);
       paramIndex++;
     }
     if (sentimentFilter && sentimentFilter !== 'all') {
@@ -306,6 +325,11 @@ router.get('/date-groups', authenticateUser as any, async (req: AuthenticatedReq
     if (priorityFilter && priorityFilter !== 'all') {
       conditions.push(`LOWER(priority_label) LIKE LOWER($${paramIndex})`);
       values.push(`%${priorityFilter}%`);
+      paramIndex++;
+    }
+    if (statusFilter && statusFilter !== 'all') {
+      conditions.push(`processing_status = $${paramIndex}`);
+      values.push(statusFilter);
       paramIndex++;
     }
 
@@ -337,7 +361,7 @@ router.get('/date-groups', authenticateUser as any, async (req: AuthenticatedReq
 
 router.get('/', authenticateUser as any, async (req: AuthenticatedRequest, res: Response) => {
   const productId = req.query.product_id as string;
-  const categoryFilter = req.query.category as string;
+  const categoryFilters = parseCategoryFilter(req.query.category);
   const sentimentFilter = req.query.sentiment as string;
   const priorityFilter = req.query.priority as string;
   const statusFilter = req.query.status as string;
@@ -365,9 +389,13 @@ router.get('/', authenticateUser as any, async (req: AuthenticatedRequest, res: 
       values.push(dateParam);
       paramIndex++;
     }
-    if (categoryFilter && categoryFilter !== 'all') {
-      conditions.push(`($${paramIndex} = ANY(categories) OR category_name = $${paramIndex})`);
-      values.push(categoryFilter);
+    if (categoryFilters.length === 1) {
+      conditions.push(`category_name = $${paramIndex}`);
+      values.push(categoryFilters[0]);
+      paramIndex++;
+    } else if (categoryFilters.length > 1) {
+      conditions.push(`category_name = ANY($${paramIndex}::text[])`);
+      values.push(categoryFilters);
       paramIndex++;
     }
     if (sentimentFilter && sentimentFilter !== 'all') {

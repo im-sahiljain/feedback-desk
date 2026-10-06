@@ -17,6 +17,8 @@ export interface AppConfig {
   resendApiKey: string | null;
   resendFromEmail: string;
   workerConcurrency: number;
+  /** Seconds after which a processing job lock is considered abandoned (crashed worker). */
+  jobLockTimeoutSeconds: number;
   /** Non-production: print OTP to terminal and skip email delivery */
   devOtpToConsole: boolean;
 }
@@ -92,6 +94,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     resendApiKey: optionalEnv(env.RESEND_API_KEY),
     resendFromEmail: env.RESEND_FROM_EMAIL?.trim() || 'Feedback Desk <noreply@localhost>',
     workerConcurrency: Math.max(1, Number(env.WORKER_CONCURRENCY || 2)),
+    // Default 30 minutes — matches incident recovery guidance; override via JOB_LOCK_TIMEOUT_SECONDS
+    jobLockTimeoutSeconds: Math.max(
+      60,
+      Number(env.JOB_LOCK_TIMEOUT_SECONDS || 1800) || 1800
+    ),
     // Default on in development/test; set DEV_OTP_TO_CONSOLE=false to send real emails instead
     devOtpToConsole:
       nodeEnv !== 'production' && env.DEV_OTP_TO_CONSOLE !== 'false',

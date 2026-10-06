@@ -6,8 +6,37 @@ import { executiveBriefLimiter } from '../middleware/rateLimiters.js';
 import { requireProductAccess } from '../authz/access.js';
 import { toSafeClientError } from '../errors/httpError.js';
 import { logger } from '../logging/logger.js';
+import { buildDashboardSummary, isDashboardPeriod } from '../dashboard/summary.js';
 
 const router = express.Router();
+
+router.get('/dashboard', authenticateUser as any, async (req: AuthenticatedRequest, res: Response) => {
+  const productId = req.query.product_id as string;
+  const periodRaw = ((req.query.period as string) || '30d').toLowerCase();
+
+  if (!productId) {
+    return res.status(400).json({ error: 'product_id is required' });
+  }
+
+  if (!isDashboardPeriod(periodRaw)) {
+    return res.status(400).json({ error: 'period must be one of: 7d, 30d, 90d' });
+  }
+
+  const pool = getPool();
+  try {
+    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+    await requireProductAccess(pool, req.user.id, productId, 'analytics:read');
+
+    const payload = await buildDashboardSummary(pool, productId, periodRaw);
+    return res.json(payload);
+  } catch (err) {
+    logger.error('Dashboard summary error', {
+      error: err instanceof Error ? err.message : 'unknown',
+    });
+    const safe = toSafeClientError(err);
+    return res.status(safe.status).json(safe.body);
+  }
+});
 
 router.get('/summary', authenticateUser as any, async (req: AuthenticatedRequest, res: Response) => {
   const productId = req.query.product_id as string;

@@ -41,13 +41,22 @@ cd backend && npm run migrate
 
 ## Background jobs after restore
 
-Jobs live in `background_jobs`. After restore:
+Jobs live in `background_jobs`.
 
-- Jobs in `processing` with stale `locked_at` may need to be reset to `queued` / `retrying`.
-- Feedback rows with `processing_status = analyzing` should be moved back to `queued` and re-enqueued if needed.
-- Do **not** invent AI results; reprocess from stored original feedback text.
+### Automatic recovery (normal operation)
 
-Example recovery SQL (run only during incident recovery):
+Workers reclaim abandoned locks automatically:
+
+1. **On startup** — immediate stale-lock scan
+2. **While polling** — at most once per minute
+
+A job is stale when `status = 'processing'` and `locked_at` is older than `JOB_LOCK_TIMEOUT_SECONDS` (default **1800** = 30 minutes). Matching feedback stuck in `analyzing` is moved back to `queued`, and a claimable analyze job is ensured.
+
+No manual SQL is required for routine crashed-worker recovery.
+
+### Manual recovery (restore / incident only)
+
+After a DB restore or if automatic reclaim cannot run, you may still reset stuck rows:
 
 ```sql
 UPDATE background_jobs
@@ -58,6 +67,8 @@ UPDATE feedbacks
 SET processing_status = 'queued', status = 'queued', queued_at = now()
 WHERE processing_status = 'analyzing' AND analyzing_at < now() - interval '30 minutes';
 ```
+
+- Do **not** invent AI results; reprocess from stored original feedback text.
 
 ## Secrets are NOT stored in backups/config files
 

@@ -1,3 +1,5 @@
+import { INDUSTRY_CATEGORY_CATALOG } from "@/lib/industryCatalog";
+
 export type Industry =
   | "tech"
   | "healthcare"
@@ -192,6 +194,120 @@ export interface ExecutiveBrief {
   is_stale?: boolean;
 }
 
+export type DashboardPeriod = "7d" | "30d" | "90d";
+
+export interface DashboardChangeDelta {
+  absolute: number;
+  percent: number | null;
+  display: string;
+  direction: "up" | "down" | "flat" | "new";
+  meaningful: boolean;
+  smallSample: boolean;
+}
+
+export interface DashboardSummary {
+  period: {
+    key: DashboardPeriod;
+    label: string;
+    from: string;
+    to: string;
+    comparisonFrom: string;
+    comparisonTo: string;
+    comparisonLabel: string;
+  };
+  summary: {
+    feedbackCount: number;
+    feedbackCountChange: DashboardChangeDelta;
+    sentiment: {
+      positive: number;
+      neutral: number;
+      negative: number;
+      mixed: number;
+      analyzed: number;
+      positivePct: number | null;
+      negativePct: number | null;
+      mixedPct: number | null;
+      neutralPct: number | null;
+      direction: "improving" | "worsening" | "stable" | "insufficient";
+    };
+    negativeChange: DashboardChangeDelta;
+    needsAttention: {
+      total: number;
+      highPriority: number;
+      failedOrNeedsReview: number;
+    };
+    processing: {
+      received: number;
+      analyzed: number;
+      processing: number;
+      failed: number;
+      pending: number;
+    };
+  };
+  attention: Array<{
+    category: string;
+    feedbackCount: number;
+    negativeCount: number;
+    highPriorityCount: number;
+    change: DashboardChangeDelta;
+    severity: "high" | "medium" | "watch";
+    signal: string | null;
+    evidenceFeedbackId: string | null;
+    evidenceDateKey: string | null;
+  }>;
+  changes: Array<{
+    id: string;
+    direction: "up" | "down";
+    label: string;
+    detail: string;
+    category?: string;
+    change: DashboardChangeDelta;
+  }>;
+  topAreas: Array<{
+    category: string;
+    feedbackCount: number;
+    negativeCount: number;
+    highPriorityCount: number;
+    positiveCount: number;
+    change: DashboardChangeDelta;
+    signal: "worsening" | "improving" | "stable" | "watch" | "high_priority";
+  }>;
+  positiveSignals: Array<{
+    category: string;
+    positiveCount: number;
+    change: DashboardChangeDelta;
+  }>;
+  sentimentTrend: Array<{
+    bucket: string;
+    label: string;
+    positive: number;
+    neutral: number;
+    negative: number;
+    mixed: number;
+    total: number;
+  }>;
+  criticalFeedback: Array<{
+    id: string;
+    text: string;
+    sentiment: string | null;
+    priority: string | null;
+    category: string | null;
+    createdAt: string;
+    processingStatus: string | null;
+    summary: string | null;
+  }>;
+  brief: {
+    available: boolean;
+    headline: string | null;
+    whatIsHappening: string | null;
+    whyItMatters: string | null;
+    recommendedFocus: string | null;
+    healthStatus: string | null;
+    generatedAt: string | null;
+    supportingCategory: string | null;
+  } | null;
+}
+
 export const INDUSTRY_LABELS: Record<Industry, string> = {
   Technology: "Technology",
   Healthcare: "Healthcare",
@@ -212,35 +328,32 @@ export const INDUSTRY_ICONS: Record<Industry, string> = {
   Custom: "⚙️",
 };
 
-export const DEFAULT_CATEGORIES: Record<Industry, string[]> = {
-  tech: [
-    "Bug Report",
-    "Performance",
-    "Feature Request",
-    "UI/UX",
-    "Documentation",
-    "Security",
-  ],
-  healthcare: [
-    "Staff Behavior",
-    "Wait Time",
-    "Facilities",
-    "Treatment Quality",
-    "Billing",
-    "Hygiene",
-  ],
-  infrastructure: [
-    "Safety Concerns",
-    "Project Delays",
-    "Quality Issues",
-    "Communication",
-    "Cost Overrun",
-    "Environmental",
-  ],
+/** Default category suggestions per industry (synced with backend Industry_Master_Labels.json). */
+export const DEFAULT_CATEGORIES: Record<string, string[]> = {
+  ...INDUSTRY_CATEGORY_CATALOG,
+  Custom: ["General", "Suggestion", "Complaint", "Praise", "Question"],
+  // Legacy keys kept for older product rows / settings fallbacks
+  tech: INDUSTRY_CATEGORY_CATALOG.Technology,
+  healthcare: INDUSTRY_CATEGORY_CATALOG.Healthcare,
+  infrastructure: INDUSTRY_CATEGORY_CATALOG.Infrastructure,
   custom: ["General", "Suggestion", "Complaint", "Praise", "Question"],
 };
 
-export const DEFAULT_AI_PROMPTS: Record<Industry, string> = {
+export const DEFAULT_AI_PROMPTS: Record<string, string> = {
+  Technology:
+    "Analyze feedback focusing on technical issues, software bugs, performance problems, and feature suggestions. Prioritize security and critical bugs.",
+  Healthcare:
+    "Analyze feedback focusing on patient experience, staff interactions, facility conditions, and treatment quality. Prioritize patient safety concerns.",
+  Infrastructure:
+    "Analyze feedback focusing on construction quality, safety compliance, project timelines, and environmental impact. Prioritize safety issues.",
+  Education:
+    "Analyze feedback focusing on teaching quality, curriculum, facilities, and student support. Prioritize learning outcomes and safety.",
+  Retail:
+    "Analyze feedback focusing on product quality, delivery, payments, and customer service. Prioritize fulfillment and refund issues.",
+  Hospitality:
+    "Analyze feedback focusing on staff behavior, cleanliness, room quality, and guest experience. Prioritize safety and service failures.",
+  Custom:
+    "Analyze feedback and categorize based on sentiment, urgency, and actionability. Focus on identifying actionable insights.",
   tech: "Analyze feedback focusing on technical issues, software bugs, performance problems, and feature suggestions. Prioritize security and critical bugs.",
   healthcare:
     "Analyze feedback focusing on patient experience, staff interactions, facility conditions, and treatment quality. Prioritize patient safety concerns.",

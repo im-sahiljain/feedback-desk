@@ -1,29 +1,38 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  Suspense,
+  useCallback,
+} from "react";
+import { useSearchParams } from "next/navigation";
 import { useApp } from "@/context/AppContext";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
-  MessageSquare,
+  Loader2,
+  Star,
+  Mail,
+  ChevronRight,
+  ChevronLeft,
+  ArrowLeft,
   ThumbsUp,
   ThumbsDown,
   Minus,
-  Loader2,
-  Star,
-  Filter,
-  Calendar,
-  Clock,
-  ChevronDown,
-  ChevronUp,
-  Monitor,
-  Server,
-  BarChart3,
-  Search,
-  Lightbulb,
-  Mail,
+  RefreshCw,
+  ChevronsUpDown,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -34,380 +43,656 @@ import {
 import { Sentiment, Priority, Feedback } from "@/types";
 import { normalizeBackendFeedbacks } from "@/lib/normalization";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { cn } from "@/lib/utils";
 
 interface DateGroup {
   date_key: string;
   formatted_date: string;
   count: number;
-  positive_count: number;
-  negative_count: number;
-  neutral_count: number;
-  latest_time: string;
-  earliest_time: string;
 }
 
-// Single Feedback Card Component
-function FeedbackCard({ fb }: { fb: Feedback }) {
-  const analysis = fb.analysis;
+type ListRow =
+  | { kind: "date"; group: DateGroup }
+  | { kind: "item"; feedback: Feedback; dateKey: string }
+  | { kind: "loading"; dateKey: string };
 
-  const getAspectIcon = (category: string) => {
-    const value = category.toLowerCase();
+const PAGE_SIZE = 50;
 
-    if (
-      value.includes("ui") ||
-      value.includes("ux") ||
-      value.includes("frontend")
-    ) {
-      return Monitor;
+function toDateKey(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function formatDateLabel(dateKey: string): string {
+  const [y, m, d] = dateKey.split("-").map(Number);
+  if (!y || !m || !d) return dateKey;
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function extractPagination(raw: unknown): {
+  nextCursor: string | null;
+  hasMore: boolean;
+} {
+  if (!raw || typeof raw !== "object") {
+    return { nextCursor: null, hasMore: false };
+  }
+  const pagination = (raw as { pagination?: Record<string, unknown> })
+    .pagination;
+  if (!pagination) return { nextCursor: null, hasMore: false };
+  return {
+    nextCursor:
+      typeof pagination.next_cursor === "string"
+        ? pagination.next_cursor
+        : null,
+    hasMore: Boolean(pagination.has_more),
+  };
+}
+
+function parseCategoryQuery(raw: string | null): string[] {
+  if (!raw || raw === "all") return [];
+  return [
+    ...new Set(
+      raw
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0 && s !== "all"),
+    ),
+  ];
+}
+
+function productCategoryOptions(product: {
+  settings?: { categories?: unknown };
+  config?: { categories?: unknown };
+} | null): string[] {
+  if (!product) return [];
+  const fromSettings = product.settings?.categories;
+  const fromConfig = product.config?.categories;
+  const raw = Array.isArray(fromSettings)
+    ? fromSettings
+    : Array.isArray(fromConfig)
+      ? fromConfig
+      : [];
+  return [
+    ...new Set(
+      raw.filter((c): c is string => typeof c === "string" && c.trim().length > 0),
+    ),
+  ].sort();
+}
+
+function CategoryMultiSelect({
+  options,
+  selected,
+  onChange,
+}: {
+  options: string[];
+  selected: string[];
+  onChange: (next: string[]) => void;
+}) {
+  const label =
+    selected.length === 0
+      ? "All categories"
+      : selected.length === 1
+        ? selected[0]
+        : `${selected.length} categories`;
+
+  const toggle = (category: string) => {
+    if (selected.includes(category)) {
+      onChange(selected.filter((c) => c !== category));
+    } else {
+      onChange([...selected, category]);
     }
-
-    if (
-      value.includes("api") ||
-      value.includes("backend") ||
-      value.includes("error") ||
-      value.includes("payment")
-    ) {
-      return Server;
-    }
-
-    if (
-      value.includes("performance") ||
-      value.includes("speed") ||
-      value.includes("latency")
-    ) {
-      return BarChart3;
-    }
-
-    return MessageSquare;
   };
 
-  const sentimentStyles =
-    analysis?.sentiment === "positive"
-      ? "bg-emerald-500 text-white"
-      : analysis?.sentiment === "negative"
-        ? "bg-red-500 text-white"
-        : analysis?.sentiment === "mixed"
-          ? "bg-violet-500 text-white"
-          : "bg-amber-500 text-white";
-
-  const priorityStyles =
-    analysis?.priority === "high"
-      ? "bg-red-50 text-red-600 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-900"
-      : analysis?.priority === "low"
-        ? "bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-800"
-        : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-900";
-
   return (
-    <Card className="group overflow-hidden border-border/70 bg-card shadow-sm transition-all duration-200 hover:border-primary/20 hover:shadow-md mb-3">
-      <CardContent className="p-0">
-        {/* =========================================================
-            HEADER
-        ========================================================== */}
-        <div className="px-5 pt-5 pb-4">
-          <div className="flex items-start gap-4">
-            {/* Sentiment Icon */}
-            <div
-              className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${sentimentStyles} shadow-sm`}
-            >
-              {fb.isAnalyzing ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : analysis?.sentiment === "positive" ? (
-                <ThumbsUp className="h-5 w-5" />
-              ) : analysis?.sentiment === "negative" ? (
-                <ThumbsDown className="h-5 w-5" />
-              ) : analysis?.sentiment === "mixed" ? (
-                <MessageSquare className="h-5 w-5" />
-              ) : (
-                <Minus className="h-5 w-5" />
-              )}
-            </div>
-
-            {/* Main Content */}
-            <div className="min-w-0 flex-1">
-              {/* Feedback + Priority */}
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <p className="text-[15px] font-semibold leading-6 tracking-[-0.01em] text-foreground">
-                  {fb.text}
-                </p>
-
-                {analysis && !fb.isAnalyzing && (
-                  <Badge
-                    variant="outline"
-                    className={`w-fit shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold capitalize ${priorityStyles}`}
-                  >
-                    {analysis.priority} Priority
-                  </Badge>
-                )}
-              </div>
-
-              {/* AI Summary */}
-              {fb.isAnalyzing ? (
-                <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
-                  AI analysis in progress...
-                </div>
-              ) : analysis ? (
-                <>
-                  {analysis.summary && (
-                    <p className="mt-2 text-[13px] leading-5 text-muted-foreground">
-                      {analysis.summary}
-                    </p>
-                  )}
-
-                  {/* Classification */}
-                  <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                    {/* Sentiment */}
-                    <Badge
-                      className={`rounded-full px-2.5 py-1 text-[10px] font-semibold capitalize ${
-                        analysis.sentiment === "negative"
-                          ? "bg-red-500 text-white hover:bg-red-500"
-                          : analysis.sentiment === "positive"
-                            ? "bg-emerald-500 text-white hover:bg-emerald-500"
-                            : analysis.sentiment === "mixed"
-                              ? "bg-violet-500 text-white hover:bg-violet-500"
-                              : "bg-amber-500 text-white hover:bg-amber-500"
-                      }`}
-                    >
-                      {analysis.sentiment}
-                    </Badge>
-
-                    {/* Categories */}
-                    {fb.categories && fb.categories.length > 0 ? (
-                      fb.categories.map((cat, i) => (
-                        <Badge
-                          key={i}
-                          variant="outline"
-                          className="rounded-full border-border/70 bg-muted/30 px-2.5 py-1 text-[10px] font-medium text-muted-foreground"
-                        >
-                          {cat}
-                        </Badge>
-                      ))
-                    ) : (
-                      <Badge
-                        variant="outline"
-                        className="rounded-full border-border/70 bg-muted/30 px-2.5 py-1 text-[10px] font-medium"
-                      >
-                        {analysis.category}
-                      </Badge>
-                    )}
-                  </div>
-                </>
-              ) : null}
-            </div>
-          </div>
-        </div>
-
-        {/* =========================================================
-            AI ANALYSIS
-        ========================================================== */}
-        {analysis && !fb.isAnalyzing && (
-          <div className="border-t border-border/60 px-5 py-4">
-            {/* =====================================================
-                ASPECT BREAKDOWN
-            ====================================================== */}
-            {analysis.aspects && analysis.aspects.length > 0 && (
-              <div className="grid grid-cols-1 gap-2.5 md:grid-cols-3">
-                {analysis.aspects.map((asp, idx) => {
-                  const Icon = getAspectIcon(asp.category);
-
-                  const isCritical = asp.severity?.toLowerCase() === "critical";
-
-                  const isModerate = asp.severity?.toLowerCase() === "moderate";
-
-                  return (
-                    <div
-                      key={idx}
-                      className="rounded-xl border border-border/60 bg-muted/20 p-3.5"
-                    >
-                      <div className="flex items-start gap-2.5">
-                        {/* Aspect Icon */}
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-background text-muted-foreground shadow-sm ring-1 ring-border/50">
-                          <Icon className="h-4 w-4" />
-                        </div>
-
-                        <div className="min-w-0">
-                          {/* Aspect Header */}
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="text-[11px] font-semibold text-foreground">
-                              {asp.category}
-                            </span>
-
-                            {/* Severity */}
-                            {asp.severity && asp.severity !== "None" && (
-                              <span
-                                className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${
-                                  isCritical
-                                    ? "bg-red-100 text-red-600 dark:bg-red-950/40 dark:text-red-400"
-                                    : isModerate
-                                      ? "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
-                                      : "bg-muted text-muted-foreground"
-                                }`}
-                              >
-                                {asp.severity}
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Aspect Text */}
-                          <p className="mt-1.5 text-[11px] leading-4 text-muted-foreground">
-                            {asp.snippet
-                              ? `"${asp.snippet}"`
-                              : asp.sentiment || "Detected issue"}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* =====================================================
-                ROOT CAUSE HYPOTHESIS
-            ====================================================== */}
-            {(analysis.rootCauseHypotheses?.length || analysis.rootCause) && (
-              <div className="mt-3 rounded-xl border border-blue-200/70 bg-blue-50/50 p-3.5 dark:border-blue-900/50 dark:bg-blue-950/20">
-                <div className="flex gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
-                    <Search className="h-4 w-4" />
-                  </div>
-
-                  <div className="min-w-0 flex-1 space-y-2">
-                    <p className="text-[11px] font-bold uppercase tracking-wide text-blue-700 dark:text-blue-400">
-                      Root cause hypothesis
-                    </p>
-
-                    {analysis.rootCauseHypotheses && analysis.rootCauseHypotheses.length > 0 ? (
-                      analysis.rootCauseHypotheses.map((h, i) => (
-                        <div key={i} className="space-y-0.5">
-                          <p className="text-[12px] leading-5 text-muted-foreground">
-                            {h.hypothesis}
-                          </p>
-                          {h.confidence && (
-                            <p className="text-[10px] font-medium capitalize text-blue-600/80 dark:text-blue-400/80">
-                              Confidence: {h.confidence}
-                            </p>
-                          )}
-                        </div>
-                      ))
-                    ) : (
-                      <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
-                        {analysis.rootCause}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* =====================================================
-                RECOMMENDED NEXT STEPS
-            ====================================================== */}
-            {analysis.actionItems && analysis.actionItems.length > 0 && (
-              <div className="mt-3 rounded-xl border border-amber-200/70 bg-amber-50/50 p-3.5 dark:border-amber-900/50 dark:bg-amber-950/20">
-                <div className="flex gap-3">
-                  {/* Icon */}
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
-                    <Lightbulb className="h-4 w-4" />
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[11px] font-bold uppercase tracking-wide text-amber-700 dark:text-amber-400">
-                      Recommended Next Steps
-                    </p>
-
-                    <div className="mt-2 space-y-2">
-                      {analysis.actionItems.map((action, i) => (
-                        <div key={i} className="flex gap-2.5">
-                          {/* Number */}
-                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-200/70 text-[10px] font-bold text-amber-700 dark:bg-amber-900/60 dark:text-amber-300">
-                            {i + 1}
-                          </span>
-
-                          {/* Action */}
-                          <p className="text-[12px] leading-5 text-muted-foreground">
-                            {action}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-8 w-[180px] justify-between px-3 text-xs font-normal"
+          aria-label="Category filter"
+        >
+          <span className="truncate">{label}</span>
+          <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-[220px]">
+        <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+          Categories
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuCheckboxItem
+          checked={selected.length === 0}
+          onCheckedChange={() => onChange([])}
+          onSelect={(e) => e.preventDefault()}
+        >
+          All categories
+        </DropdownMenuCheckboxItem>
+        {options.length > 0 && <DropdownMenuSeparator />}
+        {options.map((category) => (
+          <DropdownMenuCheckboxItem
+            key={category}
+            checked={selected.includes(category)}
+            onCheckedChange={() => toggle(category)}
+            onSelect={(e) => e.preventDefault()}
+          >
+            {category}
+          </DropdownMenuCheckboxItem>
+        ))}
+        {options.length === 0 && (
+          <p className="px-2 py-1.5 text-xs text-muted-foreground">
+            No categories configured
+          </p>
         )}
-
-        {/* =========================================================
-            FOOTER METADATA
-        ========================================================== */}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border/60 px-5 py-3 text-[11px] text-muted-foreground">
-          {/* Rating */}
-          {fb.rating && fb.rating > 0 && (
-            <span className="flex items-center gap-1.5">
-              <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
-              <span className="font-medium">{fb.rating}/5</span>
-            </span>
-          )}
-
-          {/* Email */}
-          {fb.email && (
-            <span className="flex items-center gap-1.5">
-              <Mail className="h-3.5 w-3.5" />
-              {fb.email}
-            </span>
-          )}
-
-          {/* Time */}
-          <span className="flex items-center gap-1.5">
-            <Clock className="h-3.5 w-3.5" />
-
-            {new Date(fb.createdAt).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </span>
-        </div>
-      </CardContent>
-    </Card>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
-// Virtualized Feedback List Component for expanded tabs
-function VirtualizedFeedbackList({ items }: { items: Feedback[] }) {
-  const parentRef = useRef<HTMLDivElement>(null);
+function sentimentTextClass(sentiment?: string) {
+  switch (sentiment) {
+    case "positive":
+      return "text-emerald-600 dark:text-emerald-400";
+    case "negative":
+      return "text-red-600 dark:text-red-400";
+    case "mixed":
+      return "text-violet-600 dark:text-violet-400";
+    default:
+      return "text-muted-foreground";
+  }
+}
 
-  const virtualizer = useVirtualizer({
-    count: items.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 180,
-    overscan: 4,
+function priorityTextClass(priority?: string) {
+  switch (priority) {
+    case "high":
+      return "text-red-600 dark:text-red-400";
+    case "medium":
+      return "text-amber-700 dark:text-amber-400";
+    default:
+      return "text-muted-foreground";
+  }
+}
+
+function SentimentGlyph({
+  sentiment,
+  analyzing,
+  size = "md",
+}: {
+  sentiment?: string;
+  analyzing?: boolean;
+  size?: "sm" | "md";
+}) {
+  const iconClass = size === "sm" ? "h-3.5 w-3.5" : "h-5 w-5";
+  if (analyzing) {
+    return <Loader2 className={cn(iconClass, "animate-spin text-muted-foreground")} />;
+  }
+  if (sentiment === "positive") {
+    return <ThumbsUp className={cn(iconClass, "text-emerald-600 dark:text-emerald-400")} />;
+  }
+  if (sentiment === "negative") {
+    return <ThumbsDown className={cn(iconClass, "text-red-600 dark:text-red-400")} />;
+  }
+  return <Minus className={cn(iconClass, "text-muted-foreground")} />;
+}
+
+function formatListTime(date: Date) {
+  return date.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
   });
+}
 
-  if (items.length === 0) {
-    return (
-      <div className="p-8 text-center text-muted-foreground text-xs">
-        No feedback items match your active filters for this date.
-      </div>
-    );
-  }
-
-  // If item count is small (< 5), render directly without fixed scroll height for cleaner look
-  if (items.length <= 5) {
-    return (
-      <div className="p-3 space-y-3">
-        {items.map((fb) => (
-          <FeedbackCard key={fb.id} fb={fb} />
-        ))}
-      </div>
-    );
-  }
+function FeedbackListRow({
+  fb,
+  selected,
+  onSelect,
+}: {
+  fb: Feedback;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const sentiment = fb.analysis?.sentiment;
+  const priority = fb.analysis?.priority;
+  const primary =
+    fb.category || fb.analysis?.category || fb.categories?.[0] || null;
+  const allCategories = [
+    ...new Set(
+      [
+        ...(fb.categories || []),
+        ...(fb.analysis?.categories || []),
+        ...(primary ? [primary] : []),
+      ].filter(Boolean),
+    ),
+  ];
+  const extraCount = Math.max(0, allCategories.length - (primary ? 1 : 0));
 
   return (
-    <div
-      ref={parentRef}
-      className="max-h-[550px] overflow-y-auto p-3 space-y-3 border-t border-border/50 bg-background/50 scrollbar-thin"
+    <button
+      type="button"
+      onClick={onSelect}
+      className={cn(
+        "group flex w-full items-start gap-3 px-3 py-3.5 text-left transition-colors",
+        selected
+          ? "bg-muted"
+          : "hover:bg-muted/70",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
+      )}
+      aria-current={selected ? "true" : undefined}
     >
+      <span className="mt-0.5 shrink-0" aria-hidden>
+        <SentimentGlyph sentiment={sentiment} analyzing={fb.isAnalyzing} size="sm" />
+      </span>
+      <span className="min-w-0 flex-1 space-y-1.5">
+        <span className="flex items-baseline justify-between gap-2">
+          <span className="min-w-0 truncate text-sm">
+            <span
+              className={cn(
+                "font-semibold capitalize",
+                fb.isAnalyzing
+                  ? "text-muted-foreground"
+                  : sentimentTextClass(sentiment),
+              )}
+            >
+              {fb.isAnalyzing
+                ? "Analyzing"
+                : sentiment
+                  ? sentiment
+                  : "Unanalyzed"}
+            </span>
+            {priority && !fb.isAnalyzing && (
+              <span className={cn("capitalize", priorityTextClass(priority))}>
+                {" · "}
+                {priority} priority
+              </span>
+            )}
+            {primary && (
+              <span className="text-muted-foreground">
+                {" · "}
+                {primary}
+                {extraCount > 0 ? ` +${extraCount}` : ""}
+              </span>
+            )}
+          </span>
+          <span className="shrink-0 tabular-nums text-xs text-muted-foreground">
+            {formatListTime(new Date(fb.createdAt))}
+          </span>
+        </span>
+        <span className="line-clamp-1 text-[15px] font-normal leading-6 text-foreground">
+          {fb.text}
+        </span>
+      </span>
+      <ChevronRight
+        className={cn(
+          "mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground/40 transition-colors",
+          selected && "text-foreground/60",
+        )}
+        aria-hidden
+      />
+    </button>
+  );
+}
+
+function MetaPill({
+  label,
+  value,
+  valueClassName,
+  capitalize = true,
+}: {
+  label: string;
+  value: string;
+  valueClassName?: string;
+  capitalize?: boolean;
+}) {
+  return (
+    <div className="min-w-0 rounded-md bg-muted/50 px-3 py-2">
+      <p className="text-xs font-medium text-muted-foreground">{label}</p>
+      <p
+        className={cn(
+          "truncate text-base font-medium",
+          capitalize && "capitalize",
+          valueClassName,
+        )}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function FeedbackAnalysisSections({
+  analysis,
+}: {
+  analysis: NonNullable<Feedback["analysis"]>;
+}) {
+  const hypotheses =
+    analysis.rootCauseHypotheses && analysis.rootCauseHypotheses.length > 0
+      ? analysis.rootCauseHypotheses
+      : analysis.rootCause
+        ? [{ hypothesis: analysis.rootCause, confidence: undefined as string | undefined }]
+        : [];
+
+  return (
+    <div className="space-y-7">
+      {analysis.aspects && analysis.aspects.length > 0 && (
+        <section>
+          <h3 className="text-base font-semibold text-foreground">
+            Key findings
+          </h3>
+          <ul className="mt-3 divide-y divide-border/50">
+            {analysis.aspects.map((asp, idx) => {
+              const tone = asp.sentiment?.toLowerCase().includes("pos")
+                ? "positive"
+                : asp.sentiment?.toLowerCase().includes("neg")
+                  ? "negative"
+                  : "neutral";
+              return (
+                <li key={idx} className="py-3.5 first:pt-0 last:pb-0">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span className="text-base font-medium text-foreground">
+                      {asp.category}
+                    </span>
+                    {asp.severity && asp.severity !== "None" && (
+                      <span className="text-sm text-amber-700 dark:text-amber-400">
+                        {asp.severity} severity
+                      </span>
+                    )}
+                    {asp.sentiment && (
+                      <span
+                        className={cn(
+                          "text-sm capitalize",
+                          sentimentTextClass(tone),
+                        )}
+                      >
+                        {asp.sentiment}
+                      </span>
+                    )}
+                  </div>
+                  {asp.snippet && (
+                    <p className="mt-1.5 text-base leading-relaxed text-muted-foreground">
+                      “{asp.snippet}”
+                    </p>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
+      {hypotheses.length > 0 && (
+        <section>
+          <h3 className="text-base font-semibold text-foreground">
+            Likely cause
+          </h3>
+          <ul className="mt-3 space-y-3">
+            {hypotheses.map((h, i) => (
+              <li key={i} className="space-y-1">
+                <p className="text-base leading-relaxed text-foreground">
+                  {h.hypothesis}
+                </p>
+                {h.confidence && (
+                  <p className="text-sm text-muted-foreground">
+                    Confidence:{" "}
+                    <span className="capitalize">{h.confidence}</span>
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {analysis.actionItems && analysis.actionItems.length > 0 && (
+        <section>
+          <h3 className="text-base font-semibold text-foreground">
+            Suggested next steps
+          </h3>
+          <ol className="mt-3 list-decimal space-y-2.5 pl-5 text-base leading-relaxed text-foreground">
+            {analysis.actionItems.map((action, i) => (
+              <li key={i}>{action}</li>
+            ))}
+          </ol>
+        </section>
+      )}
+    </div>
+  );
+}
+
+function FeedbackDetail({ fb }: { fb: Feedback }) {
+  const analysis = fb.analysis;
+  const primaryCategory =
+    fb.category || analysis?.category || fb.categories?.[0] || null;
+  const allCategories = (() => {
+    const fromFb = fb.categories?.length
+      ? fb.categories
+      : analysis?.categories?.length
+        ? analysis.categories
+        : [];
+    const merged = [...fromFb];
+    if (primaryCategory && !merged.includes(primaryCategory)) {
+      merged.unshift(primaryCategory);
+    }
+    return [...new Set(merged.filter(Boolean))];
+  })();
+  const secondaryCategories = allCategories.filter(
+    (c) => c !== primaryCategory,
+  );
+  const hasAnalysis =
+    !!analysis &&
+    !fb.isAnalyzing &&
+    !!(
+      analysis.aspects?.length ||
+      analysis.rootCauseHypotheses?.length ||
+      analysis.rootCause ||
+      analysis.actionItems?.length
+    );
+
+  return (
+    <article className="mx-auto max-w-2xl space-y-7 text-base">
+      <header className="space-y-5">
+        {fb.isAnalyzing ? (
+          <div className="flex items-center gap-2 text-base text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Analyzing this feedback…
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+            <MetaPill
+              label="Sentiment"
+              value={analysis?.sentiment || "Unknown"}
+              valueClassName={sentimentTextClass(analysis?.sentiment)}
+            />
+            <MetaPill
+              label="Priority"
+              value={
+                analysis?.priority
+                  ? `${analysis.priority} priority`
+                  : "Unknown"
+              }
+              valueClassName={priorityTextClass(analysis?.priority)}
+            />
+            <MetaPill
+              label="Received"
+              value={new Date(fb.createdAt).toLocaleString([], {
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true,
+              })}
+              capitalize={false}
+            />
+          </div>
+        )}
+
+        {!fb.isAnalyzing && (
+          <section>
+            <h2 className="text-base font-semibold text-foreground">
+              Categories
+            </h2>
+            <div className="mt-2.5 flex flex-wrap gap-2">
+              {allCategories.length === 0 ? (
+                <span className="text-sm text-muted-foreground">
+                  Uncategorized
+                </span>
+              ) : (
+                <>
+                  {primaryCategory && (
+                    <span className="inline-flex items-center gap-1.5 rounded-md border border-border/70 bg-background px-2.5 py-1 text-sm text-foreground">
+                      {primaryCategory}
+                      <span className="text-xs text-muted-foreground">
+                        Primary
+                      </span>
+                    </span>
+                  )}
+                  {secondaryCategories.map((cat) => (
+                    <span
+                      key={cat}
+                      className="inline-flex items-center rounded-md border border-border/50 bg-muted/40 px-2.5 py-1 text-sm text-muted-foreground"
+                    >
+                      {cat}
+                    </span>
+                  ))}
+                </>
+              )}
+            </div>
+          </section>
+        )}
+
+        <section>
+          <h2 className="text-base font-semibold text-foreground">
+            Customer feedback
+          </h2>
+          <p className="mt-2 text-lg leading-8 text-foreground">
+            {fb.text}
+          </p>
+        </section>
+
+        {analysis?.summary && !fb.isAnalyzing && (
+          <section className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3.5">
+            <h2 className="text-sm font-semibold text-primary">AI Summary</h2>
+            <p className="mt-2 text-base leading-7 text-foreground">
+              {analysis.summary}
+            </p>
+          </section>
+        )}
+      </header>
+
+      {hasAnalysis && analysis && (
+        <>
+          <div className="border-t border-border/50" />
+
+          <details className="group md:hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between py-1 text-base font-semibold text-foreground [&::-webkit-details-marker]:hidden">
+              AI analysis
+              <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-90" />
+            </summary>
+            <div className="pt-4">
+              <FeedbackAnalysisSections analysis={analysis} />
+            </div>
+          </details>
+
+          <div className="hidden md:block">
+            <FeedbackAnalysisSections analysis={analysis} />
+          </div>
+        </>
+      )}
+
+      {(fb.rating || fb.email) && (
+        <footer className="flex flex-wrap items-center gap-x-5 gap-y-1.5 border-t border-border/50 pt-4 text-sm text-muted-foreground">
+          {fb.rating && fb.rating > 0 && (
+            <span className="inline-flex items-center gap-1.5">
+              <Star className="h-4 w-4 fill-amber-500 text-amber-500" />
+              <span>
+                Rating{" "}
+                <span className="font-medium text-foreground/80">
+                  {fb.rating}/5
+                </span>
+              </span>
+            </span>
+          )}
+          {fb.email && (
+            <span className="inline-flex max-w-full items-center gap-1.5 truncate">
+              <Mail className="h-4 w-4 shrink-0" />
+              <span className="truncate">{fb.email}</span>
+            </span>
+          )}
+        </footer>
+      )}
+    </article>
+  );
+}
+
+function FeedbackInboxList({
+  rows,
+  selectedId,
+  onSelect,
+  onNearEnd,
+}: {
+  rows: ListRow[];
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+  onNearEnd: () => void;
+}) {
+  const parentRef = useRef<HTMLDivElement>(null);
+  const scrolledSelectionRef = useRef<string | null>(null);
+  const rowsRef = useRef(rows);
+  rowsRef.current = rows;
+
+  const virtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: (index) => {
+      const row = rowsRef.current[index];
+      if (!row) return 88;
+      if (row.kind === "date") return 44;
+      if (row.kind === "loading") return 40;
+      return 80;
+    },
+    getItemKey: (index) => {
+      const row = rowsRef.current[index];
+      if (!row) return index;
+      if (row.kind === "item") return row.feedback.id;
+      if (row.kind === "date") return `date-${row.group.date_key}`;
+      return `${row.kind}-${row.dateKey}`;
+    },
+    overscan: 12,
+  });
+
+  const virtualItems = virtualizer.getVirtualItems();
+  const rangeEnd = virtualItems[virtualItems.length - 1]?.index ?? -1;
+
+  useEffect(() => {
+    if (rangeEnd < 0) return;
+    if (rangeEnd >= rows.length - 8) onNearEnd();
+  }, [rangeEnd, rows.length, onNearEnd]);
+
+  useEffect(() => {
+    if (!selectedId) {
+      scrolledSelectionRef.current = null;
+      return;
+    }
+    if (scrolledSelectionRef.current === selectedId) return;
+
+    const index = rows.findIndex(
+      (r) => r.kind === "item" && r.feedback.id === selectedId,
+    );
+    if (index < 0) return;
+
+    scrolledSelectionRef.current = selectedId;
+    virtualizer.scrollToIndex(index, { align: "auto" });
+  }, [selectedId, rows, virtualizer]);
+
+  return (
+    <div ref={parentRef} className="h-full overflow-y-auto scrollbar-thin">
       <div
         style={{
           height: `${virtualizer.getTotalSize()}px`,
@@ -415,22 +700,44 @@ function VirtualizedFeedbackList({ items }: { items: Feedback[] }) {
           position: "relative",
         }}
       >
-        {virtualizer.getVirtualItems().map((virtualItem) => {
-          const fb = items[virtualItem.index];
+        {virtualItems.map((virtualRow) => {
+          const row = rows[virtualRow.index];
           return (
             <div
-              key={fb.id}
+              key={virtualRow.key}
               ref={virtualizer.measureElement}
-              data-index={virtualItem.index}
+              data-index={virtualRow.index}
               style={{
                 position: "absolute",
                 top: 0,
                 left: 0,
                 width: "100%",
-                transform: `translateY(${virtualItem.start}px)`,
+                transform: `translateY(${virtualRow.start}px)`,
               }}
             >
-              <FeedbackCard fb={fb} />
+              {row.kind === "date" && (
+                <div className="flex items-center justify-between gap-2 px-3 pb-1.5 pt-4">
+                  <span className="truncate text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {row.group.formatted_date || row.group.date_key}
+                  </span>
+                  <span className="shrink-0 text-xs tabular-nums text-muted-foreground/80">
+                    {row.group.count}
+                  </span>
+                </div>
+              )}
+              {row.kind === "item" && (
+                <FeedbackListRow
+                  fb={row.feedback}
+                  selected={selectedId === row.feedback.id}
+                  onSelect={() => onSelect(row.feedback.id)}
+                />
+              )}
+              {row.kind === "loading" && (
+                <div className="flex items-center gap-2 px-3 py-2.5 text-[11px] text-muted-foreground">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Loading…
+                </div>
+              )}
             </div>
           );
         })}
@@ -439,148 +746,472 @@ function VirtualizedFeedbackList({ items }: { items: Feedback[] }) {
   );
 }
 
-export default function FeedbackPage() {
+function FeedbackPageContent() {
   const { currentProduct, isBootstrapping } = useApp();
-  const [dateGroups, setDateGroups] = useState<DateGroup[]>([]);
-  const [isGroupLoading, setIsGroupLoading] = useState(false);
+  const searchParams = useSearchParams();
 
-  // Filter States
+  const initialSentiment = searchParams.get("sentiment");
+  const initialPriority = searchParams.get("priority");
+  const initialCategory = searchParams.get("category");
+  const highlightId = searchParams.get("highlight");
+  const focusDateKey = searchParams.get("date");
+
   const [sentimentFilter, setSentimentFilter] = useState<Sentiment | "all">(
-    "all",
+    initialSentiment === "positive" ||
+      initialSentiment === "negative" ||
+      initialSentiment === "neutral" ||
+      initialSentiment === "mixed"
+      ? initialSentiment
+      : "all",
   );
-  const [priorityFilter, setPriorityFilter] = useState<Priority | "all">("all");
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
+  const [priorityFilter, setPriorityFilter] = useState<Priority | "all">(
+    initialPriority === "high" ||
+      initialPriority === "medium" ||
+      initialPriority === "low"
+      ? initialPriority
+      : "all",
+  );
+  const [categoryFilter, setCategoryFilter] = useState<string[]>(() =>
+    parseCategoryQuery(initialCategory),
+  );
+  const [statusFilter] = useState<string>(searchParams.get("status") || "all");
+  const [availableCategories, setAvailableCategories] = useState<string[]>(
+    () => {
+      const seed = parseCategoryQuery(initialCategory);
+      return seed;
+    },
+  );
 
-  // Accordion Expand/Collapse state: map of date_key -> boolean
-  const [openDates, setOpenDates] = useState<Record<string, boolean>>({});
+  const [items, setItems] = useState<Feedback[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [totalCount, setTotalCount] = useState(0);
+  const [selectedId, setSelectedId] = useState<string | null>(highlightId);
+  const [mobileShowDetail, setMobileShowDetail] = useState(!!highlightId);
 
-  // Lazy loaded feedback cache: date_key -> Feedback[]
-  const [feedbacksByDate, setFeedbacksByDate] = useState<
-    Record<string, Feedback[]>
-  >({});
-  const [loadingDates, setLoadingDates] = useState<Record<string, boolean>>({});
+  const loadingMoreRef = useRef(false);
+  const cursorRef = useRef<string | null>(null);
+  const hasMoreRef = useRef(false);
+  const refreshInFlightRef = useRef(false);
 
-  // Helper to fetch single date feedback
-  const fetchFeedbacksForDate = async (dateKey: string) => {
-    if (!currentProduct) return;
-    setLoadingDates((prev) => ({ ...prev, [dateKey]: true }));
-
-    try {
-      const queryParams = new URLSearchParams({
-        product_id: currentProduct.id,
-        date: dateKey,
-        sentiment: sentimentFilter,
-        priority: priorityFilter,
-        category: categoryFilter,
-      });
-
-      const res = await fetch(`/api/feedbacks?${queryParams.toString()}`);
-      if (!res.ok) {
-        console.error(
-          `Failed to fetch feedback for ${dateKey}`,
-          await res.text(),
-        );
-        setFeedbacksByDate((prev) => ({ ...prev, [dateKey]: [] }));
-        return;
-      }
-
-      const data = await res.json();
-      const mappedFeedback: Feedback[] = normalizeBackendFeedbacks(
-        data,
-        currentProduct.id,
-      );
-
-      setFeedbacksByDate((prev) => ({ ...prev, [dateKey]: mappedFeedback }));
-    } catch (err) {
-      console.error(`Error fetching feedback for ${dateKey}:`, err);
-    } finally {
-      setLoadingDates((prev) => ({ ...prev, [dateKey]: false }));
-    }
-  };
-
-  // Fetch Date Groups whenever product or filters change
-  useEffect(() => {
-    if (!currentProduct) return;
-    setIsGroupLoading(true);
-    // Reset loaded date cache when filters change
-    setFeedbacksByDate({});
-
+  const buildFilterParams = useCallback(() => {
+    if (!currentProduct) return null;
     const queryParams = new URLSearchParams({
       product_id: currentProduct.id,
       sentiment: sentimentFilter,
       priority: priorityFilter,
-      category: categoryFilter,
+      status: statusFilter,
+      limit: String(PAGE_SIZE),
     });
-
-    fetch(`/api/feedbacks/date-groups?${queryParams.toString()}`)
-      .then(async (res) => {
-        if (!res.ok) {
-          console.error("Failed to fetch date groups:", await res.text());
-          return [];
-        }
-        return res.json();
-      })
-      .then((groups: DateGroup[]) => {
-        const groupArray = Array.isArray(groups) ? groups : [];
-        setDateGroups(groupArray);
-
-        // Auto-expand the first date group by default
-        if (groupArray.length > 0) {
-          const firstKey = groupArray[0].date_key;
-          setOpenDates({ [firstKey]: true });
-          fetchFeedbacksForDate(firstKey);
-        } else {
-          setOpenDates({});
-        }
-      })
-      .catch(console.error)
-      .finally(() => setIsGroupLoading(false));
-  }, [currentProduct, sentimentFilter, priorityFilter, categoryFilter]);
-
-  // Fetch categories once on mount / product change
-  useEffect(() => {
-    if (currentProduct) {
-      fetch(`/api/feedbacks?product_id=${currentProduct.id}`)
-        .then(async (res) => {
-          if (!res.ok) return [];
-          return res.json();
-        })
-        .then((data) => {
-          if (Array.isArray(data)) {
-            const cats = new Set<string>();
-            data.forEach((f: any) => {
-              if (f.category_name) cats.add(f.category_name);
-              if (Array.isArray(f.categories))
-                f.categories.forEach((c: string) => cats.add(c));
-            });
-            setAvailableCategories([...cats].sort());
-          }
-        })
-        .catch(console.error);
+    if (categoryFilter.length === 0) {
+      queryParams.set("category", "all");
+    } else {
+      queryParams.set("category", categoryFilter.join(","));
     }
+    return queryParams;
+  }, [
+    currentProduct,
+    sentimentFilter,
+    priorityFilter,
+    categoryFilter,
+    statusFilter,
+  ]);
+
+  const fetchPage = useCallback(
+    async (cursor: string | null) => {
+      const queryParams = buildFilterParams();
+      if (!queryParams || !currentProduct) {
+        return { pageItems: [] as Feedback[], next: null as string | null, more: false };
+      }
+      if (cursor) queryParams.set("cursor", cursor);
+
+      const res = await fetch(`/api/feedbacks?${queryParams.toString()}`);
+      if (!res.ok) {
+        const body = await res.text();
+        throw new Error(
+          res.status === 429
+            ? "Too many requests — wait a moment and try again"
+            : `Failed to fetch feedback (${res.status}): ${body}`,
+        );
+      }
+
+      const data = await res.json();
+      const pageItems = normalizeBackendFeedbacks(data, currentProduct.id);
+      const { nextCursor: next, hasMore: more } = extractPagination(data);
+      return { pageItems, next, more };
+    },
+    [buildFilterParams, currentProduct],
+  );
+
+  const loadMore = useCallback(async () => {
+    if (!hasMoreRef.current || loadingMoreRef.current || !currentProduct) return;
+    if (refreshInFlightRef.current) return;
+    loadingMoreRef.current = true;
+    setIsLoadingMore(true);
+    setLoadError(null);
+
+    try {
+      const { pageItems, next, more } = await fetchPage(cursorRef.current);
+      setItems((prev) => {
+        const seen = new Set(prev.map((f) => f.id));
+        const merged = [...prev];
+        for (const item of pageItems) {
+          if (!seen.has(item.id)) merged.push(item);
+        }
+        return merged;
+      });
+      cursorRef.current = next;
+      hasMoreRef.current = more;
+      setHasMore(more);
+    } catch (err) {
+      console.error(err);
+      setLoadError(err instanceof Error ? err.message : "Failed to load more");
+    } finally {
+      loadingMoreRef.current = false;
+      setIsLoadingMore(false);
+    }
+  }, [currentProduct, fetchPage]);
+
+  const refreshInbox = useCallback(async () => {
+    if (!currentProduct || refreshInFlightRef.current || isInitialLoading) return;
+
+    refreshInFlightRef.current = true;
+    setIsRefreshing(true);
+    setLoadError(null);
+    loadingMoreRef.current = false;
+    cursorRef.current = null;
+    hasMoreRef.current = false;
+
+    try {
+      const groupParams = new URLSearchParams({
+        product_id: currentProduct.id,
+        sentiment: sentimentFilter,
+        priority: priorityFilter,
+        status: statusFilter,
+      });
+      if (categoryFilter.length === 0) {
+        groupParams.set("category", "all");
+      } else {
+        groupParams.set("category", categoryFilter.join(","));
+      }
+      const groupsRes = await fetch(
+        `/api/feedbacks/date-groups?${groupParams.toString()}`,
+      );
+      if (groupsRes.ok) {
+        const groups = await groupsRes.json();
+        if (Array.isArray(groups)) {
+          setTotalCount(
+            groups.reduce(
+              (acc: number, g: { count?: number }) => acc + (g.count || 0),
+              0,
+            ),
+          );
+        }
+      }
+
+      const { pageItems, next, more } = await fetchPage(null);
+      setItems(pageItems);
+      cursorRef.current = next;
+      hasMoreRef.current = more;
+      setHasMore(more);
+
+      setAvailableCategories((prev) => {
+        const cats = new Set<string>([
+          ...productCategoryOptions(currentProduct),
+          ...prev,
+          ...categoryFilter,
+        ]);
+        for (const fb of pageItems) {
+          fb.categories?.forEach((c) => cats.add(c));
+          if (fb.analysis?.category) cats.add(fb.analysis.category);
+          if (fb.category) cats.add(fb.category);
+        }
+        return [...cats].sort();
+      });
+
+      setSelectedId((prev) => {
+        if (prev && pageItems.some((f) => f.id === prev)) return prev;
+        return pageItems[0]?.id ?? null;
+      });
+    } catch (err) {
+      console.error(err);
+      setLoadError(
+        err instanceof Error ? err.message : "Failed to refresh feedback",
+      );
+    } finally {
+      refreshInFlightRef.current = false;
+      setIsRefreshing(false);
+    }
+  }, [
+    currentProduct,
+    isInitialLoading,
+    sentimentFilter,
+    priorityFilter,
+    categoryFilter,
+    statusFilter,
+    fetchPage,
+  ]);
+
+  // Initial load + filter changes
+  useEffect(() => {
+    if (!currentProduct) return;
+
+    let cancelled = false;
+    setIsInitialLoading(true);
+    setLoadError(null);
+    setItems([]);
+    setHasMore(false);
+    cursorRef.current = null;
+    hasMoreRef.current = false;
+    loadingMoreRef.current = false;
+    setSelectedId(highlightId);
+    setMobileShowDetail(!!highlightId);
+
+    const run = async () => {
+      try {
+        // Total count from date-groups (single request)
+        const groupParams = new URLSearchParams({
+          product_id: currentProduct.id,
+          sentiment: sentimentFilter,
+          priority: priorityFilter,
+          status: statusFilter,
+        });
+        if (categoryFilter.length === 0) {
+          groupParams.set("category", "all");
+        } else {
+          groupParams.set("category", categoryFilter.join(","));
+        }
+        const groupsRes = await fetch(
+          `/api/feedbacks/date-groups?${groupParams.toString()}`,
+        );
+        if (groupsRes.ok) {
+          const groups = await groupsRes.json();
+          if (!cancelled && Array.isArray(groups)) {
+            setTotalCount(
+              groups.reduce(
+                (acc: number, g: { count?: number }) => acc + (g.count || 0),
+                0,
+              ),
+            );
+          }
+        }
+
+        // Deep-link: load focus date first so the target item is available
+        if (focusDateKey || highlightId) {
+          const focusParams = buildFilterParams();
+          if (focusParams && focusDateKey) {
+            focusParams.set("date", focusDateKey);
+            focusParams.delete("limit");
+            const focusRes = await fetch(
+              `/api/feedbacks?${focusParams.toString()}`,
+            );
+            if (focusRes.ok && !cancelled) {
+              const focusData = await focusRes.json();
+              const focusItems = normalizeBackendFeedbacks(
+                focusData,
+                currentProduct.id,
+              );
+              setItems(focusItems);
+            }
+          }
+        }
+
+        if (cancelled) return;
+
+        const { pageItems, next, more } = await fetchPage(null);
+        if (cancelled) return;
+
+        setItems((prev) => {
+          if (prev.length === 0) return pageItems;
+          const seen = new Set(prev.map((f) => f.id));
+          const merged = [...prev];
+          for (const item of pageItems) {
+            if (!seen.has(item.id)) merged.push(item);
+          }
+          // Keep newest-first order
+          merged.sort(
+            (a, b) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+          );
+          return merged;
+        });
+        cursorRef.current = next;
+        hasMoreRef.current = more;
+        setHasMore(more);
+
+        if (!cancelled) {
+          setAvailableCategories((prev) => {
+            const cats = new Set<string>([
+              ...productCategoryOptions(currentProduct),
+              ...prev,
+              ...categoryFilter,
+            ]);
+            for (const fb of pageItems) {
+              fb.categories?.forEach((c) => cats.add(c));
+              if (fb.analysis?.category) cats.add(fb.analysis.category);
+              if (fb.category) cats.add(fb.category);
+            }
+            return [...cats].sort();
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        if (!cancelled) {
+          setLoadError(
+            err instanceof Error ? err.message : "Failed to load feedback",
+          );
+        }
+      } finally {
+        if (!cancelled) setIsInitialLoading(false);
+      }
+    };
+
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    currentProduct,
+    sentimentFilter,
+    priorityFilter,
+    categoryFilter,
+    statusFilter,
+    focusDateKey,
+    highlightId,
+    fetchPage,
+    buildFilterParams,
+  ]);
+
+  // Keep category options available from the product even when filters return no rows
+  useEffect(() => {
+    if (!currentProduct) return;
+    setAvailableCategories((prev) => {
+      const cats = new Set<string>([
+        ...productCategoryOptions(currentProduct),
+        ...prev,
+      ]);
+      return [...cats].sort();
+    });
   }, [currentProduct]);
 
-  // Toggle Tab Collapse/Expand
-  const toggleDateTab = (dateKey: string) => {
-    const isOpening = !openDates[dateKey];
-    setOpenDates((prev) => ({ ...prev, [dateKey]: isOpening }));
+  // Keep loading pages until highlight is found (bounded)
+  useEffect(() => {
+    if (!highlightId || isInitialLoading) return;
+    if (items.some((f) => f.id === highlightId)) return;
+    if (!hasMore || isLoadingMore) return;
+    void loadMore();
+  }, [
+    highlightId,
+    items,
+    hasMore,
+    isLoadingMore,
+    isInitialLoading,
+    loadMore,
+  ]);
 
-    if (isOpening && !feedbacksByDate[dateKey]) {
-      fetchFeedbacksForDate(dateKey);
+  const rows: ListRow[] = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const fb of items) {
+      const key = toDateKey(new Date(fb.createdAt));
+      counts.set(key, (counts.get(key) || 0) + 1);
     }
+
+    const out: ListRow[] = [];
+    let currentKey = "";
+    for (const fb of items) {
+      const key = toDateKey(new Date(fb.createdAt));
+      if (key !== currentKey) {
+        currentKey = key;
+        out.push({
+          kind: "date",
+          group: {
+            date_key: key,
+            formatted_date: formatDateLabel(key),
+            count: counts.get(key) || 0,
+          },
+        });
+      }
+      out.push({ kind: "item", feedback: fb, dateKey: key });
+    }
+    if (isLoadingMore) {
+      out.push({ kind: "loading", dateKey: "__more__" });
+    }
+    return out;
+  }, [items, isLoadingMore]);
+
+  useEffect(() => {
+    if (items.length === 0) return;
+
+    if (highlightId) {
+      const found = items.find((f) => f.id === highlightId);
+      if (found) {
+        setSelectedId(found.id);
+        return;
+      }
+    }
+
+    setSelectedId((prev) => {
+      if (prev && items.some((f) => f.id === prev)) return prev;
+      return items[0]?.id ?? null;
+    });
+  }, [items, highlightId]);
+
+  const selectedFeedback = items.find((f) => f.id === selectedId) ?? null;
+
+  const handleSelect = (id: string) => {
+    setSelectedId(id);
+    setMobileShowDetail(true);
   };
 
-  const totalItemsCount = dateGroups.reduce((acc, g) => acc + g.count, 0);
+  const selectRelative = useCallback(
+    (delta: number) => {
+      if (items.length === 0) return;
+      const idx = items.findIndex((f) => f.id === selectedId);
+      const next = Math.min(
+        items.length - 1,
+        Math.max(0, (idx < 0 ? 0 : idx) + delta),
+      );
+      setSelectedId(items[next].id);
+      setMobileShowDetail(true);
+    },
+    [items, selectedId],
+  );
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      if (e.key === "ArrowDown" || e.key === "j") {
+        e.preventDefault();
+        selectRelative(1);
+      } else if (e.key === "ArrowUp" || e.key === "k") {
+        e.preventDefault();
+        selectRelative(-1);
+      } else if (e.key === "Escape") {
+        setMobileShowDetail(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selectRelative]);
 
   if (isBootstrapping) {
     return (
-      <AppLayout title="Feedback">
-        <div className="flex items-center justify-center h-[60vh]">
-          <div className="text-center space-y-3 text-muted-foreground">
-            <div className="h-8 w-8 mx-auto rounded-full border-2 border-primary border-t-transparent animate-spin" />
-            <p className="text-sm">Loading…</p>
-          </div>
+      <AppLayout title="Feedback" fill>
+        <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Loading…
         </div>
       </AppLayout>
     );
@@ -588,13 +1219,12 @@ export default function FeedbackPage() {
 
   if (!currentProduct) {
     return (
-      <AppLayout title="Feedback">
-        <div className="flex items-center justify-center h-[60vh]">
-          <div className="text-center space-y-4">
-            <div className="text-6xl">📦</div>
-            <h2 className="text-xl font-semibold">No Product Selected</h2>
-            <p className="text-muted-foreground">
-              Select a product from the sidebar to view feedback
+      <AppLayout title="Feedback" fill>
+        <div className="flex flex-1 items-center justify-center">
+          <div className="max-w-sm text-center">
+            <h2 className="text-base font-semibold">No product selected</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Choose a product from the sidebar to view its feedback.
             </p>
           </div>
         </div>
@@ -604,214 +1234,209 @@ export default function FeedbackPage() {
 
   return (
     <AppLayout
-      title="Feedback Explorer"
-      description={`On-demand timeline & virtualized feedback for ${currentProduct.name}`}
+      title="Feedback"
+      description={`${currentProduct.name} · ${totalCount || items.length} items`}
+      fill
     >
-      <div className="space-y-5 max-w-5xl mx-auto">
-        {/* Filters Bar */}
-        <Card className="shadow-sm border border-border/80 bg-gradient-to-r from-card to-secondary/10">
-          <CardContent className="py-3.5 px-4">
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-primary" />
-                <span className="text-sm font-semibold tracking-tight">
-                  Filters:
-                </span>
-              </div>
-              <Select
-                value={sentimentFilter}
-                onValueChange={(value) =>
-                  setSentimentFilter(value as Sentiment | "all")
-                }
+      <div className="flex min-h-0 flex-1 flex-col gap-3">
+        <div
+          className={cn(
+            "shrink-0 flex-col gap-2 sm:flex-row sm:items-center",
+            mobileShowDetail ? "hidden md:flex" : "flex",
+          )}
+        >
+          <div className="flex flex-wrap items-center gap-2">
+            <Select
+              value={sentimentFilter}
+              onValueChange={(value) =>
+                setSentimentFilter(value as Sentiment | "all")
+              }
+            >
+              <SelectTrigger
+                className="h-8 w-[140px] text-xs"
+                aria-label="Sentiment filter"
               >
-                <SelectTrigger className="w-[150px] h-9 text-xs">
-                  <SelectValue placeholder="Sentiment" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Sentiment</SelectItem>
-                  <SelectItem value="positive">Positive</SelectItem>
-                  <SelectItem value="neutral">Neutral</SelectItem>
-                  <SelectItem value="negative">Negative</SelectItem>
-                  <SelectItem value="mixed">Mixed</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select
-                value={priorityFilter}
-                onValueChange={(value) =>
-                  setPriorityFilter(value as Priority | "all")
-                }
+                <SelectValue placeholder="Sentiment" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All sentiment</SelectItem>
+                <SelectItem value="positive">Positive</SelectItem>
+                <SelectItem value="neutral">Neutral</SelectItem>
+                <SelectItem value="negative">Negative</SelectItem>
+                <SelectItem value="mixed">Mixed</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              value={priorityFilter}
+              onValueChange={(value) =>
+                setPriorityFilter(value as Priority | "all")
+              }
+            >
+              <SelectTrigger
+                className="h-8 w-[130px] text-xs"
+                aria-label="Priority filter"
               >
-                <SelectTrigger className="w-[140px] h-9 text-xs">
-                  <SelectValue placeholder="Priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Priority</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select
-                value={categoryFilter}
-                onValueChange={(value) => setCategoryFilter(value)}
-              >
-                <SelectTrigger className="w-[180px] h-9 text-xs">
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {availableCategories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Badge
-                variant="secondary"
-                className="ml-auto font-mono text-xs px-2.5 py-1"
-              >
-                {isGroupLoading
-                  ? "Loading dates..."
-                  : `${totalItemsCount} Total Items across ${dateGroups.length} Days`}
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Collapsible Date and Time Accordion Tabs */}
-        {isGroupLoading ? (
-          <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="animate-pulse">
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div className="h-5 bg-muted rounded w-1/3" />
-                  <div className="h-5 bg-muted rounded w-24" />
-                </CardContent>
-              </Card>
-            ))}
+                <SelectValue placeholder="Priority" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All priority</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="low">Low</SelectItem>
+              </SelectContent>
+            </Select>
+            <CategoryMultiSelect
+              options={availableCategories}
+              selected={categoryFilter}
+              onChange={setCategoryFilter}
+            />
           </div>
-        ) : dateGroups.length === 0 ? (
-          <Card className="py-12 border-dashed">
-            <CardContent className="text-center">
-              <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
-              <h3 className="font-semibold text-base mb-1">
-                No Feedback Timeline Found
-              </h3>
-              <p className="text-xs text-muted-foreground">
-                No feedback records match your selected date or filter criteria.
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {dateGroups.map((group) => {
-              const isOpen = !!openDates[group.date_key];
-              const isLoadingDate = !!loadingDates[group.date_key];
-              const dateItems = feedbacksByDate[group.date_key] || [];
-
-              return (
-                <Card
-                  key={group.date_key}
-                  className={`overflow-hidden transition-all border ${
-                    isOpen
-                      ? "border-primary/40 shadow-sm"
-                      : "border-border/80 hover:border-primary/20"
-                  }`}
-                >
-                  {/* Collapsible Header Button */}
-                  <button
-                    onClick={() => toggleDateTab(group.date_key)}
-                    className="w-full text-left p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-card hover:bg-muted/30 transition-colors focus:outline-none"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 text-primary shrink-0">
-                        <Calendar className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-sm font-bold text-foreground">
-                            {group.formatted_date ||
-                              group.date_key ||
-                              "Date Pending"}
-                          </h3>
-                          <Badge
-                            variant="outline"
-                            className="text-[11px] font-mono px-2 py-0"
-                          >
-                            {group.count} {group.count === 1 ? "item" : "items"}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                          <Clock className="h-3 w-3" />
-                          <span>
-                            Timeline:{" "}
-                            {group.earliest_time && group.latest_time
-                              ? `${group.earliest_time} - ${group.latest_time}`
-                              : "All Day"}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Sentiment Breakdown Badges & Collapse Trigger Chevron */}
-                    <div className="flex items-center gap-2 shrink-0">
-                      <div className="flex items-center gap-1.5 text-xs">
-                        {group.positive_count > 0 && (
-                          <Badge
-                            variant="secondary"
-                            className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] px-1.5 py-0 border-emerald-500/20"
-                          >
-                            👍 {group.positive_count}
-                          </Badge>
-                        )}
-                        {group.neutral_count > 0 && (
-                          <Badge
-                            variant="secondary"
-                            className="bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] px-1.5 py-0 border-amber-500/20"
-                          >
-                            ➖ {group.neutral_count}
-                          </Badge>
-                        )}
-                        {group.negative_count > 0 && (
-                          <Badge
-                            variant="secondary"
-                            className="bg-destructive/10 text-destructive text-[10px] px-1.5 py-0 border-destructive/20"
-                          >
-                            👎 {group.negative_count}
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="p-1 rounded-md bg-secondary/50 text-secondary-foreground ml-1">
-                        {isOpen ? (
-                          <ChevronUp className="h-4 w-4 transition-transform" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4 transition-transform" />
-                        )}
-                      </div>
-                    </div>
-                  </button>
-
-                  {/* Collapsible Content Area */}
-                  {isOpen && (
-                    <div>
-                      {isLoadingDate ? (
-                        <div className="p-6 text-center text-xs text-muted-foreground flex items-center justify-center gap-2 border-t border-border/40 bg-muted/10">
-                          <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                          Fetching feedback timeline for {group.formatted_date}
-                          ...
-                        </div>
-                      ) : (
-                        <VirtualizedFeedbackList items={dateItems} />
-                      )}
-                    </div>
-                  )}
-                </Card>
-              );
-            })}
+          <div className="flex items-center gap-2 sm:ml-auto">
+            <p className="text-[11px] text-muted-foreground">
+              {isInitialLoading
+                ? "Loading…"
+                : isRefreshing
+                  ? "Refreshing…"
+                  : `${items.length}${hasMore ? "+" : ""} loaded`}
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1.5 px-2.5 text-xs"
+              onClick={() => void refreshInbox()}
+              disabled={isInitialLoading || isRefreshing}
+              aria-label="Refresh feedback"
+            >
+              <RefreshCw
+                className={cn(
+                  "h-3.5 w-3.5",
+                  isRefreshing && "animate-spin",
+                )}
+              />
+              Refresh
+            </Button>
           </div>
+        </div>
+
+        {loadError && (
+          <p className="text-xs text-destructive">{loadError}</p>
         )}
+
+        <div className="grid min-h-0 flex-1 overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm md:grid-cols-[minmax(17rem,24rem)_minmax(0,1fr)]">
+          <aside
+            className={cn(
+              "min-h-0 md:border-r md:border-border/60",
+              mobileShowDetail ? "hidden md:block" : "block",
+            )}
+          >
+            {isInitialLoading ? (
+              <div className="flex h-full items-center justify-center gap-2 text-xs text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading timeline…
+              </div>
+            ) : items.length === 0 ? (
+              <div className="flex h-full items-center justify-center px-6 text-center text-xs text-muted-foreground">
+                No feedback matches your filters.
+              </div>
+            ) : (
+              <FeedbackInboxList
+                rows={rows}
+                selectedId={selectedId}
+                onSelect={handleSelect}
+                onNearEnd={loadMore}
+              />
+            )}
+          </aside>
+
+          <section
+            className={cn(
+              "min-h-0 overflow-y-auto",
+              mobileShowDetail ? "block" : "hidden md:block",
+            )}
+          >
+            <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-border/60 bg-card/95 px-3 py-2 backdrop-blur-sm md:hidden">
+              <button
+                type="button"
+                onClick={() => setMobileShowDetail(false)}
+                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                Inbox
+              </button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={() => void refreshInbox()}
+                disabled={isInitialLoading || isRefreshing}
+                aria-label="Refresh feedback"
+              >
+                <RefreshCw
+                  className={cn(
+                    "h-3.5 w-3.5",
+                    isRefreshing && "animate-spin",
+                  )}
+                />
+              </Button>
+            </div>
+
+            {selectedFeedback ? (
+              <div className="px-4 py-4 md:px-8 md:py-7">
+                <div className="mb-4 hidden items-center justify-between md:flex">
+                  <button
+                    type="button"
+                    onClick={() => selectRelative(-1)}
+                    disabled={!selectedId || items[0]?.id === selectedId}
+                    className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted disabled:opacity-40"
+                    aria-label="Previous feedback"
+                  >
+                    <ChevronLeft className="h-3.5 w-3.5" />
+                    Prev
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => selectRelative(1)}
+                    disabled={
+                      !selectedId ||
+                      items[items.length - 1]?.id === selectedId
+                    }
+                    className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted disabled:opacity-40"
+                    aria-label="Next feedback"
+                  >
+                    Next
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                <FeedbackDetail fb={selectedFeedback} />
+              </div>
+            ) : (
+              <div className="flex h-full min-h-[16rem] items-center justify-center px-6 text-center text-sm text-muted-foreground">
+                {isInitialLoading
+                  ? "Loading…"
+                  : "Select a feedback item from the list"}
+              </div>
+            )}
+          </section>
+        </div>
       </div>
     </AppLayout>
+  );
+}
+
+export default function FeedbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <AppLayout title="Feedback" fill>
+          <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+            Loading feedback…
+          </div>
+        </AppLayout>
+      }
+    >
+      <FeedbackPageContent />
+    </Suspense>
   );
 }
