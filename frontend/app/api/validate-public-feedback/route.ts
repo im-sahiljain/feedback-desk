@@ -4,8 +4,17 @@ import { verifyParams } from '@/lib/crypto';
 
 export async function POST(request: Request) {
     try {
-        const body = await request.json();
-        const { productId, userId, industry, signature } = body;
+        let body: any;
+        try {
+            body = await request.json();
+        } catch {
+            return NextResponse.json(
+                { valid: false, message: 'Invalid JSON payload' },
+                { status: 400 }
+            );
+        }
+
+        const { productId, userId, industry, signature } = body || {};
 
         // 1. Basic Parameter Presence Check
         if (!productId || !userId || !industry || !signature) {

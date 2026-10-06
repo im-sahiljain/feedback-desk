@@ -22,9 +22,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { INDUSTRY_ICONS, INDUSTRY_LABELS, Product } from "@/types";
-import { Plus, Package, Link, QrCode, Share2, Copy, Loader2 } from "lucide-react";
+import { Plus, Package, Link, QrCode, Share2, Copy, Loader2, RefreshCw } from "lucide-react";
 import { CreateProductDialog } from "@/components/products/create-product-dialog";
 import { toast } from "@/hooks/use-toast";
+import { formatFriendlyDate } from "@/lib/dates";
 import { QRCodeSVG } from "qrcode.react";
 
 function ProductsContent() {
@@ -33,6 +34,7 @@ function ProductsContent() {
   const [qrProduct, setQrProduct] = useState<Product | null>(null);
   const [qrUrl, setQrUrl] = useState<string>("");
   const [isGeneratingQr, setIsGeneratingQr] = useState<boolean>(false);
+  const [isRegenerating, setIsRegenerating] = useState<boolean>(false);
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -55,16 +57,14 @@ function ProductsContent() {
     refreshProducts();
   };
 
-  const getProductSignedUrl = async (product: Product): Promise<string> => {
-    const response = await fetch("/api/products/sign-link", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        productId: product.id,
-        industry: product.industry,
-      }),
-    });
+  /** Prefer long-lived opaque /f/{token} public links over legacy signed URLs. */
+  const getProductPublicUrl = async (product: Product): Promise<string> => {
+    const existingPath = product.public_feedback_path;
+    if (existingPath && typeof existingPath === "string") {
+      return `${window.location.origin}${existingPath.startsWith("/") ? existingPath : `/${existingPath}`}`;
+    }
 
+    const response = await fetch(`/api/products/${product.id}/public-link`);
     if (!response.ok) {
       if (response.status === 401) {
         toast({
@@ -74,29 +74,49 @@ function ProductsContent() {
         });
         throw new Error("Authentication required");
       }
-      throw new Error("Failed to sign link");
+      if (response.status === 404) {
+        // No active link — regenerate one
+        const regen = await fetch(`/api/products/${product.id}/public-link/regenerate`, {
+          method: "POST",
+        });
+        if (!regen.ok) {
+          throw new Error("Failed to create public link");
+        }
+        const regenData = await regen.json();
+        const path = regenData.path || (regenData.token ? `/f/${regenData.token}` : null);
+        if (!path) throw new Error("Failed to create public link");
+        return `${window.location.origin}${path}`;
+      }
+      throw new Error("Failed to fetch public link");
     }
 
-    const { signature, userId } = await response.json();
-    return `${window.location.origin}/submit-feedback/${product.id}/${userId}/${product.industry}?sig=${signature}`;
+    const data = await response.json();
+    const path = data.path || (data.token ? `/f/${data.token}` : null);
+    if (!path) throw new Error("Public link missing from response");
+    return `${window.location.origin}${path}`;
   };
 
   const handleCopyLink = async (product: Product) => {
     try {
-      const url = await getProductSignedUrl(product);
+      const url = await getProductPublicUrl(product);
       await navigator.clipboard.writeText(url);
       toast({
         title: "Link copied",
-        description: "The feedback link has been copied. Share it with your users.",
+        description: "Long-lived feedback link copied. Share it with your users.",
       });
     } catch (error) {
-      console.error("Failed to copy signed link:", error);
+      console.error("Failed to copy public link:", error);
+      toast({
+        title: "Error",
+        description: "Failed to copy feedback link.",
+        variant: "destructive",
+      });
     }
   };
 
   const handleShareOS = async (product: Product) => {
     try {
-      const url = await getProductSignedUrl(product);
+      const url = await getProductPublicUrl(product);
       if (typeof navigator !== "undefined" && navigator.share) {
         await navigator.share({
           title: product.name,
@@ -126,13 +146,56 @@ function ProductsContent() {
     setQrProduct(product);
     setIsGeneratingQr(true);
     try {
-      const url = await getProductSignedUrl(product);
+      const url = await getProductPublicUrl(product);
       setQrUrl(url);
     } catch (error) {
       console.error("Failed to generate QR code:", error);
       setQrProduct(null);
+      toast({
+        title: "Error",
+        description: "Failed to generate QR code.",
+        variant: "destructive",
+      });
     } finally {
       setIsGeneratingQr(false);
+    }
+  };
+
+  const handleRegenerateLink = async () => {
+    if (!qrProduct) return;
+    const confirmed = window.confirm(
+      "Regenerate this feedback link? The current link will stop working immediately."
+    );
+    if (!confirmed) return;
+
+    setIsRegenerating(true);
+    try {
+      const response = await fetch(
+        `/api/products/${qrProduct.id}/public-link/regenerate`,
+        { method: "POST" }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to regenerate link");
+      }
+      const data = await response.json();
+      const path = data.path || (data.token ? `/f/${data.token}` : null);
+      if (!path) throw new Error("Missing path in regenerate response");
+      const url = `${window.location.origin}${path}`;
+      setQrUrl(url);
+      toast({
+        title: "Link regenerated",
+        description: "Previous link is now inactive. Copy the new link to share.",
+      });
+      refreshProducts();
+    } catch (error) {
+      console.error("Failed to regenerate link:", error);
+      toast({
+        title: "Error",
+        description: "Failed to regenerate public link.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRegenerating(false);
     }
   };
 
@@ -254,7 +317,7 @@ function ProductsContent() {
                   <span>
                     Created{" "}
                     {product.created_at
-                      ? new Date(product.created_at).toLocaleDateString()
+                      ? formatFriendlyDate(product.created_at)
                       : "recently"}
                   </span>
                 </CardFooter>
@@ -273,7 +336,7 @@ function ProductsContent() {
                   {qrProduct.name} QR Code
                 </DialogTitle>
                 <DialogDescription className="text-xs">
-                  Scan this QR code with any mobile camera to open the feedback form.
+                  Scan this QR code with any mobile camera to open the feedback form. Link does not expire.
                 </DialogDescription>
               </DialogHeader>
 
@@ -312,6 +375,21 @@ function ProductsContent() {
                   <Copy className="h-3.5 w-3.5" /> Copy
                 </Button>
               </div>
+
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={handleRegenerateLink}
+                disabled={isRegenerating || isGeneratingQr || !qrUrl}
+                className="w-full mt-2 text-xs gap-1.5"
+              >
+                {isRegenerating ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-3.5 w-3.5" />
+                )}
+                Regenerate link
+              </Button>
             </DialogContent>
           )}
         </Dialog>

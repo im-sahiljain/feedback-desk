@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: feedback
+          POSTGRES_PASSWORD: feedback
+          POSTGRES_DB: feedback_desk_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U feedback -d feedback_desk_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://feedback:feedback@localhost:5432/feedback_desk_test
+      JWT_SECRET: ci-test-jwt-secret-with-enough-length-32
+      OTP_HMAC_SECRET: ci-test-otp-hmac-secret-enough-len-32
+      LINK_SECRET: ci-test-link-secret-with-enough-len-32
+      DATABASE_SSL: "false"
+      DB_SSL_REJECT_UNAUTHORIZED: "false"
+      EXPOSE_OTP_FOR_TESTS: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run migrate
+      - run: npm test
+      - run: npm run test:integration
+      - run: npm run build
+      - run: npm audit --audit-level=critical || true
+      - name: Verify packaging excludes secrets
+        run: |
+          ! test -f .env || (echo ".env must not be packaged" && exit 1)
+          grep -R "feedback-desk-jwt-access-secret" src && exit 1 || true
+          grep -R "\[OTP VERIFICATION\]" src && exit 1 || true
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      BACKEND_API_URL: http://localhost:5000
+      LINK_SECRET: ci-test-link-secret-with-enough-len-32
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build

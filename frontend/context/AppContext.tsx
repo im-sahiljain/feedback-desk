@@ -20,6 +20,8 @@ interface AppContextType {
   setCurrentProduct: (product: Product | null) => void;
   isLoadingProduct: boolean;
   setIsLoadingProduct: (loading: boolean) => void;
+  /** True until auth + initial products resolve — avoid empty-state flashes */
+  isBootstrapping: boolean;
 
   // Products List
   products: Product[];
@@ -32,83 +34,104 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-export function AppProvider({ children }: { children: ReactNode }) {
+const isPublicPath = (pathname: string) =>
+  pathname === '/login' ||
+  pathname === '/signup' ||
+  pathname.startsWith('/submit-feedback') ||
+  pathname.startsWith('/f/');
 
+export function AppProvider({ children }: { children: ReactNode }) {
   const { setTheme, resolvedTheme } = useTheme();
   const pathname = usePathname();
 
-  // Use resolvedTheme to correctly identify if we are in dark mode (handles system preference)
   const isDarkMode = resolvedTheme === 'dark';
 
   const [products, setProducts] = useState<Product[]>([]);
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
   const [isLoadingProduct, setIsLoadingProduct] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [productsChecked, setProductsChecked] = useState(false);
+
+  const onPublicRoute = isPublicPath(pathname);
+  const isBootstrapping =
+    !onPublicRoute && (!authChecked || (user !== null && !productsChecked));
 
   const fetchUser = useCallback(() => {
-    fetch('/api/auth/me')
-      .then(res => res.json())
-      .then(data => {
+    return fetch('/api/auth/me')
+      .then((res) => res.json())
+      .then((data) => {
         if (data.user) {
           setUser(data.user);
+          // Force a products load for this session
+          setProductsChecked(false);
         } else {
           setUser(null);
+          setProducts([]);
+          setCurrentProduct(null);
+          setProductsChecked(true);
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error('Failed to fetch user:', err);
         setUser(null);
+        setProducts([]);
+        setCurrentProduct(null);
+        setProductsChecked(true);
+      })
+      .finally(() => {
+        setAuthChecked(true);
       });
   }, []);
 
-  // Fetch user data once on mount only (excluding public auth pages)
+  // Auth check on protected routes; skip bootstrap on public pages
   useEffect(() => {
-    if (pathname === '/login' || pathname === '/signup') {
+    if (onPublicRoute) {
+      setAuthChecked(true);
       return;
     }
-    fetchUser();
+    if (!authChecked) {
+      fetchUser();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [onPublicRoute]);
 
   const refreshProducts = useCallback(() => {
     setIsLoadingProduct(true);
-    fetch('/api/products')
-      .then(res => res.json())
-      .then(data => {
-        // Ensure data is an array before setting
+    return fetch('/api/products')
+      .then((res) => res.json())
+      .then((data) => {
         if (Array.isArray(data)) {
           setProducts(data);
-
-          // Only set first product if none selected
-          setCurrentProduct(prev => {
+          setCurrentProduct((prev) => {
             if (!prev && data.length > 0) {
               return data[0];
+            }
+            if (prev && !data.some((p: Product) => p.id === prev.id)) {
+              return data[0] || null;
             }
             return prev;
           });
         } else {
           console.error('Products API did not return an array:', data);
-          setProducts([]); // Ensure products is always an array
+          setProducts([]);
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error('Failed to fetch products:', err);
-        setProducts([]); // Ensure products is always an array even on error
+        setProducts([]);
       })
       .finally(() => {
         setIsLoadingProduct(false);
+        setProductsChecked(true);
       });
   }, []);
 
-  // Fetch products when user is set
+  // Fetch products once user is known
   useEffect(() => {
-    if (user) {
-      refreshProducts();
-    } else {
-      setProducts([]);
-      setCurrentProduct(null);
-    }
-  }, [user, refreshProducts]);
+    if (!authChecked || !user || productsChecked) return;
+    refreshProducts();
+  }, [user, authChecked, productsChecked, refreshProducts]);
 
   const toggleDarkMode = useCallback(() => {
     setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
@@ -121,6 +144,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setCurrentProduct,
     isLoadingProduct,
     setIsLoadingProduct,
+    isBootstrapping,
     products,
     user,
     refetchUser: fetchUser,

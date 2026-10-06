@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
+import { authorizedBackendFetch } from '@/lib/bffAuth';
 
 export async function GET(request: Request) {
     try {
@@ -12,30 +10,30 @@ export async function GET(request: Request) {
             return NextResponse.json({ message: 'Product ID is required' }, { status: 400 });
         }
 
-        const cookieStore = await cookies();
-        const token = cookieStore.get('token')?.value;
+        const { response, unauthorized, applyAuthCookies } = await authorizedBackendFetch(
+            `/api/analytics/executive-brief?${searchParams.toString()}`
+        );
 
-        if (!token) {
-            return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+        if (unauthorized || !response) {
+            const errorResponse = NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+            applyAuthCookies(errorResponse);
+            return errorResponse;
         }
-
-        const response = await fetch(`${API_BASE_URL}/api/analytics/executive-brief?${searchParams.toString()}`, {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
-        });
 
         if (!response.ok) {
             const errData = await response.json().catch(() => ({}));
-            return NextResponse.json(
+            const errorResponse = NextResponse.json(
                 { message: errData.error || 'Failed to fetch executive brief' },
                 { status: response.status }
             );
+            applyAuthCookies(errorResponse);
+            return errorResponse;
         }
 
         const data = await response.json();
-        return NextResponse.json(data);
+        const nextResponse = NextResponse.json(data);
+        applyAuthCookies(nextResponse);
+        return nextResponse;
     } catch (error) {
         console.error('Executive Brief Proxy Error:', error);
         return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });

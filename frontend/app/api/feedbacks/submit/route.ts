@@ -1,32 +1,66 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
+import { verifyParams } from '@/lib/crypto';
+import { getBackendApiUrl } from '@/lib/bffAuth';
 
 export async function POST(request: Request) {
     try {
-        const body = await request.json();
+        let body: any;
+        try {
+            body = await request.json();
+        } catch {
+            return NextResponse.json({ message: 'Invalid JSON payload' }, { status: 400 });
+        }
 
-        // console.log('Feedback Submit Request:', body);
+        if (!body || typeof body !== 'object') {
+            return NextResponse.json({ message: 'Request body must be an object' }, { status: 400 });
+        }
 
-        // Transform payload to match backend schema exactly
+        const productId = body.productId ?? body.product_id;
+        const userId = body.userId ?? body.user_id;
+        const industry = body.industry;
+        const signature = body.signature ?? body.sig;
+        const feedbackText = typeof body.feedback === 'string' ? body.feedback.trim() : '';
+
+        // 1. Parameter presence validation
+        if (!productId || !userId || !industry || !signature) {
+            return NextResponse.json(
+                { message: 'Missing required validation parameters or signature' },
+                { status: 400 }
+            );
+        }
+
+        if (!feedbackText) {
+            return NextResponse.json(
+                { message: 'Feedback text is required' },
+                { status: 400 }
+            );
+        }
+
+        // 2. Server-side HMAC Signature Verification
+        const isValidSignature = verifyParams(
+            { productId, userId, industry },
+            String(signature)
+        );
+
+        if (!isValidSignature) {
+            return NextResponse.json(
+                { message: 'Invalid or tampered feedback link signature' },
+                { status: 403 }
+            );
+        }
+
+        // 3. Prepare payload using the validated product identifier and signature
         const backendPayload = {
-            product_id: Number(body.product_id), // Ensure number
-            feedback: body.feedback,
-            email: body.email || "", // content-type json usually expects all keys or specific optional handling. sending empty string if undefined just in case
-            rating: Number(body.rating || 0),
-            // User ID and Industry are passed in URL for tracking but backend submit endpoint 
-            // seemingly only takes the above. We inject them if the backend supports them in the future
-            // or if we need to log them. For now, let's stick to the curl command's strict schema 
-            // to avoid 422/400 errors, but since it's 404, valid ID is crucial.
+            product_id: String(productId),
+            user_id: String(userId),
+            industry: String(industry),
+            signature: String(signature),
+            feedback: feedbackText,
+            email: body.email ? String(body.email).trim() : '',
+            rating: body.rating !== undefined && body.rating !== null && !isNaN(Number(body.rating)) ? Number(body.rating) : 0,
         };
 
-        // If the backend actually supports user_id and industry, we should add them. 
-        // But the user curl didn't show them. Let's start with strict adherence to curl.
-
-        // console.log('Sending to Backend:', backendPayload);
-
-        const response = await fetch(`${API_BASE_URL}/api/feedbacks/submit`, {
+        const response = await fetch(`${getBackendApiUrl()}/api/feedbacks/submit`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -35,18 +69,29 @@ export async function POST(request: Request) {
         });
 
         if (!response.ok) {
-            // Try to get error details
-            const errorText = await response.text();
-            console.error(`Backend failed with ${response.status}: ${errorText}`);
+            const errorText = await response.text().catch(() => '');
+            console.error(`Backend feedback submission failed with status code ${response.status}`);
+
+            let errorMessage = 'Failed to submit feedback';
+            try {
+                const parsed = JSON.parse(errorText);
+                if (parsed.error && typeof parsed.error === 'string') {
+                    errorMessage = parsed.error;
+                } else if (parsed.message && typeof parsed.message === 'string') {
+                    errorMessage = parsed.message;
+                }
+            } catch {
+                // Keep default error message
+            }
 
             return NextResponse.json(
-                { message: 'Failed to submit feedback' },
+                { message: errorMessage },
                 { status: response.status }
             );
         }
 
         const data = await response.json();
-        return NextResponse.json(data);
+        return NextResponse.json(data, { status: 201 });
     } catch (error) {
         console.error('Feedback Submit Error:', error);
         return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });

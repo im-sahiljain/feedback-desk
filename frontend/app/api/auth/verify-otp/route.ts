@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
+import { getBackendApiUrl, setBffCookies } from '@/lib/bffAuth';
 
 export async function POST(request: Request) {
     try {
         const body = await request.json();
 
-        const response = await fetch(`${API_BASE_URL}/api/auth/verify-otp`, {
+        const response = await fetch(`${getBackendApiUrl()}/api/auth/verify-otp`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -25,13 +24,10 @@ export async function POST(request: Request) {
 
         const nextResponse = NextResponse.json(data, { status: 200 });
 
-        if (data.token) {
-            nextResponse.cookies.set('token', data.token, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'strict',
-                maxAge: 60 * 60 * 24 * 7, // 7 days
-                path: '/',
+        if (data.accessToken || data.token) {
+            setBffCookies(nextResponse, {
+                accessToken: data.accessToken || data.token,
+                refreshToken: data.refreshToken,
             });
         }
 

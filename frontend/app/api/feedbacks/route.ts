@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
+import { getBackendApiUrl, getBffTokens } from '@/lib/bffAuth';
 
 export async function GET(request: Request) {
     try {
@@ -12,16 +10,15 @@ export async function GET(request: Request) {
             return NextResponse.json({ message: 'Product ID is required' }, { status: 400 });
         }
 
-        const cookieStore = await cookies();
-        const token = cookieStore.get('token')?.value;
+        const { accessToken } = await getBffTokens();
 
-        if (!token) {
+        if (!accessToken) {
             return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
         }
 
-        const response = await fetch(`${API_BASE_URL}/api/feedbacks?${searchParams.toString()}`, {
+        const response = await fetch(`${getBackendApiUrl()}/api/feedbacks?${searchParams.toString()}`, {
             headers: {
-                'Authorization': `Bearer ${token}`,
+                'Authorization': `Bearer ${accessToken}`,
                 'Content-Type': 'application/json',
             },
         });

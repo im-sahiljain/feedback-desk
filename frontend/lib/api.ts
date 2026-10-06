@@ -1,6 +1,24 @@
+async function parseErrorResponse(response: Response, defaultMessage: string): Promise<Error> {
+    let message = defaultMessage;
+    try {
+        const errorData = await response.json();
+        message = errorData.error || errorData.message || defaultMessage;
+    } catch {
+        try {
+            const text = await response.text();
+            if (text && text.trim().length > 0) message = text;
+        } catch {
+            // keep defaultMessage
+        }
+    }
+    const err: any = new Error(message);
+    err.status = response.status;
+    return err;
+}
+
 export const api = {
     auth: {
-        login: async (data: any) => {
+        login: async (data: { email: string; purpose?: string } | Record<string, any>) => {
             const response = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: {
@@ -10,13 +28,12 @@ export const api = {
             });
 
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Login failed');
+                throw await parseErrorResponse(response, 'Failed to send verification code');
             }
 
             return response.json();
         },
-        register: async (data: any) => {
+        register: async (data: { name?: string; email: string } | Record<string, any>) => {
             const response = await fetch('/api/auth/register', {
                 method: 'POST',
                 headers: {
@@ -26,13 +43,12 @@ export const api = {
             });
 
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Registration failed');
+                throw await parseErrorResponse(response, 'Registration failed');
             }
 
             return response.json();
         },
-        verifyOtp: async (data: { email: string; otp: string }) => {
+        verifyOtp: async (data: { email: string; otp: string; challengeId?: string; name?: string }) => {
             const response = await fetch('/api/auth/verify-otp', {
                 method: 'POST',
                 headers: {
@@ -42,13 +58,12 @@ export const api = {
             });
 
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Verification failed');
+                throw await parseErrorResponse(response, 'Verification failed');
             }
 
             return response.json();
         },
-        resendOtp: async (data: { email: string }) => {
+        resendOtp: async (data: { email: string; challengeId?: string }) => {
             const response = await fetch('/api/auth/resend-otp', {
                 method: 'POST',
                 headers: {
@@ -58,14 +73,22 @@ export const api = {
             });
 
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Resend failed');
+                throw await parseErrorResponse(response, 'Resend failed');
             }
 
             return response.json();
         },
+        refreshToken: async () => {
+            const response = await fetch('/api/auth/refresh', {
+                method: 'POST',
+            });
+            if (!response.ok) {
+                throw await parseErrorResponse(response, 'Session refresh failed');
+            }
+            return response.json();
+        },
         logout: async () => {
-            await fetch('/api/auth/logout', { method: 'POST' });
+            await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
             window.location.href = '/login';
         },
         getToken: () => {
@@ -76,67 +99,99 @@ export const api = {
         list: async () => {
             const response = await fetch('/api/products');
             if (!response.ok) {
-                const error: any = new Error('Failed to fetch products');
-                error.status = response.status;
-                throw error;
+                throw await parseErrorResponse(response, 'Failed to fetch products');
             }
             return response.json();
         },
-        create: async (data: any) => {
+        create: async (data: { name: string; industry: string; description?: string; config?: { categories: string[]; aiPrompt?: string; focusAreas?: string[] } }) => {
             const response = await fetch('/api/products', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
             });
-            if (!response.ok) throw new Error('Failed to create product');
+            if (!response.ok) {
+                throw await parseErrorResponse(response, 'Failed to create product');
+            }
             return response.json();
         },
         getIndustries: async () => {
             const response = await fetch('/api/products/industries');
-            if (!response.ok) throw new Error('Failed to fetch industries');
+            if (!response.ok) {
+                throw await parseErrorResponse(response, 'Failed to fetch industries');
+            }
             return response.json();
         },
         getLabels: async (industry: string) => {
-            const response = await fetch(`/api/products/labels?industry=${industry}`);
-            if (!response.ok) throw new Error('Failed to fetch labels');
+            const response = await fetch(`/api/products/labels?industry=${encodeURIComponent(industry)}`);
+            if (!response.ok) {
+                throw await parseErrorResponse(response, 'Failed to fetch labels');
+            }
             return response.json();
         },
     },
     feedbacks: {
         list: async (productId: string, period = 'all', startDate?: string, endDate?: string) => {
-            let url = `/api/feedbacks?product_id=${productId}&period=${period}`;
+            let url = `/api/feedbacks?product_id=${encodeURIComponent(productId)}&period=${encodeURIComponent(period)}`;
             if (startDate) url += `&start_date=${encodeURIComponent(startDate)}`;
             if (endDate) url += `&end_date=${encodeURIComponent(endDate)}`;
             const response = await fetch(url);
-            if (!response.ok) throw new Error('Failed to fetch feedbacks');
+            if (!response.ok) {
+                throw await parseErrorResponse(response, 'Failed to fetch feedbacks');
+            }
             return response.json();
         },
-        submit: async (data: any) => {
+        submit: async (data: {
+            productId?: string;
+            product_id?: string;
+            userId?: string;
+            user_id?: string;
+            industry?: string;
+            signature?: string;
+            sig?: string;
+            feedback: string;
+            rating?: number;
+            email?: string;
+        }) => {
             const response = await fetch('/api/feedbacks/submit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
             });
-            if (!response.ok) throw new Error('Failed to submit feedback');
+            if (!response.ok) {
+                throw await parseErrorResponse(response, 'Failed to submit feedback');
+            }
             return response.json();
         }
     },
     analytics: {
         getSummary: async (productId: string, period = 'all', startDate?: string, endDate?: string) => {
-            let url = `/api/analytics/summary?product_id=${productId}&period=${period}`;
+            let url = `/api/analytics/summary?product_id=${encodeURIComponent(productId)}&period=${encodeURIComponent(period)}`;
             if (startDate) url += `&start_date=${encodeURIComponent(startDate)}`;
             if (endDate) url += `&end_date=${encodeURIComponent(endDate)}`;
             const response = await fetch(url);
-            if (!response.ok) throw new Error('Failed to fetch analytics summary');
+            if (!response.ok) {
+                throw await parseErrorResponse(response, 'Failed to fetch analytics summary');
+            }
             return response.json();
         },
-        getExecutiveBrief: async (productId: string, refresh = false, period = 'all', startDate?: string, endDate?: string) => {
-            let url = `/api/analytics/executive-brief?product_id=${productId}&refresh=${refresh}&period=${period}`;
+        getExecutiveBrief: async (
+            productId: string,
+            refresh = false,
+            period = 'today',
+            startDate?: string,
+            endDate?: string,
+            cacheOnly = false
+        ) => {
+            let url = `/api/analytics/executive-brief?product_id=${encodeURIComponent(productId)}&refresh=${refresh}&period=${encodeURIComponent(period)}`;
+            if (cacheOnly) url += `&cache_only=true`;
             if (startDate) url += `&start_date=${encodeURIComponent(startDate)}`;
             if (endDate) url += `&end_date=${encodeURIComponent(endDate)}`;
             const response = await fetch(url);
-            if (!response.ok) throw new Error('Failed to fetch executive brief');
+            if (!response.ok) {
+                throw await parseErrorResponse(response, 'Failed to fetch executive brief');
+            }
             return response.json();
         }
     }
 };
+

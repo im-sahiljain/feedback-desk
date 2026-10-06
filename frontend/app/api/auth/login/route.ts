@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
+import { getBackendApiUrl, setBffCookies } from '@/lib/bffAuth';
 
 export async function POST(request: Request) {
     try {
         const body = await request.json();
 
-        const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        const response = await fetch(`${getBackendApiUrl()}/api/auth/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -14,27 +13,21 @@ export async function POST(request: Request) {
             body: JSON.stringify(body),
         });
 
+        const data = await response.json();
+
         if (!response.ok) {
-            const error = await response.json();
             return NextResponse.json(
-                { message: error.message || error.error || 'Login failed' },
+                { message: data.message || data.error || 'Failed to send verification code' },
                 { status: response.status }
             );
         }
 
-        const data = await response.json();
-
-        // Create the Next.js response
         const nextResponse = NextResponse.json(data, { status: 200 });
 
-        // Set HttpOnly cookie
-        if (data.token) {
-            nextResponse.cookies.set('token', data.token, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'strict',
-                maxAge: 60 * 60 * 24 * 7, // 7 days
-                path: '/',
+        if (data.accessToken || data.token) {
+            setBffCookies(nextResponse, {
+                accessToken: data.accessToken || data.token,
+                refreshToken: data.refreshToken,
             });
         }
 

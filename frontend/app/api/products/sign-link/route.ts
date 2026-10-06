@@ -1,22 +1,19 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { getBackendApiUrl, getBffTokens } from '@/lib/bffAuth';
 import { signParams } from '@/lib/crypto';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
 
 export async function POST(request: Request) {
     try {
-        const cookieStore = await cookies();
-        const token = cookieStore.get('token')?.value;
+        const { accessToken } = await getBffTokens();
 
-        if (!token) {
+        if (!accessToken) {
             return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
         }
 
         // Get user from backend using token
-        const userResponse = await fetch(`${API_BASE_URL}/api/auth/me`, {
+        const userResponse = await fetch(`${getBackendApiUrl()}/api/auth/me`, {
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${accessToken}`
             }
         });
 

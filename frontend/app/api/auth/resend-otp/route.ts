@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
+import { getBackendApiUrl } from '@/lib/bffAuth';
 
 export async function POST(request: Request) {
     try {
         const body = await request.json();
 
-        const response = await fetch(`${API_BASE_URL}/api/auth/resend-otp`, {
+        const response = await fetch(`${getBackendApiUrl()}/api/auth/resend-otp`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

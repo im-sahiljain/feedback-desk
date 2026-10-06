@@ -19,6 +19,19 @@ const SIDEBAR_WIDTH_MOBILE = "18rem";
 const SIDEBAR_WIDTH_ICON = "3rem";
 const SIDEBAR_KEYBOARD_SHORTCUT = "b";
 
+/** Survives AppLayout remounts on client navigations so collapsed state doesn't flash open. */
+let lastKnownOpen: boolean | undefined;
+
+function readSidebarCookie(): boolean | undefined {
+  if (typeof document === "undefined") return undefined;
+  const cookieValue = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith(`${SIDEBAR_COOKIE_NAME}=`))
+    ?.split("=")[1];
+  if (cookieValue === undefined) return undefined;
+  return cookieValue === "true";
+}
+
 type SidebarContext = {
   state: "expanded" | "collapsed";
   open: boolean;
@@ -51,32 +64,33 @@ const SidebarProvider = React.forwardRef<
   const isMobile = useIsMobile();
   const [openMobile, setOpenMobile] = React.useState(false);
 
+  // Prefer in-memory last state (client nav), then cookie, then defaultOpen.
+  // Cookie is only read in the initializer on the client after a prior visit in this tab
+  // has populated lastKnownOpen via the mount effect — avoids SSR/client hydration mismatch.
   const [_open, _setOpen] = React.useState(() => {
-    if (typeof window !== "undefined") {
-      const cookieValue = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith(`${SIDEBAR_COOKIE_NAME}=`))
-        ?.split("=")[1];
-      if (cookieValue !== undefined) {
-        return cookieValue === "true";
-      }
-    }
+    if (typeof lastKnownOpen === "boolean") return lastKnownOpen;
     return defaultOpen;
   });
 
   React.useEffect(() => {
-    const cookieValue = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith(`${SIDEBAR_COOKIE_NAME}=`))
-      ?.split("=")[1];
-    if (cookieValue !== undefined) {
-      _setOpen(cookieValue === "true");
+    if (typeof lastKnownOpen === "boolean") {
+      _setOpen(lastKnownOpen);
+      return;
     }
-  }, []);
+    const fromCookie = readSidebarCookie();
+    if (fromCookie !== undefined) {
+      lastKnownOpen = fromCookie;
+      _setOpen(fromCookie);
+    } else {
+      lastKnownOpen = defaultOpen;
+    }
+  }, [defaultOpen]);
+
   const open = openProp ?? _open;
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
       const openState = typeof value === "function" ? value(open) : value;
+      lastKnownOpen = openState;
       if (setOpenProp) {
         setOpenProp(openState);
       } else {

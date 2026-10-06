@@ -5,7 +5,7 @@ export type Industry =
   | "custom"
   | string;
 
-export type Sentiment = "positive" | "neutral" | "negative";
+export type Sentiment = "positive" | "neutral" | "negative" | "mixed";
 
 export type Priority = "low" | "medium" | "high";
 
@@ -16,6 +16,12 @@ export interface AspectDetail {
   snippet: string;
 }
 
+export interface RootCauseHypothesis {
+  hypothesis: string;
+  confidence: string;
+  evidence: string[];
+}
+
 export interface AIAnalysis {
   sentiment: Sentiment;
   category: string;
@@ -24,7 +30,9 @@ export interface AIAnalysis {
   summary: string;
   aspects?: AspectDetail[];
   actionItems?: string[];
+  /** @deprecated prefer rootCauseHypotheses — first hypothesis text for compat */
   rootCause?: string;
+  rootCauseHypotheses?: RootCauseHypothesis[];
 }
 
 export interface Feedback {
@@ -36,9 +44,49 @@ export interface Feedback {
   createdAt: Date;
   categories?: string[];
   category?: string;
-  sentiment?: string;
+  sentiment?: Sentiment | string;
+  impact?: string;
+  status?: string;
+  processing_status?: string;
   analysis?: AIAnalysis;
   isAnalyzing?: boolean;
+}
+
+export interface BackendRawAiMetadata {
+  sentiment?: { label?: string; score?: number } | string;
+  category?: { label?: string; score?: number } | string;
+  categories?: string[];
+  priority?: { label?: string; score?: number } | string;
+  confidence?: number;
+  summary?: string;
+  executiveSummary?: string;
+  aspects?: AspectDetail[];
+  action_items?: string[];
+  root_cause?: string;
+  rootCauseHypotheses?: RootCauseHypothesis[];
+  impact?: string;
+}
+
+export interface BackendFeedback {
+  id?: string | number;
+  product_id?: string | number;
+  feedback?: string;
+  email?: string | null;
+  rating?: string | number | null;
+  created_at?: string | Date;
+  categories?: string[];
+  category_name?: string;
+  sentiment_label?: string;
+  priority_label?: string;
+  confidence?: number;
+  raw_ai_metadata?: BackendRawAiMetadata;
+  status?: string;
+  processing_status?: string;
+  impact?: string;
+  sentiment?: { label?: string; score?: number } | string;
+  category?: { label?: string; score?: number } | string;
+  priority?: { label?: string; score?: number } | string;
+  analysis?: AIAnalysis | BackendRawAiMetadata;
 }
 
 export interface ProductConfig {
@@ -56,6 +104,8 @@ export interface Product {
   settings?: any; // To support API response
   createdAt?: Date; // API might not return this immediately in list
   created_at?: Date;
+  public_feedback_token?: string | null;
+  public_feedback_path?: string | null;
 }
 
 export interface InsightStats {
@@ -82,7 +132,10 @@ export interface ImpactCorrelationMetrics {
   total_negative: number;
   total_positive: number;
   total_neutral: number;
+  total_mixed?: number;
   total_high_priority: number;
+  total_medium_priority?: number;
+  total_low_priority?: number;
   average_rating: number;
   primary_culprit_category: string;
   primary_culprit_neg_share: number;
@@ -91,6 +144,16 @@ export interface ImpactCorrelationMetrics {
   categories: CategoryCorrelation[];
   period_key?: string;
   period_label?: string;
+  chart_snapshot?: {
+    sentiment: Array<{ name: string; value: number }>;
+    priority: Array<{ name: string; value: number }>;
+    trend: Array<{ day: string; total: number; positive: number }>;
+    top_issues: Array<{
+      text: string;
+      category: string;
+      rating: number | null;
+    }>;
+  };
 }
 
 export interface StrategicDecision {
@@ -124,6 +187,9 @@ export interface ExecutiveBrief {
   period_label?: string;
   generated_at: string;
   is_cached: boolean;
+  window_start?: string | null;
+  window_end?: string | null;
+  is_stale?: boolean;
 }
 
 export const INDUSTRY_LABELS: Record<Industry, string> = {

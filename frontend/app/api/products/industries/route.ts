@@ -1,20 +1,17 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
+import { getBackendApiUrl, getBffTokens } from '@/lib/bffAuth';
 
 export async function GET() {
     try {
-        const cookieStore = await cookies();
-        const token = cookieStore.get('token')?.value;
+        const { accessToken } = await getBffTokens();
 
-        if (!token) {
+        if (!accessToken) {
             return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
         }
 
-        const response = await fetch(`${API_BASE_URL}/api/products/industries`, {
+        const response = await fetch(`${getBackendApiUrl()}/api/products/industries`, {
             headers: {
-                'Authorization': `Bearer ${token}`,
+                'Authorization': `Bearer ${accessToken}`,
             },
         });
 

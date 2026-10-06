@@ -1,19 +1,27 @@
 import { NextResponse } from 'next/server';
+import { getBackendApiUrl, getBffTokens, clearBffCookies } from '@/lib/bffAuth';
 
 export async function POST() {
-    const response = NextResponse.json(
-        { message: 'Logged out successfully' },
-        { status: 200 }
-    );
+    try {
+        const { accessToken, refreshToken } = await getBffTokens();
 
-    // Clear the cookie by setting maxAge to 0
-    response.cookies.set('token', '', {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 0,
-        path: '/',
-    });
+        if (refreshToken || accessToken) {
+            await fetch(`${getBackendApiUrl()}/api/auth/logout`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
+                },
+                body: JSON.stringify({ refreshToken }),
+            }).catch(() => {});
+        }
 
-    return response;
+        const response = NextResponse.json({ message: 'Logged out successfully' }, { status: 200 });
+        clearBffCookies(response);
+        return response;
+    } catch {
+        const response = NextResponse.json({ message: 'Logged out' }, { status: 200 });
+        clearBffCookies(response);
+        return response;
+    }
 }

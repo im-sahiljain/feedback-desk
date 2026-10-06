@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Sentiment, Priority, Feedback } from "@/types";
+import { normalizeBackendFeedbacks } from "@/lib/normalization";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
 interface DateGroup {
@@ -44,160 +45,6 @@ interface DateGroup {
   latest_time: string;
   earliest_time: string;
 }
-
-// // Single Feedback Card Component
-// function FeedbackCard({ fb }: { fb: Feedback }) {
-//   return (
-//     <Card className="overflow-hidden shadow-sm border border-border/80 hover:border-primary/20 transition-all mb-3">
-//       <CardContent className="p-4">
-//         <div className="flex gap-4">
-//           {/* Sentiment Icon */}
-//           <div className="flex-shrink-0 mt-1">
-//             {fb.isAnalyzing ? (
-//               <Loader2 className="h-5 w-5 animate-spin text-primary" />
-//             ) : fb.analysis?.sentiment === "positive" ? (
-//               <ThumbsUp className="h-5 w-5 text-emerald-500" />
-//             ) : fb.analysis?.sentiment === "negative" ? (
-//               <ThumbsDown className="h-5 w-5 text-destructive" />
-//             ) : (
-//               <Minus className="h-5 w-5 text-amber-500" />
-//             )}
-//           </div>
-
-//           {/* Content */}
-//           <div className="flex-1 min-w-0 space-y-3">
-//             <p className="text-sm font-medium text-foreground leading-relaxed">
-//               {fb.text}
-//             </p>
-
-//             {/* AI Analysis */}
-//             {fb.isAnalyzing ? (
-//               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-//                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
-//                 AI analysis in progress...
-//               </div>
-//             ) : (
-//               fb.analysis && (
-//                 <div className="space-y-2 pt-1 border-t border-border/40">
-//                   <p className="text-xs text-muted-foreground italic">
-//                     "{fb.analysis.summary}"
-//                   </p>
-//                   <div className="flex flex-wrap items-center gap-2">
-//                     <Badge
-//                       variant={
-//                         fb.analysis.sentiment === "positive"
-//                           ? "default"
-//                           : fb.analysis.sentiment === "negative"
-//                             ? "destructive"
-//                             : "secondary"
-//                       }
-//                       className="capitalize text-[11px] font-semibold px-2 py-0.5"
-//                     >
-//                       {fb.analysis.sentiment}
-//                     </Badge>
-
-//                     {/* Render Multi-Category Badges */}
-//                     {fb.categories && fb.categories.length > 0 ? (
-//                       fb.categories.map((cat, i) => (
-//                         <Badge
-//                           key={i}
-//                           variant="outline"
-//                           className="text-[11px] bg-muted/40 font-medium"
-//                         >
-//                           🏷️ {cat}
-//                         </Badge>
-//                       ))
-//                     ) : (
-//                       <Badge variant="outline" className="text-[11px]">
-//                         🏷️ {fb.analysis.category}
-//                       </Badge>
-//                     )}
-
-//                     <Badge
-//                       variant={
-//                         fb.analysis.priority === "high"
-//                           ? "destructive"
-//                           : "secondary"
-//                       }
-//                       className="text-[11px] capitalize font-medium"
-//                     >
-//                       {fb.analysis.priority} Priority
-//                     </Badge>
-//                   </div>
-
-//                   {/* Aspect-Based Granular Breakdown */}
-//                   {fb.analysis.aspects && fb.analysis.aspects.length > 0 && (
-//                     <div className="flex flex-wrap gap-1.5 pt-1">
-//                       {fb.analysis.aspects.map((asp, idx) => (
-//                         <span
-//                           key={idx}
-//                           className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md bg-secondary/40 text-secondary-foreground border border-border/60"
-//                         >
-//                           <span className="font-semibold">{asp.category}:</span>
-//                           <span>
-//                             {asp.snippet ? `"${asp.snippet}"` : asp.sentiment}
-//                           </span>
-//                           {asp.severity && asp.severity !== "None" && (
-//                             <span className="text-[10px] text-muted-foreground">
-//                               ({asp.severity})
-//                             </span>
-//                           )}
-//                         </span>
-//                       ))}
-//                     </div>
-//                   )}
-
-//                   {/* Root Cause Diagnosis */}
-//                   {fb.analysis.rootCause && (
-//                     <div className="text-xs text-muted-foreground pt-0.5">
-//                       <span className="font-medium text-foreground">
-//                         🔍 Root Cause:{" "}
-//                       </span>
-//                       {fb.analysis.rootCause}
-//                     </div>
-//                   )}
-
-//                   {/* Action Items Box */}
-//                   {fb.analysis.actionItems &&
-//                     fb.analysis.actionItems.length > 0 && (
-//                       <div className="mt-2 p-2.5 rounded-lg bg-primary/5 border border-primary/10 text-xs space-y-1">
-//                         <div className="font-semibold text-primary flex items-center gap-1.5">
-//                           <span>💡 Recommended Next Steps:</span>
-//                         </div>
-//                         <ul className="list-disc list-inside space-y-0.5 text-muted-foreground pl-1">
-//                           {fb.analysis.actionItems.map((action, i) => (
-//                             <li key={i}>{action}</li>
-//                           ))}
-//                         </ul>
-//                       </div>
-//                     )}
-//                 </div>
-//               )
-//             )}
-
-//             {/* Meta Timestamp */}
-//             <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground pt-1 border-t border-border/30">
-//               {fb.rating && fb.rating > 0 && (
-//                 <span className="flex items-center gap-1">
-//                   <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
-//                   {fb.rating}/5
-//                 </span>
-//               )}
-//               {fb.email && <span>{fb.email}</span>}
-//               <span className="flex items-center gap-1">
-//                 <Clock className="h-3 w-3" />
-//                 {new Date(fb.createdAt).toLocaleTimeString([], {
-//                   hour: "2-digit",
-//                   minute: "2-digit",
-//                 })}
-//               </span>
-//             </div>
-//           </div>
-//         </div>
-//       </CardContent>
-//     </Card>
-//   );
-// }
 
 // Single Feedback Card Component
 function FeedbackCard({ fb }: { fb: Feedback }) {
@@ -239,7 +86,9 @@ function FeedbackCard({ fb }: { fb: Feedback }) {
       ? "bg-emerald-500 text-white"
       : analysis?.sentiment === "negative"
         ? "bg-red-500 text-white"
-        : "bg-amber-500 text-white";
+        : analysis?.sentiment === "mixed"
+          ? "bg-violet-500 text-white"
+          : "bg-amber-500 text-white";
 
   const priorityStyles =
     analysis?.priority === "high"
@@ -266,6 +115,8 @@ function FeedbackCard({ fb }: { fb: Feedback }) {
                 <ThumbsUp className="h-5 w-5" />
               ) : analysis?.sentiment === "negative" ? (
                 <ThumbsDown className="h-5 w-5" />
+              ) : analysis?.sentiment === "mixed" ? (
+                <MessageSquare className="h-5 w-5" />
               ) : (
                 <Minus className="h-5 w-5" />
               )}
@@ -312,7 +163,9 @@ function FeedbackCard({ fb }: { fb: Feedback }) {
                           ? "bg-red-500 text-white hover:bg-red-500"
                           : analysis.sentiment === "positive"
                             ? "bg-emerald-500 text-white hover:bg-emerald-500"
-                            : "bg-amber-500 text-white hover:bg-amber-500"
+                            : analysis.sentiment === "mixed"
+                              ? "bg-violet-500 text-white hover:bg-violet-500"
+                              : "bg-amber-500 text-white hover:bg-amber-500"
                       }`}
                     >
                       {analysis.sentiment}
@@ -410,23 +263,38 @@ function FeedbackCard({ fb }: { fb: Feedback }) {
             )}
 
             {/* =====================================================
-                ROOT CAUSE
+                ROOT CAUSE HYPOTHESIS
             ====================================================== */}
-            {analysis.rootCause && (
+            {(analysis.rootCauseHypotheses?.length || analysis.rootCause) && (
               <div className="mt-3 rounded-xl border border-blue-200/70 bg-blue-50/50 p-3.5 dark:border-blue-900/50 dark:bg-blue-950/20">
                 <div className="flex gap-3">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
                     <Search className="h-4 w-4" />
                   </div>
 
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1 space-y-2">
                     <p className="text-[11px] font-bold uppercase tracking-wide text-blue-700 dark:text-blue-400">
-                      Root Cause
+                      Root cause hypothesis
                     </p>
 
-                    <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
-                      {analysis.rootCause}
-                    </p>
+                    {analysis.rootCauseHypotheses && analysis.rootCauseHypotheses.length > 0 ? (
+                      analysis.rootCauseHypotheses.map((h, i) => (
+                        <div key={i} className="space-y-0.5">
+                          <p className="text-[12px] leading-5 text-muted-foreground">
+                            {h.hypothesis}
+                          </p>
+                          {h.confidence && (
+                            <p className="text-[10px] font-medium capitalize text-blue-600/80 dark:text-blue-400/80">
+                              Confidence: {h.confidence}
+                            </p>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
+                        {analysis.rootCause}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -572,7 +440,7 @@ function VirtualizedFeedbackList({ items }: { items: Feedback[] }) {
 }
 
 export default function FeedbackPage() {
-  const { currentProduct } = useApp();
+  const { currentProduct, isBootstrapping } = useApp();
   const [dateGroups, setDateGroups] = useState<DateGroup[]>([]);
   const [isGroupLoading, setIsGroupLoading] = useState(false);
 
@@ -618,75 +486,9 @@ export default function FeedbackPage() {
       }
 
       const data = await res.json();
-
-      const mappedFeedback: Feedback[] = (Array.isArray(data) ? data : []).map(
-        (f: any) => {
-          const priorityLabel =
-            f.priority_label ||
-            (typeof f.priority === "string" ? f.priority : f.priority?.label) ||
-            f.raw_ai_metadata?.priority?.label ||
-            "";
-          let priorityValue: Priority = "medium";
-          if (priorityLabel.toLowerCase().includes("high"))
-            priorityValue = "high";
-          else if (priorityLabel.toLowerCase().includes("low"))
-            priorityValue = "low";
-
-          const categoryName =
-            f.category_name ||
-            (typeof f.category === "string" ? f.category : f.category?.label) ||
-            f.raw_ai_metadata?.category?.label ||
-            "Uncategorized";
-          const sentimentLabel =
-            f.sentiment_label ||
-            (typeof f.sentiment === "string"
-              ? f.sentiment
-              : f.sentiment?.label) ||
-            f.raw_ai_metadata?.sentiment?.label ||
-            "neutral";
-
-          const assignedCategories: string[] =
-            Array.isArray(f.categories) && f.categories.length > 0
-              ? f.categories
-              : Array.isArray(f.raw_ai_metadata?.categories)
-                ? f.raw_ai_metadata.categories
-                : [categoryName];
-
-          return {
-            id: String(f.id ?? ""),
-            productId: currentProduct.id,
-            text: f.feedback || "",
-            rating: f.rating ? Number(f.rating) : 0,
-            email: f.email,
-            createdAt: new Date(f.created_at || Date.now()),
-            categories: assignedCategories,
-            sentiment: sentimentLabel.toLowerCase() as any,
-            category: categoryName,
-            impact: f.impact || "medium",
-            status: f.status || "new",
-            analysis: {
-              sentiment: sentimentLabel.toLowerCase() as any,
-              category: categoryName,
-              categories: assignedCategories,
-              priority: priorityValue,
-              summary:
-                f.raw_ai_metadata?.summary ||
-                (f.feedback
-                  ? f.feedback.length > 50
-                    ? f.feedback.substring(0, 50) + "..."
-                    : f.feedback
-                  : ""),
-              aspects: Array.isArray(f.raw_ai_metadata?.aspects)
-                ? f.raw_ai_metadata.aspects
-                : [],
-              actionItems: Array.isArray(f.raw_ai_metadata?.action_items)
-                ? f.raw_ai_metadata.action_items
-                : [],
-              rootCause: f.raw_ai_metadata?.root_cause || "",
-            },
-            isAnalyzing: f.status === "Pending",
-          };
-        },
+      const mappedFeedback: Feedback[] = normalizeBackendFeedbacks(
+        data,
+        currentProduct.id,
       );
 
       setFeedbacksByDate((prev) => ({ ...prev, [dateKey]: mappedFeedback }));
@@ -771,6 +573,19 @@ export default function FeedbackPage() {
 
   const totalItemsCount = dateGroups.reduce((acc, g) => acc + g.count, 0);
 
+  if (isBootstrapping) {
+    return (
+      <AppLayout title="Feedback">
+        <div className="flex items-center justify-center h-[60vh]">
+          <div className="text-center space-y-3 text-muted-foreground">
+            <div className="h-8 w-8 mx-auto rounded-full border-2 border-primary border-t-transparent animate-spin" />
+            <p className="text-sm">Loading…</p>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
   if (!currentProduct) {
     return (
       <AppLayout title="Feedback">
@@ -817,6 +632,7 @@ export default function FeedbackPage() {
                   <SelectItem value="positive">Positive</SelectItem>
                   <SelectItem value="neutral">Neutral</SelectItem>
                   <SelectItem value="negative">Negative</SelectItem>
+                  <SelectItem value="mixed">Mixed</SelectItem>
                 </SelectContent>
               </Select>
               <Select

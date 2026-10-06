@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { Loader2, MailCheck, ArrowLeft, RefreshCw } from "lucide-react"
+import { Loader2, MailCheck, ArrowLeft, RefreshCw, Mail } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 import { useApp } from "@/context/AppContext"
@@ -19,16 +19,12 @@ import {
     FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { PasswordInput } from "@/components/ui/password-input"
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp"
 import { useToast } from "@/hooks/use-toast"
 
 const formSchema = z.object({
     email: z.string().email({
         message: "Please enter a valid email address.",
-    }),
-    password: z.string().min(1, {
-        message: "Password is required.",
     }),
 })
 
@@ -40,7 +36,8 @@ export function LoginForm() {
     const [isLoading, setIsLoading] = useState(false)
     const [isResending, setIsResending] = useState(false)
     const [requiresOtp, setRequiresOtp] = useState(false)
-    const [unverifiedEmail, setUnverifiedEmail] = useState("")
+    const [userEmail, setUserEmail] = useState("")
+    const [challengeId, setChallengeId] = useState<string | undefined>(undefined)
     const [otpCode, setOtpCode] = useState("")
     const [cooldown, setCooldown] = useState(0)
 
@@ -48,7 +45,6 @@ export function LoginForm() {
         resolver: zodResolver(formSchema),
         defaultValues: {
             email: "",
-            password: "",
         },
     })
 
@@ -60,35 +56,25 @@ export function LoginForm() {
         return () => clearInterval(timer)
     }, [cooldown])
 
-    async function onSubmitLogin(values: z.infer<typeof formSchema>) {
+    async function onSubmitEmail(values: z.infer<typeof formSchema>) {
         setIsLoading(true)
         try {
-            await api.auth.login(values)
-
-            refetchUser()
+            const res = await api.auth.login({ email: values.email })
+            setUserEmail(values.email)
+            if (res.challengeId) setChallengeId(res.challengeId)
+            setRequiresOtp(true)
+            setCooldown(60)
 
             toast({
-                title: "Success",
-                description: "You have successfully logged in.",
+                title: "Verification code sent!",
+                description: res.message || `We sent a 6-digit code to ${values.email}.`,
             })
-            router.push("/")
         } catch (error: any) {
-            // Check if backend flagged account as unverified
-            if (error.message && error.message.includes("Account not verified")) {
-                setUnverifiedEmail(values.email)
-                setRequiresOtp(true)
-                setCooldown(60)
-                toast({
-                    title: "Verification required",
-                    description: "A new verification code has been sent to your email.",
-                })
-            } else {
-                toast({
-                    variant: "destructive",
-                    title: "Login Error",
-                    description: error.message || "Invalid credentials.",
-                })
-            }
+            toast({
+                variant: "destructive",
+                title: "Sign In Error",
+                description: error.message || "Failed to send verification code. Please try again.",
+            })
         } finally {
             setIsLoading(false)
         }
@@ -107,11 +93,11 @@ export function LoginForm() {
 
         setIsLoading(true)
         try {
-            await api.auth.verifyOtp({ email: unverifiedEmail, otp: otpCode })
+            await api.auth.verifyOtp({ email: userEmail, otp: otpCode, challengeId })
             refetchUser()
             toast({
-                title: "Account verified!",
-                description: "You have been logged in successfully.",
+                title: "Welcome back!",
+                description: "You have signed in successfully.",
             })
             router.push("/")
         } catch (error: any) {
@@ -129,11 +115,12 @@ export function LoginForm() {
         if (cooldown > 0 || isResending) return
         setIsResending(true)
         try {
-            await api.auth.resendOtp({ email: unverifiedEmail })
+            const res = await api.auth.resendOtp({ email: userEmail, challengeId })
+            if (res.challengeId) setChallengeId(res.challengeId)
             setCooldown(60)
             toast({
                 title: "Code Resent",
-                description: `A new verification code has been sent to ${unverifiedEmail}.`,
+                description: `A new verification code has been sent to ${userEmail}.`,
             })
         } catch (error: any) {
             toast({
@@ -155,7 +142,7 @@ export function LoginForm() {
                     </div>
                     <h2 className="text-xl font-semibold">Verify your email</h2>
                     <p className="text-xs text-muted-foreground max-w-xs">
-                        Enter the 6-digit code sent to <span className="font-medium text-foreground">{unverifiedEmail}</span>
+                        Enter the 6-digit code sent to <span className="font-medium text-foreground">{userEmail}</span>
                     </p>
                 </div>
 
@@ -189,7 +176,7 @@ export function LoginForm() {
                         onClick={() => setRequiresOtp(false)}
                         className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
                     >
-                        <ArrowLeft className="w-3.5 h-3.5" /> Back to Login
+                        <ArrowLeft className="w-3.5 h-3.5" /> Back to Email
                     </button>
 
                     <button
@@ -212,36 +199,32 @@ export function LoginForm() {
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmitLogin)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmitEmail)} className="space-y-4">
                 <FormField
                     control={form.control}
                     name="email"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel className="dark:text-zinc-200 text-xs font-medium">Email</FormLabel>
+                            <FormLabel className="dark:text-zinc-200 text-xs font-medium">Work Email</FormLabel>
                             <FormControl>
-                                <Input placeholder="name@example.com" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel className="dark:text-zinc-200 text-xs font-medium">Password</FormLabel>
-                            <FormControl>
-                                <PasswordInput placeholder="Enter your password" {...field} />
+                                <Input placeholder="name@company.com" {...field} autoFocus />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
                     )}
                 />
                 <Button className="w-full" type="submit" disabled={isLoading}>
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Sign In
+                    {isLoading ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Sending Code...
+                        </>
+                    ) : (
+                        <>
+                            <Mail className="mr-2 h-4 w-4" />
+                            Continue with Email
+                        </>
+                    )}
                 </Button>
             </form>
         </Form>

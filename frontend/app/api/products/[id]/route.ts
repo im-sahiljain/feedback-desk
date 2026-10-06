@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
+import { getBackendApiUrl, getBffTokens } from '@/lib/bffAuth';
 
 export async function PUT(
     request: Request,
@@ -9,28 +7,38 @@ export async function PUT(
 ) {
     try {
         const { id } = await params;
-        const cookieStore = await cookies();
-        const token = cookieStore.get('token')?.value;
+        const { accessToken } = await getBffTokens();
 
-        if (!token) {
+        if (!accessToken) {
             return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
         }
 
         const body = await request.json();
 
-        const response = await fetch(`${API_BASE_URL}/api/products/${id}`, {
+        const response = await fetch(`${getBackendApiUrl()}/api/products/${id}`, {
             method: 'PUT',
             headers: {
-                'Authorization': `Bearer ${token}`,
+                'Authorization': `Bearer ${accessToken}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(body),
         });
 
         if (!response.ok) {
-            const errorText = await response.text();
+            const errorText = await response.text().catch(() => '');
+            let errorMessage = 'Failed to update product';
+            try {
+                const parsed = JSON.parse(errorText);
+                if (parsed.error && typeof parsed.error === 'string') {
+                    errorMessage = parsed.error;
+                } else if (parsed.message && typeof parsed.message === 'string') {
+                    errorMessage = parsed.message;
+                }
+            } catch {
+                // keep default
+            }
             return NextResponse.json(
-                { message: 'Failed to update product', error: errorText },
+                { message: errorMessage },
                 { status: response.status }
             );
         }
@@ -49,25 +57,35 @@ export async function DELETE(
 ) {
     try {
         const { id } = await params;
-        const cookieStore = await cookies();
-        const token = cookieStore.get('token')?.value;
+        const { accessToken } = await getBffTokens();
 
-        if (!token) {
+        if (!accessToken) {
             return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
         }
 
-        const response = await fetch(`${API_BASE_URL}/api/products/${id}`, {
+        const response = await fetch(`${getBackendApiUrl()}/api/products/${id}`, {
             method: 'DELETE',
             headers: {
-                'Authorization': `Bearer ${token}`,
+                'Authorization': `Bearer ${accessToken}`,
                 'Content-Type': 'application/json',
             },
         });
 
         if (!response.ok) {
-            const errorText = await response.text();
+            const errorText = await response.text().catch(() => '');
+            let errorMessage = 'Failed to delete product';
+            try {
+                const parsed = JSON.parse(errorText);
+                if (parsed.error && typeof parsed.error === 'string') {
+                    errorMessage = parsed.error;
+                } else if (parsed.message && typeof parsed.message === 'string') {
+                    errorMessage = parsed.message;
+                }
+            } catch {
+                // keep default
+            }
             return NextResponse.json(
-                { message: 'Failed to delete product', error: errorText },
+                { message: errorMessage },
                 { status: response.status }
             );
         }

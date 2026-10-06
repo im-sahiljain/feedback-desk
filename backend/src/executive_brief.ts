@@ -1,5 +1,19 @@
 import { GoogleGenAI, Type } from '@google/genai';
 import { Pool } from 'pg';
+import { formatFriendlyDate } from './dates.js';
+
+/** Strip fabricated financial/causal claims from model output */
+export function sanitizeImpactClaim(text: string): string {
+    if (!text) return 'Impact is not quantifiable from feedback alone.';
+    let out = text;
+    out = out.replace(/reduces?\s+churn\s+by\s+~?\d+(\.\d+)?%/gi, 'may help retain customers (impact not quantifiable from feedback alone)');
+    out = out.replace(/increase[sd]?\s+revenue\s+by\s+~?\d+(\.\d+)?%/gi, 'may improve outcomes (impact not quantifiable)');
+    out = out.replace(/save[sd]?\s+~?\d+(\.\d+)?%/gi, 'may reduce friction (impact not quantifiable)');
+    out = out.replace(/ROI\s+(of\s+)?~?\d+(\.\d+)?%/gi, 'qualitative operational benefit');
+    out = out.replace(/estimated\s+ROI[^.]*\./gi, 'Impact is not quantifiable from feedback alone.');
+    out = out.replace(/will\s+(increase|reduce|save|improve)\s+[^.]*\d+%[^.]*\./gi, 'May improve outcomes; quantitative impact is not measurable from feedback alone.');
+    return out;
+}
 
 export interface CategoryCorrelation {
     category: string;
@@ -16,7 +30,10 @@ export interface ImpactCorrelationMetrics {
     total_negative: number;
     total_positive: number;
     total_neutral: number;
+    total_mixed?: number;
     total_high_priority: number;
+    total_medium_priority?: number;
+    total_low_priority?: number;
     average_rating: number;
     primary_culprit_category: string;
     primary_culprit_neg_share: number;
@@ -25,6 +42,17 @@ export interface ImpactCorrelationMetrics {
     categories: CategoryCorrelation[];
     period_key: string;
     period_label: string;
+    /** Snapshot used by Insights charts — only present for stored AI insights */
+    chart_snapshot?: {
+        sentiment: Array<{ name: string; value: number }>;
+        priority: Array<{ name: string; value: number }>;
+        trend: Array<{ day: string; total: number; positive: number }>;
+        top_issues: Array<{
+            text: string;
+            category: string;
+            rating: number | null;
+        }>;
+    };
 }
 
 export interface StrategicDecision {
@@ -51,6 +79,11 @@ export interface ExecutiveBrief {
     period_label: string;
     generated_at: string;
     is_cached: boolean;
+    /** Actual feedback window analyzed when this brief was generated */
+    window_start?: string | null;
+    window_end?: string | null;
+    /** True when a rolling period brief was generated on a prior calendar day */
+    is_stale?: boolean;
 }
 
 /**
@@ -65,6 +98,16 @@ export function parsePeriodBounds(
     const cleanPeriod = (period || 'all').toLowerCase();
 
     switch (cleanPeriod) {
+        case 'today': {
+            const start = new Date(now);
+            start.setHours(0, 0, 0, 0);
+            return {
+                periodKey: 'today',
+                startDate: start,
+                endDate: now,
+                periodLabel: 'Today'
+            };
+        }
         case '7d': {
             const start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
             return {
@@ -97,7 +140,7 @@ export function parsePeriodBounds(
             const end = customEnd ? new Date(customEnd) : now;
             const key = `custom_${start?.toISOString().split('T')[0] || 'start'}_${end?.toISOString().split('T')[0] || 'now'}`;
             const label = start && end 
-                ? `Custom Range (${start.toLocaleDateString()} - ${end.toLocaleDateString()})`
+                ? `Custom Range (${formatFriendlyDate(start)} - ${formatFriendlyDate(end)})`
                 : 'Custom Date Range';
             return {
                 periodKey: key,
@@ -136,10 +179,21 @@ export async function calculateImpactCorrelation(
             COUNT(*) FILTER (WHERE sentiment_label ILIKE 'negative') as total_negative,
             COUNT(*) FILTER (WHERE sentiment_label ILIKE 'positive') as total_positive,
             COUNT(*) FILTER (WHERE sentiment_label ILIKE 'neutral') as total_neutral,
+            COUNT(*) FILTER (WHERE sentiment_label ILIKE 'mixed') as total_mixed,
             COUNT(*) FILTER (WHERE priority_label ILIKE '%high%') as total_high_priority,
-            AVG(NULLIF(rating, '')::numeric) as avg_rating
+            COUNT(*) FILTER (WHERE priority_label ILIKE '%medium%') as total_medium_priority,
+            COUNT(*) FILTER (WHERE priority_label ILIKE '%low%') as total_low_priority,
+            AVG(
+              CASE
+                WHEN rating IS NULL THEN NULL
+                WHEN TRIM(rating::text) = '' THEN NULL
+                WHEN rating::text ~ '^[0-9]+(\\.[0-9]+)?$' THEN rating::text::numeric
+                ELSE NULL
+              END
+            ) as avg_rating
         FROM feedbacks
         WHERE product_id = $1
+          AND deleted_at IS NULL
           AND ($2::timestamptz IS NULL OR created_at >= $2::timestamptz)
           AND ($3::timestamptz IS NULL OR created_at <= $3::timestamptz)
     `, [productId, startDate, endDate]);
@@ -149,7 +203,10 @@ export async function calculateImpactCorrelation(
     const totalNegative = parseInt(overall.total_negative, 10) || 0;
     const totalPositive = parseInt(overall.total_positive, 10) || 0;
     const totalNeutral = parseInt(overall.total_neutral, 10) || 0;
+    const totalMixed = parseInt(overall.total_mixed, 10) || 0;
     const totalHighPriority = parseInt(overall.total_high_priority, 10) || 0;
+    const totalMediumPriority = parseInt(overall.total_medium_priority, 10) || 0;
+    const totalLowPriority = parseInt(overall.total_low_priority, 10) || 0;
     const avgRating = parseFloat(overall.avg_rating) || 0;
 
     // 2. Unnest multi-category array within time window
@@ -167,6 +224,7 @@ export async function calculateImpactCorrelation(
                 priority_label
             FROM feedbacks
             WHERE product_id = $1
+              AND deleted_at IS NULL
               AND ($2::timestamptz IS NULL OR created_at >= $2::timestamptz)
               AND ($3::timestamptz IS NULL OR created_at <= $3::timestamptz)
         ) sub
@@ -211,7 +269,10 @@ export async function calculateImpactCorrelation(
         total_negative: totalNegative,
         total_positive: totalPositive,
         total_neutral: totalNeutral,
+        total_mixed: totalMixed,
         total_high_priority: totalHighPriority,
+        total_medium_priority: totalMediumPriority,
+        total_low_priority: totalLowPriority,
         average_rating: avgRating,
         primary_culprit_category: primaryCulprit.category,
         primary_culprit_neg_share: primaryCulprit.neg_share_percent,
@@ -246,9 +307,10 @@ async function getFeedbackSamples(
             created_at
         FROM feedbacks
         WHERE product_id = $1
+          AND deleted_at IS NULL
           AND ($2::timestamptz IS NULL OR created_at >= $2::timestamptz)
           AND ($3::timestamptz IS NULL OR created_at <= $3::timestamptz)
-        ORDER BY 
+        ORDER BY
             CASE WHEN priority_label ILIKE '%high%' THEN 0 ELSE 1 END,
             created_at DESC
         LIMIT $4
@@ -258,7 +320,9 @@ async function getFeedbackSamples(
 }
 
 /**
- * Generates or retrieves cached Executive Operational Brief with Period Support
+ * Generates or retrieves cached Executive Operational Brief with Period Support.
+ * Insights are persisted as new rows in executive_briefs (history kept on regenerate).
+ * Reads always return the latest row for the period_key.
  */
 export async function getOrGenerateExecutiveBrief(
     productId: string,
@@ -266,108 +330,186 @@ export async function getOrGenerateExecutiveBrief(
     forceRefresh = false,
     period = 'all',
     customStart?: string,
-    customEnd?: string
-): Promise<{ brief: ExecutiveBrief; metrics: ImpactCorrelationMetrics }> {
+    customEnd?: string,
+    options: { cacheOnly?: boolean } = {}
+): Promise<{ brief: ExecutiveBrief | null; metrics: ImpactCorrelationMetrics | null; cached: boolean }> {
     const { periodKey, startDate, endDate, periodLabel } = parsePeriodBounds(period, customStart, customEnd);
+    const cacheOnly = options.cacheOnly === true;
 
-    // 1. Calculate latest real-time metrics for this specific period
-    const metrics = await calculateImpactCorrelation(productId, pool, startDate, endDate, periodKey, periodLabel);
-
-    if (metrics.total_feedback === 0) {
-        return {
-            brief: {
-                headline: `No Feedback in ${periodLabel}`,
-                macro_health_status: 'Stable',
-                executive_summary: `No customer feedback was submitted during the selected period (${periodLabel}). Select another timeframe or collect more feedback to view operational insights.`,
-                impact_correlation: {
-                    primary_culprit_category: 'None',
-                    quantified_impact_statement: `Zero complaints recorded in ${periodLabel}.`,
-                    root_cause_diagnosis: 'No submissions in this timeframe.'
-                },
-                top_strategic_decisions: [],
-                strengths_to_reinforce: [],
-                period_key: periodKey,
-                period_label: periodLabel,
-                generated_at: new Date().toISOString(),
-                is_cached: false
-            },
-            metrics
-        };
-    }
-
-    // 2. Check Database Cache tagged by periodKey if forceRefresh is false
+    // Always prefer latest DB row when not forcing refresh
     if (!forceRefresh) {
-        const cacheRes = await pool.query(`
-            SELECT brief, metrics, created_at, feedback_count_at_generation
-            FROM executive_briefs
-            WHERE product_id = $1 AND period_key = $2
-            ORDER BY created_at DESC
-            LIMIT 1
-        `, [productId, periodKey]);
+        const cacheRes = await pool.query(
+            `SELECT brief, metrics, created_at, start_date, end_date
+             FROM executive_briefs
+             WHERE product_id = $1 AND period_key = $2
+             ORDER BY created_at DESC
+             LIMIT 1`,
+            [productId, periodKey]
+        );
 
         if (cacheRes.rows.length > 0) {
             const cachedRow = cacheRes.rows[0];
+            const generatedAt = cachedRow.created_at;
             const cachedBrief: ExecutiveBrief = {
                 ...cachedRow.brief,
                 period_key: periodKey,
                 period_label: periodLabel,
-                generated_at: cachedRow.created_at,
-                is_cached: true
+                generated_at: generatedAt,
+                is_cached: true,
+                window_start: cachedRow.start_date,
+                window_end: cachedRow.end_date,
+                is_stale: isPeriodBriefStale(periodKey, generatedAt),
             };
             return {
                 brief: cachedBrief,
-                metrics: cachedRow.metrics || metrics
+                metrics: cachedRow.metrics || null,
+                cached: true,
             };
+        }
+
+        if (cacheOnly) {
+            return { brief: null, metrics: null, cached: false };
         }
     }
 
-    // 3. Fetch Product Metadata
+    // Generate path — compute metrics from analyzed feedback in window
+    const metrics = await calculateImpactCorrelation(productId, pool, startDate, endDate, periodKey, periodLabel);
+
+    if (metrics.total_feedback === 0) {
+        return { brief: null, metrics: null, cached: false };
+    }
+
+    const sampleFeedbacks = await getFeedbackSamples(productId, pool, 50, startDate, endDate);
+    const chartSnapshot = buildChartSnapshot(metrics, sampleFeedbacks);
+    const metricsWithCharts: ImpactCorrelationMetrics = {
+        ...metrics,
+        chart_snapshot: chartSnapshot,
+    };
+
     const prodRes = await pool.query('SELECT name, industry, description FROM products WHERE id = $1', [productId]);
     const product = prodRes.rows[0] || { name: 'Product', industry: 'General', description: '' };
 
-    // 4. Fetch Sample Feedbacks for the selected timeframe
-    const sampleFeedbacks = await getFeedbackSamples(productId, pool, 20, startDate, endDate);
+    const synthesizedBrief = await synthesizeWithGemini(product, metricsWithCharts, sampleFeedbacks, periodLabel);
+    const generatedAt = new Date().toISOString();
 
-    // 5. Synthesize Brief with Gemini AI (with retries & heuristic fallback)
-    const synthesizedBrief = await synthesizeWithGemini(product, metrics, sampleFeedbacks, periodLabel);
+    const briefPayload = {
+        ...synthesizedBrief,
+        period_key: periodKey,
+        period_label: periodLabel,
+    };
 
-    // 6. Store in Database Cache with period_key and date boundaries
     try {
-        await pool.query(`
-            INSERT INTO executive_briefs (
-                product_id, 
-                period_key, 
-                start_date, 
-                end_date, 
-                brief, 
-                metrics, 
-                feedback_count_at_generation, 
-                created_at, 
-                updated_at
-            )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
-        `, [
-            productId,
-            periodKey,
-            startDate,
-            endDate,
-            JSON.stringify(synthesizedBrief),
-            JSON.stringify(metrics),
-            metrics.total_feedback
-        ]);
+        // Always INSERT a new row so regenerate keeps history
+        await pool.query(
+            `INSERT INTO executive_briefs (
+                product_id, period_key, start_date, end_date, brief, metrics,
+                feedback_count_at_generation, created_at, updated_at
+             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8::timestamptz, $8::timestamptz)`,
+            [
+                productId,
+                periodKey,
+                startDate,
+                endDate,
+                JSON.stringify(briefPayload),
+                JSON.stringify(metricsWithCharts),
+                metrics.total_feedback,
+                generatedAt,
+            ]
+        );
     } catch (saveErr) {
         console.error('Failed to cache executive brief in DB:', saveErr);
     }
 
     return {
         brief: {
-            ...synthesizedBrief,
-            period_key: periodKey,
-            period_label: periodLabel,
-            generated_at: new Date().toISOString(),
-            is_cached: false
+            ...briefPayload,
+            generated_at: generatedAt,
+            is_cached: false,
+            window_start: startDate?.toISOString() ?? null,
+            window_end: endDate?.toISOString() ?? null,
+            is_stale: false,
         },
-        metrics
+        metrics: metricsWithCharts,
+        cached: false,
+    };
+}
+
+/**
+ * Period briefs (including All Time) are stale once the calendar day of generation has passed.
+ * Custom ranges stay fresh until explicitly regenerated — their bounds are fixed.
+ */
+function isPeriodBriefStale(periodKey: string, generatedAt: string | Date): boolean {
+    if (periodKey.startsWith('custom_')) return false;
+    const generatedDay = new Date(generatedAt).toISOString().slice(0, 10);
+    const today = new Date().toISOString().slice(0, 10);
+    return generatedDay < today;
+}
+
+function buildChartSnapshot(
+    metrics: ImpactCorrelationMetrics,
+    samples: Array<{
+        feedback?: string;
+        rating?: number | string | null;
+        sentiment_label?: string;
+        priority_label?: string;
+        categories?: string[];
+        category_name?: string;
+        created_at?: string | Date;
+    }>
+): NonNullable<ImpactCorrelationMetrics['chart_snapshot']> {
+    const trendMap = new Map<string, { total: number; positive: number; sortKey: string }>();
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setHours(0, 0, 0, 0);
+        d.setDate(d.getDate() - i);
+        const key = d.toISOString().slice(0, 10);
+        trendMap.set(key, {
+            total: 0,
+            positive: 0,
+            sortKey: key,
+        });
+    }
+
+    for (const f of samples) {
+        if (!f.created_at) continue;
+        const key = new Date(f.created_at).toISOString().slice(0, 10);
+        const bucket = trendMap.get(key);
+        if (!bucket) continue;
+        bucket.total += 1;
+        if ((f.sentiment_label || '').toLowerCase().includes('pos')) bucket.positive += 1;
+    }
+
+    const topIssues = samples
+        .filter(
+            (f) =>
+                (f.sentiment_label || '').toLowerCase().includes('neg') &&
+                (f.priority_label || '').toLowerCase().includes('high')
+        )
+        .slice(0, 5)
+        .map((f) => ({
+            text: String(f.feedback || '').slice(0, 240),
+            category: (Array.isArray(f.categories) && f.categories[0]) || f.category_name || 'General',
+            rating: f.rating !== null && f.rating !== undefined && !isNaN(Number(f.rating)) ? Number(f.rating) : null,
+        }));
+
+    return {
+        sentiment: [
+            { name: 'Positive', value: metrics.total_positive },
+            { name: 'Neutral', value: metrics.total_neutral },
+            { name: 'Negative', value: metrics.total_negative },
+            { name: 'Mixed', value: metrics.total_mixed || 0 },
+        ],
+        priority: [
+            { name: 'High', value: metrics.total_high_priority },
+            { name: 'Medium', value: metrics.total_medium_priority || 0 },
+            { name: 'Low', value: metrics.total_low_priority || 0 },
+        ],
+        trend: Array.from(trendMap.entries()).map(([key, v]) => ({
+            day: new Date(key).toLocaleDateString('en-US', { weekday: 'short' }),
+            total: v.total,
+            positive: v.positive,
+        })),
+        top_issues: topIssues,
     };
 }
 
@@ -424,8 +566,9 @@ Synthesize an authoritative, executive-level Operational Brief tailored to this 
    - Primary culprit category in this period.
    - Exact quantified impact statement.
    - Root-cause diagnosis explaining WHY this bottleneck occurred.
-5. Top 3 Strategic Decisions: Exactly 3 high-leverage, concrete operational decisions for management. Must specify department, urgency, operational action, and projected ROI / outcome.
-6. Strengths to Reinforce: 2-3 key positive practices or staff behaviors highlighted in positive reviews during this period.`;
+5. Top 3 Strategic Decisions: Exactly 3 high-leverage, concrete operational decisions for management. Must specify department, urgency, and operational action. For expected impact, use QUALITATIVE language only. Do NOT invent ROI percentages, churn reductions, revenue increases, monetary savings, or fabricated customer counts. If impact cannot be measured from the provided metrics, say impact is not quantifiable from feedback alone.
+6. Strengths to Reinforce: 2-3 key positive practices or staff behaviors highlighted in positive reviews during this period.
+7. Root-cause diagnosis must be framed as a hypothesis supported by the feedback themes, not as confirmed technical causality.`;
 
     // Try up to 2 attempts for resilience
     for (let attempt = 1; attempt <= 2; attempt++) {
@@ -497,7 +640,7 @@ Synthesize an authoritative, executive-level Operational Brief tailored to this 
                     department_or_area: d.departmentOrArea || product.industry,
                     urgency: d.urgency || 'Immediate (24-48h)',
                     decision: d.decision || '',
-                    expected_roi_or_impact: d.expectedRoiOrImpact || 'Improves customer satisfaction and retention.'
+                    expected_roi_or_impact: sanitizeImpactClaim(d.expectedRoiOrImpact || 'Qualitative operational improvement; impact not quantifiable from feedback alone.')
                 })),
                 strengths_to_reinforce: parsed.strengthsToReinforce || ['High-quality individual care provided by frontline professionals.']
             };
@@ -565,7 +708,7 @@ function generateFallbackBrief(
                 department_or_area: 'Customer Relations',
                 urgency: 'Immediate (24-48h)',
                 decision: 'Proactively contact high-priority dissatisfied customers with service recovery vouchers.',
-                expected_roi_or_impact: 'Protects public reputation and reduces customer churn by ~30%.'
+                expected_roi_or_impact: 'May help protect reputation and customer relationships; quantitative churn impact is not measurable from feedback alone.'
             }
         ],
         strengths_to_reinforce: [

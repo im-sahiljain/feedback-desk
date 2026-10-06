@@ -1,24 +1,44 @@
-# docker-compose.yml
-# ⚠️ Used for LOCAL DEVELOPMENT ONLY
-# Not used in production or on Render
-
-
-version: '3.8'
+# Production Readiness Report helper — see docs/BACKUP_AND_RECOVERY.md
 
 services:
   db:
-    image: postgres:14-alpine
-    container_name: feedback_desk_db
-    restart: always
+    image: postgres:16-alpine
     environment:
-      POSTGRES_USER: sahil
-      POSTGRES_PASSWORD: Sahil2001
+      POSTGRES_USER: feedback
+      POSTGRES_PASSWORD: feedback
       POSTGRES_DB: feedback_desk
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - feedback_desk_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U feedback -d feedback_desk"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      DATABASE_URL: postgresql://feedback:feedback@db:5432/feedback_desk
+      JWT_SECRET: ${JWT_SECRET}
+      OTP_HMAC_SECRET: ${OTP_HMAC_SECRET}
+      LINK_SECRET: ${LINK_SECRET}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-}
+      RUN_MIGRATIONS_ON_START: "true"
+      WORKER_CONCURRENCY: "2"
+    ports:
+      - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
-  pgdata:
+  feedback_desk_pg:

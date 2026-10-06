@@ -15,7 +15,7 @@ import { Save, Plus, X, Loader2, Edit3 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 export default function Settings() {
-  const { currentProduct, setCurrentProduct } = useApp();
+  const { currentProduct, setCurrentProduct, refreshProducts, isBootstrapping } = useApp();
   const [editedProduct, setEditedProduct] = useState<Product | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [newCategory, setNewCategory] = useState('');
@@ -27,6 +27,19 @@ export default function Settings() {
       setEditedProduct(currentProduct);
     }
   }, [currentProduct]);
+
+  if (isBootstrapping) {
+    return (
+      <AppLayout title="Settings">
+        <div className="flex items-center justify-center h-[60vh]">
+          <div className="text-center space-y-3 text-muted-foreground">
+            <div className="h-8 w-8 mx-auto rounded-full border-2 border-primary border-t-transparent animate-spin" />
+            <p className="text-sm">Loading…</p>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
 
   if (!currentProduct || !editedProduct) {
     return (
@@ -92,6 +105,7 @@ export default function Settings() {
 
       setEditedProduct(updatedProductObj);
       setCurrentProduct(updatedProductObj);
+      refreshProducts();
       setIsEditing(false);
 
       toast({

@@ -4,9 +4,10 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2, MailCheck, ArrowLeft, RefreshCw } from "lucide-react";
+import { Loader2, MailCheck, ArrowLeft, RefreshCw, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+import { useApp } from "@/context/AppContext";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,8 +19,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { PasswordInput } from "@/components/ui/password-input";
-import { PasswordStrengthMeter } from "@/components/auth/password-strength-meter";
 import {
   InputOTP,
   InputOTPGroup,
@@ -27,42 +26,25 @@ import {
 } from "@/components/ui/input-otp";
 import { useToast } from "@/hooks/use-toast";
 
-const formSchema = z
-  .object({
-    name: z.string().min(2, {
-      message: "Name must be at least 2 characters.",
-    }),
-    email: z.string().email({
-      message: "Please enter a valid email address.",
-    }),
-    password: z
-      .string()
-      .min(8, {
-        message: "Password must be at least 8 characters.",
-      })
-      .regex(/[A-Z]/, {
-        message: "Password must contain at least one uppercase letter.",
-      })
-      .regex(/[0-9]/, {
-        message: "Password must contain at least one number.",
-      })
-      .regex(/[^A-Za-z0-9]/, {
-        message: "Password must contain at least one special character.",
-      }),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match.",
-    path: ["confirmPassword"],
-  });
+const formSchema = z.object({
+  name: z.string().min(2, {
+    message: "Name must be at least 2 characters.",
+  }),
+  email: z.string().email({
+    message: "Please enter a valid email address.",
+  }),
+});
 
 export function SignupForm() {
   const { toast } = useToast();
+  const { refetchUser } = useApp();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [step, setStep] = useState<"signup" | "otp">("signup");
   const [userEmail, setUserEmail] = useState("");
+  const [userName, setUserName] = useState("");
+  const [challengeId, setChallengeId] = useState<string | undefined>(undefined);
   const [otpCode, setOtpCode] = useState("");
   const [cooldown, setCooldown] = useState(0);
 
@@ -71,12 +53,8 @@ export function SignupForm() {
     defaultValues: {
       name: "",
       email: "",
-      password: "",
-      confirmPassword: "",
     },
   });
-
-  const password = form.watch("password");
 
   // Handle resend countdown timer
   useEffect(() => {
@@ -90,8 +68,10 @@ export function SignupForm() {
   async function onSubmitSignup(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-      const res = await api.auth.register(values);
+      const res = await api.auth.register({ name: values.name, email: values.email });
       setUserEmail(values.email);
+      setUserName(values.name);
+      if (res.challengeId) setChallengeId(res.challengeId);
       setStep("otp");
       setCooldown(60);
       toast({
@@ -104,7 +84,7 @@ export function SignupForm() {
       toast({
         variant: "destructive",
         title: "Registration Error",
-        description: error.message || "Something went wrong.",
+        description: error.message || "Failed to start registration. Please try again.",
       });
     } finally {
       setIsLoading(false);
@@ -124,7 +104,8 @@ export function SignupForm() {
 
     setIsLoading(true);
     try {
-      await api.auth.verifyOtp({ email: userEmail, otp: otpCode });
+      await api.auth.verifyOtp({ email: userEmail, otp: otpCode, challengeId, name: userName });
+      refetchUser();
       toast({
         title: "Account verified!",
         description: "Your account has been created and verified successfully.",
@@ -145,7 +126,8 @@ export function SignupForm() {
     if (cooldown > 0 || isResending) return;
     setIsResending(true);
     try {
-      await api.auth.resendOtp({ email: userEmail });
+      const res = await api.auth.resendOtp({ email: userEmail, challengeId });
+      if (res.challengeId) setChallengeId(res.challengeId);
       setCooldown(60);
       toast({
         title: "Code Resent",
@@ -200,7 +182,7 @@ export function SignupForm() {
             disabled={isLoading || otpCode.length !== 6}
           >
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Verify
+            Verify & Create Account
           </Button>
         </form>
 
@@ -241,7 +223,7 @@ export function SignupForm() {
             <FormItem>
               <FormLabel className="dark:text-zinc-200 text-xs font-medium">Full Name</FormLabel>
               <FormControl>
-                <Input placeholder="John Doe" {...field} />
+                <Input placeholder="Jane Doe" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -252,48 +234,26 @@ export function SignupForm() {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="dark:text-zinc-200 text-xs font-medium">Email</FormLabel>
+              <FormLabel className="dark:text-zinc-200 text-xs font-medium">Work Email</FormLabel>
               <FormControl>
-                <Input placeholder="name@example.com" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="dark:text-zinc-200 text-xs font-medium">Password</FormLabel>
-              <FormControl>
-                <PasswordInput
-                  showToggle={false}
-                  placeholder="Create a password"
-                  {...field}
-                />
-              </FormControl>
-              <PasswordStrengthMeter password={password} />
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="confirmPassword"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="dark:text-zinc-200 text-xs font-medium">Confirm Password</FormLabel>
-              <FormControl>
-                <PasswordInput placeholder="Confirm your password" {...field} />
+                <Input placeholder="name@company.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
         <Button className="w-full" type="submit" disabled={isLoading}>
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Create Account
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Sending Code...
+            </>
+          ) : (
+            <>
+              <Mail className="mr-2 h-4 w-4" />
+              Get Started with Email
+            </>
+          )}
         </Button>
       </form>
     </Form>

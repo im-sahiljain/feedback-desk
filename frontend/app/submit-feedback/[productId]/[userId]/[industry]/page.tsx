@@ -70,7 +70,7 @@ export default function PublicFeedbackPage() {
                     <CardContent className="pt-6 text-center space-y-4">
                         <h2 className="text-2xl font-bold">Page Not Found</h2>
                         <p className="text-muted-foreground">
-                            The link you used is invalid or expired. Please check the URL and try again.
+                            The link you used is invalid. Please check the URL and try again.
                         </p>
                     </CardContent>
                 </Card>
@@ -79,20 +79,18 @@ export default function PublicFeedbackPage() {
     }
 
     const handleSubmit = async () => {
-        if (!productId || !feedbackText.trim()) return;
+        if (!productId || !feedbackText.trim() || !signature) return;
 
         setIsSubmitting(true);
         try {
-            // Backend expects: { product_id, feedback, email, rating }
-            // We also include user_id and industry from URL as per requirement, 
-            // passing them to backend in case it uses them.
             const payload = {
-                product_id: productId,
+                productId,
+                userId,
+                industry: decodeURIComponent(industry),
+                signature,
                 feedback: feedbackText.trim(),
                 rating,
                 email: email.trim() || undefined,
-                user_id: userId,
-                industry: decodeURIComponent(industry),
             };
 
             const response = await fetch('/api/feedbacks/submit', {
@@ -104,7 +102,8 @@ export default function PublicFeedbackPage() {
             });
 
             if (!response.ok) {
-                throw new Error('Failed to submit feedback');
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || 'Failed to submit feedback');
             }
 
             setIsSuccess(true);
@@ -118,11 +117,11 @@ export default function PublicFeedbackPage() {
             setRating(undefined);
             setEmail('');
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Submit error:', error);
             toast({
                 title: 'Error',
-                description: 'Failed to submit feedback. Please try again.',
+                description: error.message || 'Failed to submit feedback. Please try again.',
                 variant: 'destructive',
             });
         } finally {
