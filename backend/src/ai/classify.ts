@@ -17,7 +17,7 @@ import { logger } from '../logging/logger.js';
 export type { DeepAnalysisResult, AspectDetail, RootCauseHypothesis } from './types.js';
 export { ANALYSIS_VERSION, SCHEMA_VERSION, PROMPT_VERSION } from './types.js';
 
-const MODEL_NAME = 'gemini-2.5-flash';
+const MODEL_NAME = 'gemini-3.5-flash-lite';
 
 /**
  * Classify feedback asynchronously-safe. Callers must persist original text first.

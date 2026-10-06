@@ -222,7 +222,7 @@ async function handleJobFailure(
   );
 }
 
-const MODEL_PLACEHOLDER = 'gemini-2.5-flash';
+const MODEL_PLACEHOLDER = 'gemini-3.5-flash-lite';
 
 async function workerLoop(workerId: string): Promise<void> {
   const pool = getPool();
