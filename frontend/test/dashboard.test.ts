@@ -19,6 +19,17 @@ describe("dashboard navigation helpers", () => {
       "/feedback?category=Delivery&status=failed",
     );
     assert.equal(feedbackFilterHref({}), "/feedback");
+    assert.equal(
+      feedbackFilterHref({
+        productId: "08284da7-3c8c-4a20-8a38-7ba60db265d4",
+        ids: [
+          "156a3237-21a1-42ee-9790-4fa44cacf784",
+          "not-a-uuid",
+          "156a3237-21a1-42ee-9790-4fa44cacf784",
+        ],
+      }),
+      "/feedback?product_id=08284da7-3c8c-4a20-8a38-7ba60db265d4&ids=156a3237-21a1-42ee-9790-4fa44cacf784",
+    );
   });
 
   it("builds insights deep links with period", () => {

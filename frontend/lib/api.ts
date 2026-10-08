@@ -16,6 +16,61 @@ async function parseErrorResponse(response: Response, defaultMessage: string): P
     return err;
 }
 
+/** Single-flight client refresh so parallel 401s share one /api/auth/refresh. */
+let refreshInFlight: Promise<boolean> | null = null;
+
+async function refreshSession(): Promise<boolean> {
+    if (refreshInFlight) return refreshInFlight;
+
+    refreshInFlight = (async () => {
+        try {
+            const response = await fetch('/api/auth/refresh', { method: 'POST' });
+            return response.ok;
+        } catch {
+            return false;
+        } finally {
+            refreshInFlight = null;
+        }
+    })();
+
+    return refreshInFlight;
+}
+
+const AUTH_SKIP_REFRESH_PREFIXES = [
+    '/api/auth/login',
+    '/api/auth/register',
+    '/api/auth/verify-otp',
+    '/api/auth/resend-otp',
+    '/api/auth/refresh',
+    '/api/auth/logout',
+];
+
+/**
+ * Browser fetch that retries once after a silent session refresh on 401.
+ */
+export async function authFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+    const url =
+        typeof input === 'string'
+            ? input
+            : input instanceof URL
+              ? input.toString()
+              : input.url;
+
+    const skipRefresh = AUTH_SKIP_REFRESH_PREFIXES.some((prefix) => url.startsWith(prefix));
+    const response = await fetch(input, init);
+
+    if (response.status !== 401 || skipRefresh) {
+        return response;
+    }
+
+    const refreshed = await refreshSession();
+    if (!refreshed) {
+        return response;
+    }
+
+    return fetch(input, init);
+}
+
 export const api = {
     auth: {
         login: async (data: { email: string; purpose?: string } | Record<string, any>) => {
@@ -97,14 +152,14 @@ export const api = {
     },
     products: {
         list: async () => {
-            const response = await fetch('/api/products');
+            const response = await authFetch('/api/products');
             if (!response.ok) {
                 throw await parseErrorResponse(response, 'Failed to fetch products');
             }
             return response.json();
         },
         create: async (data: { name: string; industry: string; description?: string; config?: { categories: string[]; aiPrompt?: string; focusAreas?: string[] } }) => {
-            const response = await fetch('/api/products', {
+            const response = await authFetch('/api/products', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
@@ -115,14 +170,14 @@ export const api = {
             return response.json();
         },
         getIndustries: async () => {
-            const response = await fetch('/api/products/industries');
+            const response = await authFetch('/api/products/industries');
             if (!response.ok) {
                 throw await parseErrorResponse(response, 'Failed to fetch industries');
             }
             return response.json();
         },
         getLabels: async (industry: string) => {
-            const response = await fetch(`/api/products/labels?industry=${encodeURIComponent(industry)}`);
+            const response = await authFetch(`/api/products/labels?industry=${encodeURIComponent(industry)}`);
             if (!response.ok) {
                 throw await parseErrorResponse(response, 'Failed to fetch labels');
             }
@@ -134,7 +189,7 @@ export const api = {
             let url = `/api/feedbacks?product_id=${encodeURIComponent(productId)}&period=${encodeURIComponent(period)}`;
             if (startDate) url += `&start_date=${encodeURIComponent(startDate)}`;
             if (endDate) url += `&end_date=${encodeURIComponent(endDate)}`;
-            const response = await fetch(url);
+            const response = await authFetch(url);
             if (!response.ok) {
                 throw await parseErrorResponse(response, 'Failed to fetch feedbacks');
             }
@@ -168,7 +223,7 @@ export const api = {
             let url = `/api/analytics/summary?product_id=${encodeURIComponent(productId)}&period=${encodeURIComponent(period)}`;
             if (startDate) url += `&start_date=${encodeURIComponent(startDate)}`;
             if (endDate) url += `&end_date=${encodeURIComponent(endDate)}`;
-            const response = await fetch(url);
+            const response = await authFetch(url);
             if (!response.ok) {
                 throw await parseErrorResponse(response, 'Failed to fetch analytics summary');
             }
@@ -176,7 +231,7 @@ export const api = {
         },
         getDashboard: async (productId: string, period: '7d' | '30d' | '90d' = '30d') => {
             const url = `/api/analytics/dashboard?product_id=${encodeURIComponent(productId)}&period=${encodeURIComponent(period)}`;
-            const response = await fetch(url);
+            const response = await authFetch(url);
             if (!response.ok) {
                 throw await parseErrorResponse(response, 'Failed to fetch dashboard summary');
             }
@@ -194,7 +249,7 @@ export const api = {
             if (cacheOnly) url += `&cache_only=true`;
             if (startDate) url += `&start_date=${encodeURIComponent(startDate)}`;
             if (endDate) url += `&end_date=${encodeURIComponent(endDate)}`;
-            const response = await fetch(url);
+            const response = await authFetch(url);
             if (!response.ok) {
                 throw await parseErrorResponse(response, 'Failed to fetch executive brief');
             }
@@ -202,4 +257,3 @@ export const api = {
         }
     }
 };
-

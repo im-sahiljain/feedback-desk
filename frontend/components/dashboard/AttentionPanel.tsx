@@ -11,9 +11,27 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { feedbackFilterHref, formatChangeTone, insightsHref } from "@/lib/dashboard";
+import {
+  feedbackFilterHref,
+  formatChangeTone,
+  insightsHref,
+} from "@/lib/dashboard";
+import { cn } from "@/lib/utils";
 import type { DashboardPeriod, DashboardSummary } from "@/types";
 import { ArrowRight, ShieldAlert } from "lucide-react";
+
+function severityBadgeClass(
+  severity: DashboardSummary["attention"][number]["severity"],
+) {
+  switch (severity) {
+    case "high":
+      return "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80";
+    case "medium":
+      return "border-transparent bg-warning text-warning-foreground hover:bg-warning/80";
+    case "watch":
+      return "border-transparent bg-info text-info-foreground hover:bg-info/80";
+  }
+}
 
 export function AttentionPanel({
   data,
@@ -34,10 +52,16 @@ export function AttentionPanel({
               <CardTitle className="text-base">Needs your attention</CardTitle>
             </div>
             <CardDescription>
-              Ranked feedback areas with elevated negative or high-priority volume
+              Ranked feedback areas with elevated negative or high-priority
+              volume
             </CardDescription>
           </div>
-          <Button asChild variant="outline" size="sm" className="shrink-0 gap-1.5">
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="shrink-0 gap-1.5"
+          >
             <Link href={insightsHref({ period })}>
               View all in Insights
               <ArrowRight className="h-3.5 w-3.5" />
@@ -57,9 +81,12 @@ export function AttentionPanel({
           </div>
         ) : !data || data.attention.length === 0 ? (
           <div className="rounded-lg border border-dashed bg-muted/20 px-4 py-8 text-center">
-            <p className="text-sm font-medium">No urgent feedback needs attention</p>
+            <p className="text-sm font-medium">
+              No urgent feedback needs attention
+            </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              No elevated negative or high-priority concentrations in this period.
+              No elevated negative or high-priority concentrations in this
+              period.
             </p>
           </div>
         ) : (
@@ -77,28 +104,58 @@ export function AttentionPanel({
                       </span>
                       <h3 className="text-sm font-semibold">{item.category}</h3>
                       <Badge
-                        variant={item.severity === "high" ? "destructive" : "secondary"}
-                        className="text-[10px] capitalize"
+                        variant="outline"
+                        className={cn(
+                          "text-[10px] capitalize",
+                          severityBadgeClass(item.severity),
+                        )}
                       >
                         {item.severity === "watch" ? "Watch" : item.severity}
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {item.negativeCount} negative · {item.feedbackCount} total ·{" "}
-                      {item.highPriorityCount} high priority
+                      <span
+                        className={
+                          item.negativeCount > 0
+                            ? "text-destructive"
+                            : undefined
+                        }
+                      >
+                        {item.negativeCount} negative
+                      </span>
+                      {" · "}
+                      <span>{item.feedbackCount} total</span>
+                      {" · "}
+                      <span
+                        className={
+                          item.highPriorityCount > 0
+                            ? "text-destructive"
+                            : undefined
+                        }
+                      >
+                        {item.highPriorityCount} high priority
+                      </span>
                       {item.change.direction !== "flat" ? (
-                        <span className={`ml-2 ${formatChangeTone(item.change)}`}>
+                        <span
+                          className={`ml-2 font-medium ${formatChangeTone(item.change)}`}
+                        >
                           {item.change.display}
                         </span>
                       ) : null}
                     </p>
                     {item.signal && (
                       <p className="text-sm leading-relaxed text-foreground/90">
-                        <span className="font-medium">Main signal:</span> {item.signal}
+                        <span className="font-medium">Main signal:</span>{" "}
+                        {item.signal}
                       </p>
                     )}
                   </div>
-                  <Button asChild size="sm" variant="outline" className="shrink-0 gap-1.5">
+                  <Button
+                    asChild
+                    size="sm"
+                    variant="outline"
+                    className="shrink-0 gap-1.5"
+                  >
                     <Link
                       href={feedbackFilterHref({
                         category: item.category,

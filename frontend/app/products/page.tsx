@@ -36,6 +36,7 @@ import {
 import { CreateProductDialog } from "@/components/products/create-product-dialog";
 import { toast } from "@/hooks/use-toast";
 import { formatFriendlyDate } from "@/lib/dates";
+import { authFetch } from "@/lib/api";
 import { QRCodeSVG } from "qrcode.react";
 
 function ProductsContent() {
@@ -76,7 +77,7 @@ function ProductsContent() {
       return `${window.location.origin}${existingPath.startsWith("/") ? existingPath : `/${existingPath}`}`;
     }
 
-    const response = await fetch(`/api/products/${product.id}/public-link`);
+    const response = await authFetch(`/api/products/${product.id}/public-link`);
     if (!response.ok) {
       if (response.status === 401) {
         toast({
@@ -88,7 +89,7 @@ function ProductsContent() {
       }
       if (response.status === 404) {
         // No active link — regenerate one
-        const regen = await fetch(`/api/products/${product.id}/public-link/regenerate`, {
+        const regen = await authFetch(`/api/products/${product.id}/public-link/regenerate`, {
           method: "POST",
         });
         if (!regen.ok) {
@@ -182,7 +183,7 @@ function ProductsContent() {
 
     setIsRegenerating(true);
     try {
-      const response = await fetch(
+      const response = await authFetch(
         `/api/products/${qrProduct.id}/public-link/regenerate`,
         { method: "POST" }
       );

@@ -35,6 +35,25 @@ function parseCategoryFilter(raw: unknown): string[] {
   return [...new Set(out)];
 }
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const MAX_IDS_FILTER = 200;
+
+/** Accept `ids=uuid` or `ids=uuid1,uuid2` (max 200 valid UUIDs). */
+function parseIdsFilter(raw: unknown): string[] {
+  if (raw == null) return [];
+  const parts = Array.isArray(raw) ? raw : [raw];
+  const out: string[] = [];
+  for (const part of parts) {
+    for (const piece of String(part).split(',')) {
+      const trimmed = piece.trim();
+      if (UUID_RE.test(trimmed)) out.push(trimmed.toLowerCase());
+      if (out.length >= MAX_IDS_FILTER) return [...new Set(out)];
+    }
+  }
+  return [...new Set(out)];
+}
+
 /**
  * Public opaque destination submit: POST /api/feedbacks/public/:token
  * Also supports legacy signed URL body for backwards compatibility.
@@ -296,6 +315,7 @@ router.get('/date-groups', authenticateUser as any, async (req: AuthenticatedReq
   const sentimentFilter = req.query.sentiment as string;
   const priorityFilter = req.query.priority as string;
   const statusFilter = req.query.status as string;
+  const idsFilter = parseIdsFilter(req.query.ids);
 
   if (!productId) return res.status(400).json({ error: 'product_id is required' });
 
@@ -308,6 +328,11 @@ router.get('/date-groups', authenticateUser as any, async (req: AuthenticatedReq
     const values: unknown[] = [productId];
     let paramIndex = 2;
 
+    if (idsFilter.length > 0) {
+      conditions.push(`id = ANY($${paramIndex}::uuid[])`);
+      values.push(idsFilter);
+      paramIndex++;
+    }
     if (categoryFilters.length === 1) {
       conditions.push(`category_name = $${paramIndex}`);
       values.push(categoryFilters[0]);
@@ -366,6 +391,7 @@ router.get('/', authenticateUser as any, async (req: AuthenticatedRequest, res: 
   const priorityFilter = req.query.priority as string;
   const statusFilter = req.query.status as string;
   const dateParam = req.query.date as string;
+  const idsFilter = parseIdsFilter(req.query.ids);
   const cursor = req.query.cursor as string | undefined;
   const limitRaw = Number(req.query.limit || DEFAULT_FEEDBACK_PAGE_SIZE);
   const limit = Math.min(
@@ -384,6 +410,11 @@ router.get('/', authenticateUser as any, async (req: AuthenticatedRequest, res: 
     const values: unknown[] = [productId];
     let paramIndex = 2;
 
+    if (idsFilter.length > 0) {
+      conditions.push(`id = ANY($${paramIndex}::uuid[])`);
+      values.push(idsFilter);
+      paramIndex++;
+    }
     if (dateParam && dateParam !== 'all') {
       conditions.push(`TO_CHAR(COALESCE(created_at, NOW()), 'YYYY-MM-DD') = $${paramIndex}`);
       values.push(dateParam);

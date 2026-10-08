@@ -322,7 +322,7 @@ async function queryPeriodCounts(
       COUNT(*) FILTER (WHERE sentiment_label ILIKE 'neutral')::text AS neutral,
       COUNT(*) FILTER (WHERE sentiment_label ILIKE 'negative')::text AS negative,
       COUNT(*) FILTER (WHERE sentiment_label ILIKE 'mixed')::text AS mixed,
-      COUNT(*) FILTER (WHERE priority_label ILIKE '%high%')::text AS high_priority,
+      COUNT(*) FILTER (WHERE (priority_label ILIKE '%high%' OR priority_label ILIKE '%critical%'))::text AS high_priority,
       COUNT(*) FILTER (
         WHERE processing_status = 'analyzed'
            OR (sentiment_label IS NOT NULL AND processing_status IS DISTINCT FROM 'failed')
@@ -362,7 +362,7 @@ async function queryCategoryStats(
       COUNT(*)::text AS total_count,
       COUNT(*) FILTER (WHERE sentiment_label ILIKE 'negative')::text AS negative_count,
       COUNT(*) FILTER (WHERE sentiment_label ILIKE 'positive')::text AS positive_count,
-      COUNT(*) FILTER (WHERE priority_label ILIKE '%high%')::text AS high_priority_count
+      COUNT(*) FILTER (WHERE (priority_label ILIKE '%high%' OR priority_label ILIKE '%critical%'))::text AS high_priority_count
     FROM (
       SELECT
         unnest(COALESCE(categories, ARRAY[COALESCE(category_name, 'General')])) AS cat,
@@ -381,7 +381,7 @@ async function queryCategoryStats(
     GROUP BY cat
     ORDER BY
       COUNT(*) FILTER (WHERE sentiment_label ILIKE 'negative') DESC,
-      COUNT(*) FILTER (WHERE priority_label ILIKE '%high%') DESC,
+      COUNT(*) FILTER (WHERE (priority_label ILIKE '%high%' OR priority_label ILIKE '%critical%')) DESC,
       COUNT(*) DESC
     LIMIT 12
     `,
@@ -423,7 +423,7 @@ async function queryCategorySignals(
         ROW_NUMBER() OVER (
           PARTITION BY cat
           ORDER BY
-            CASE WHEN priority_label ILIKE '%high%' THEN 0 ELSE 1 END,
+            CASE WHEN (priority_label ILIKE '%high%' OR priority_label ILIKE '%critical%') THEN 0 ELSE 1 END,
             created_at DESC
         ) AS rn
       FROM (
@@ -441,7 +441,7 @@ async function queryCategorySignals(
           AND created_at <= $3::timestamptz
           AND (
             sentiment_label ILIKE 'negative'
-            OR priority_label ILIKE '%high%'
+            OR (priority_label ILIKE '%high%' OR priority_label ILIKE '%critical%')
           )
       ) base
       WHERE cat = ANY($4::text[])
@@ -539,13 +539,13 @@ async function queryCriticalFeedback(
       AND created_at >= $2::timestamptz
       AND created_at <= $3::timestamptz
       AND (
-        priority_label ILIKE '%high%'
+        (priority_label ILIKE '%high%' OR priority_label ILIKE '%critical%')
         OR processing_status = 'failed'
         OR (sentiment_label ILIKE 'negative' AND priority_label ILIKE '%medium%')
       )
     ORDER BY
       CASE
-        WHEN priority_label ILIKE '%high%' THEN 0
+        WHEN (priority_label ILIKE '%high%' OR priority_label ILIKE '%critical%') THEN 0
         WHEN processing_status = 'failed' THEN 1
         ELSE 2
       END,

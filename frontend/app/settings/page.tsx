@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { INDUSTRY_ICONS, INDUSTRY_LABELS, Industry, DEFAULT_CATEGORIES, DEFAULT_AI_PROMPTS, Product } from '@/types';
 import { Save, Plus, X, Loader2, Edit3 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { authFetch } from '@/lib/api';
 
 export default function Settings() {
   const { currentProduct, setCurrentProduct, refreshProducts, isBootstrapping } = useApp();
@@ -78,7 +79,7 @@ export default function Settings() {
         }
       };
 
-      const res = await fetch(`/api/products/${editedProduct.id}`, {
+      const res = await authFetch(`/api/products/${editedProduct.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

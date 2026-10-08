@@ -7,6 +7,25 @@ export const DASHBOARD_PERIODS: { key: DashboardPeriod; label: string }[] = [
   { key: "90d", label: "90 days" },
 ];
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const MAX_EVIDENCE_IDS = 200;
+
+/** Normalize evidence feedback IDs for deep links (valid UUIDs only, capped). */
+export function normalizeEvidenceIds(ids: string[] | null | undefined): string[] {
+  if (!ids?.length) return [];
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const raw of ids) {
+    const id = String(raw || "").trim().toLowerCase();
+    if (!UUID_RE.test(id) || seen.has(id)) continue;
+    seen.add(id);
+    out.push(id);
+    if (out.length >= MAX_EVIDENCE_IDS) break;
+  }
+  return out;
+}
+
 export function feedbackFilterHref(opts: {
   priority?: string;
   sentiment?: string;
@@ -14,14 +33,19 @@ export function feedbackFilterHref(opts: {
   status?: string;
   highlight?: string;
   date?: string;
+  ids?: string[];
+  productId?: string;
 }): string {
   const params = new URLSearchParams();
+  if (opts.productId) params.set("product_id", opts.productId);
   if (opts.priority) params.set("priority", opts.priority);
   if (opts.sentiment) params.set("sentiment", opts.sentiment);
   if (opts.category) params.set("category", opts.category);
   if (opts.status) params.set("status", opts.status);
   if (opts.highlight) params.set("highlight", opts.highlight);
   if (opts.date) params.set("date", opts.date);
+  const ids = normalizeEvidenceIds(opts.ids);
+  if (ids.length > 0) params.set("ids", ids.join(","));
   const qs = params.toString();
   return qs ? `/feedback?${qs}` : "/feedback";
 }

@@ -26,7 +26,8 @@ describe('Feedback Normalization and Type Safety', () => {
     it('should normalize priority from various backend structures', () => {
         assert.strictEqual(normalizePriority('High Priority'), 'high');
         assert.strictEqual(normalizePriority('high'), 'high');
-        assert.strictEqual(normalizePriority('Critical'), 'high');
+        assert.strictEqual(normalizePriority('Critical Priority'), 'critical');
+        assert.strictEqual(normalizePriority('Critical'), 'critical');
         assert.strictEqual(normalizePriority({ label: 'High Priority', score: 0.9 }), 'high');
         assert.strictEqual(normalizePriority('Low Priority'), 'low');
         assert.strictEqual(normalizePriority('low'), 'low');
@@ -142,5 +143,49 @@ describe('Feedback Normalization and Type Safety', () => {
 
         const fromData = normalizeBackendFeedbacks({ data: [rawFeedback] });
         assert.strictEqual(fromData.length, 1);
+    });
+
+    it('should map intents, topics, issues, severity, and urgency from raw_ai_metadata', () => {
+        const rawFeedback: BackendFeedback = {
+            id: 5,
+            product_id: 20,
+            feedback: 'Love the app speed but checkout crashes when I upload a photo. Wish I could export to Excel.',
+            priority_label: 'High Priority',
+            raw_ai_metadata: {
+                severity: 'high',
+                urgency: 'medium',
+                intents: ['praise', 'bug_report', 'feature_request'],
+                topics: ['Performance', 'Checkout', 'Reporting'],
+                issues: [
+                    {
+                        description: 'Checkout crashes during photo upload',
+                        topic: 'Checkout',
+                        evidence: ['crashes when I upload a photo'],
+                    },
+                ],
+                requestedCapabilities: ['Export reports to Excel'],
+                positiveAttributes: ['App speed'],
+                aspects: [
+                    {
+                        category: 'Performance',
+                        sentiment: 'Positive',
+                        severity: 'none',
+                        observation: 'Customer likes app speed',
+                        evidence: 'Love the app speed',
+                    },
+                ],
+                summary: 'Mixed feedback: praise for speed, crash at checkout, Excel export request.',
+            },
+        };
+
+        const normalized = normalizeBackendFeedback(rawFeedback);
+        assert.strictEqual(normalized.analysis?.severity, 'high');
+        assert.strictEqual(normalized.analysis?.urgency, 'medium');
+        assert.deepStrictEqual(normalized.analysis?.intents, ['praise', 'bug_report', 'feature_request']);
+        assert.deepStrictEqual(normalized.analysis?.topics, ['Performance', 'Checkout', 'Reporting']);
+        assert.strictEqual(normalized.analysis?.issues?.[0]?.description, 'Checkout crashes during photo upload');
+        assert.strictEqual(normalized.analysis?.requestedCapabilities?.[0], 'Export reports to Excel');
+        assert.strictEqual(normalized.analysis?.positiveAttributes?.[0], 'App speed');
+        assert.strictEqual(normalized.analysis?.aspects?.[0]?.observation, 'Customer likes app speed');
     });
 });

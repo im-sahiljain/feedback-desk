@@ -1,8 +1,9 @@
 "use client";
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import { useTheme } from 'next-themes';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Product } from '@/types';
+import { authFetch } from '@/lib/api';
 
 interface User {
   id: number;
@@ -43,6 +44,7 @@ const isPublicPath = (pathname: string) =>
 export function AppProvider({ children }: { children: ReactNode }) {
   const { setTheme, resolvedTheme } = useTheme();
   const pathname = usePathname();
+  const router = useRouter();
 
   const isDarkMode = resolvedTheme === 'dark';
 
@@ -57,19 +59,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const isBootstrapping =
     !onPublicRoute && (!authChecked || (user !== null && !productsChecked));
 
+  const handleSessionExpired = useCallback(() => {
+    setUser(null);
+    setProducts([]);
+    setCurrentProduct(null);
+    setProductsChecked(true);
+    setAuthChecked(true);
+    if (!isPublicPath(pathname)) {
+      router.replace('/login');
+    }
+  }, [pathname, router]);
+
   const fetchUser = useCallback(() => {
-    return fetch('/api/auth/me')
-      .then((res) => res.json())
-      .then((data) => {
+    return authFetch('/api/auth/me')
+      .then(async (res) => {
+        if (res.status === 401) {
+          handleSessionExpired();
+          return;
+        }
+        const data = await res.json();
         if (data.user) {
           setUser(data.user);
           // Force a products load for this session
           setProductsChecked(false);
         } else {
-          setUser(null);
-          setProducts([]);
-          setCurrentProduct(null);
-          setProductsChecked(true);
+          handleSessionExpired();
         }
       })
       .catch((err) => {
@@ -82,7 +96,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .finally(() => {
         setAuthChecked(true);
       });
-  }, []);
+  }, [handleSessionExpired]);
 
   // Auth check on protected routes; skip bootstrap on public pages
   useEffect(() => {
@@ -98,9 +112,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const refreshProducts = useCallback(() => {
     setIsLoadingProduct(true);
-    return fetch('/api/products')
-      .then((res) => res.json())
-      .then((data) => {
+    return authFetch('/api/products')
+      .then(async (res) => {
+        if (res.status === 401) {
+          handleSessionExpired();
+          return;
+        }
+        if (!res.ok) {
+          console.error('Failed to fetch products:', res.status);
+          setProducts([]);
+          return;
+        }
+        const data = await res.json();
         if (Array.isArray(data)) {
           setProducts(data);
           setCurrentProduct((prev) => {
@@ -125,8 +148,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setIsLoadingProduct(false);
         setProductsChecked(true);
       });
-  }, []);
-
+  }, [handleSessionExpired]);
   // Fetch products once user is known
   useEffect(() => {
     if (!authChecked || !user || productsChecked) return;

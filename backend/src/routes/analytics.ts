@@ -1,68 +1,98 @@
-import express, { Response } from 'express';
-import { getPool } from '../db.js';
-import { authenticateUser, AuthenticatedRequest } from './auth.js';
-import { getOrGenerateExecutiveBrief, calculateImpactCorrelation, parsePeriodBounds } from '../executive_brief.js';
-import { executiveBriefLimiter } from '../middleware/rateLimiters.js';
-import { requireProductAccess } from '../authz/access.js';
-import { toSafeClientError } from '../errors/httpError.js';
-import { logger } from '../logging/logger.js';
-import { buildDashboardSummary, isDashboardPeriod } from '../dashboard/summary.js';
+import express, { Response } from "express";
+import { getPool } from "../db.js";
+import { authenticateUser, AuthenticatedRequest } from "./auth.js";
+import {
+  getOrGenerateExecutiveBrief,
+  calculateImpactCorrelation,
+  parsePeriodBounds,
+} from "../executive_brief.js";
+import { executiveBriefLimiter } from "../middleware/rateLimiters.js";
+import { requireProductAccess } from "../authz/access.js";
+import { toSafeClientError } from "../errors/httpError.js";
+import { logger } from "../logging/logger.js";
+import {
+  buildDashboardSummary,
+  isDashboardPeriod,
+} from "../dashboard/summary.js";
 
 const router = express.Router();
 
-router.get('/dashboard', authenticateUser as any, async (req: AuthenticatedRequest, res: Response) => {
-  const productId = req.query.product_id as string;
-  const periodRaw = ((req.query.period as string) || '30d').toLowerCase();
+router.get(
+  "/dashboard",
+  authenticateUser as any,
+  async (req: AuthenticatedRequest, res: Response) => {
+    const productId = req.query.product_id as string;
+    const periodRaw = ((req.query.period as string) || "30d").toLowerCase();
 
-  if (!productId) {
-    return res.status(400).json({ error: 'product_id is required' });
-  }
+    if (!productId) {
+      return res.status(400).json({ error: "product_id is required" });
+    }
 
-  if (!isDashboardPeriod(periodRaw)) {
-    return res.status(400).json({ error: 'period must be one of: 7d, 30d, 90d' });
-  }
+    if (!isDashboardPeriod(periodRaw)) {
+      return res
+        .status(400)
+        .json({ error: "period must be one of: 7d, 30d, 90d" });
+    }
 
-  const pool = getPool();
-  try {
-    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-    await requireProductAccess(pool, req.user.id, productId, 'analytics:read');
+    const pool = getPool();
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      await requireProductAccess(
+        pool,
+        req.user.id,
+        productId,
+        "analytics:read",
+      );
 
-    const payload = await buildDashboardSummary(pool, productId, periodRaw);
-    return res.json(payload);
-  } catch (err) {
-    logger.error('Dashboard summary error', {
-      error: err instanceof Error ? err.message : 'unknown',
-    });
-    const safe = toSafeClientError(err);
-    return res.status(safe.status).json(safe.body);
-  }
-});
+      const payload = await buildDashboardSummary(pool, productId, periodRaw);
+      return res.json(payload);
+    } catch (err) {
+      logger.error("Dashboard summary error", {
+        error: err instanceof Error ? err.message : "unknown",
+      });
+      const safe = toSafeClientError(err);
+      return res.status(safe.status).json(safe.body);
+    }
+  },
+);
 
-router.get('/summary', authenticateUser as any, async (req: AuthenticatedRequest, res: Response) => {
-  const productId = req.query.product_id as string;
-  const period = (req.query.period as string) || 'all';
-  const customStart = req.query.start_date as string;
-  const customEnd = req.query.end_date as string;
+router.get(
+  "/summary",
+  authenticateUser as any,
+  async (req: AuthenticatedRequest, res: Response) => {
+    const productId = req.query.product_id as string;
+    const period = (req.query.period as string) || "all";
+    const customStart = req.query.start_date as string;
+    const customEnd = req.query.end_date as string;
 
-  if (!productId) {
-    return res.status(400).json({ error: 'product_id is required' });
-  }
+    if (!productId) {
+      return res.status(400).json({ error: "product_id is required" });
+    }
 
-  const { startDate, endDate, periodKey, periodLabel } = parsePeriodBounds(period, customStart, customEnd);
-  const pool = getPool();
+    const { startDate, endDate, periodKey, periodLabel } = parsePeriodBounds(
+      period,
+      customStart,
+      customEnd,
+    );
+    const pool = getPool();
 
-  try {
-    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-    await requireProductAccess(pool, req.user.id, productId, 'analytics:read');
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      await requireProductAccess(
+        pool,
+        req.user.id,
+        productId,
+        "analytics:read",
+      );
 
-    const totalQuery = `
+      const totalQuery = `
       SELECT COUNT(*) FROM feedbacks
       WHERE product_id = $1 AND deleted_at IS NULL
         AND ($2::timestamptz IS NULL OR created_at >= $2::timestamptz)
         AND ($3::timestamptz IS NULL OR created_at <= $3::timestamptz)
     `;
 
-    const sentimentQuery = `
+      const sentimentQuery = `
       SELECT sentiment_label as label, COUNT(*) as count
       FROM feedbacks
       WHERE product_id = $1 AND deleted_at IS NULL
@@ -72,7 +102,7 @@ router.get('/summary', authenticateUser as any, async (req: AuthenticatedRequest
       GROUP BY sentiment_label
     `;
 
-    const categoryQuery = `
+      const categoryQuery = `
       SELECT tag as label, COUNT(*) as count
       FROM (
         SELECT unnest(COALESCE(categories, ARRAY[category_name])) as tag
@@ -87,16 +117,16 @@ router.get('/summary', authenticateUser as any, async (req: AuthenticatedRequest
       LIMIT 6
     `;
 
-    const priorityQuery = `
+      const priorityQuery = `
       SELECT COUNT(*)
       FROM feedbacks
       WHERE product_id = $1 AND deleted_at IS NULL
-        AND priority_label = 'High Priority'
+        AND (priority_label = 'High Priority' OR priority_label = 'Critical Priority')
         AND ($2::timestamptz IS NULL OR created_at >= $2::timestamptz)
         AND ($3::timestamptz IS NULL OR created_at <= $3::timestamptz)
     `;
 
-    const actionItemsQuery = `
+      const actionItemsQuery = `
       SELECT raw_ai_metadata->'action_items' as action_items
       FROM feedbacks
       WHERE product_id = $1 AND deleted_at IS NULL
@@ -107,75 +137,98 @@ router.get('/summary', authenticateUser as any, async (req: AuthenticatedRequest
       LIMIT 5
     `;
 
-    const [totalRes, sentimentRes, categoryRes, priorityRes, actionsRes, correlationMetrics] =
-      await Promise.all([
+      const [
+        totalRes,
+        sentimentRes,
+        categoryRes,
+        priorityRes,
+        actionsRes,
+        correlationMetrics,
+      ] = await Promise.all([
         pool.query(totalQuery, [productId, startDate, endDate]),
         pool.query(sentimentQuery, [productId, startDate, endDate]),
         pool.query(categoryQuery, [productId, startDate, endDate]),
         pool.query(priorityQuery, [productId, startDate, endDate]),
         pool.query(actionItemsQuery, [productId, startDate, endDate]),
-        calculateImpactCorrelation(productId, pool, startDate, endDate, periodKey, periodLabel),
+        calculateImpactCorrelation(
+          productId,
+          pool,
+          startDate,
+          endDate,
+          periodKey,
+          periodLabel,
+        ),
       ]);
 
-    const uniqueActionItems: string[] = [];
-    actionsRes.rows.forEach((r) => {
-      if (Array.isArray(r.action_items)) {
-        r.action_items.forEach((item: string) => {
-          if (item && !uniqueActionItems.includes(item)) uniqueActionItems.push(item);
-        });
-      }
-    });
+      const uniqueActionItems: string[] = [];
+      actionsRes.rows.forEach((r) => {
+        if (Array.isArray(r.action_items)) {
+          r.action_items.forEach((item: string) => {
+            if (item && !uniqueActionItems.includes(item))
+              uniqueActionItems.push(item);
+          });
+        }
+      });
 
-    return res.json({
-      total_feedback: parseInt(totalRes.rows[0].count, 10),
-      high_priority_count: parseInt(priorityRes.rows[0].count, 10),
-      sentiment_distribution: sentimentRes.rows,
-      top_categories: categoryRes.rows,
-      action_items: uniqueActionItems.slice(0, 5),
-      impact_correlation: correlationMetrics,
-      period_key: periodKey,
-      period_label: periodLabel,
-    });
-  } catch (err) {
-    logger.error('Analytics summary error', {
-      error: err instanceof Error ? err.message : 'unknown',
-    });
-    const safe = toSafeClientError(err);
-    return res.status(safe.status).json(safe.body);
-  }
-});
+      return res.json({
+        total_feedback: parseInt(totalRes.rows[0].count, 10),
+        high_priority_count: parseInt(priorityRes.rows[0].count, 10),
+        sentiment_distribution: sentimentRes.rows,
+        top_categories: categoryRes.rows,
+        action_items: uniqueActionItems.slice(0, 5),
+        // Preferred neutral name for new consumers.
+        signal_metrics: correlationMetrics,
+        // Backwards-compatible alias used by older Insights UI code.
+        impact_correlation: correlationMetrics,
+        period_key: periodKey,
+        period_label: periodLabel,
+      });
+    } catch (err) {
+      logger.error("Analytics summary error", {
+        error: err instanceof Error ? err.message : "unknown",
+      });
+      const safe = toSafeClientError(err);
+      return res.status(safe.status).json(safe.body);
+    }
+  },
+);
 
 router.get(
-  '/executive-brief',
+  "/executive-brief",
   executiveBriefLimiter,
   authenticateUser as any,
   async (req: AuthenticatedRequest, res: Response) => {
     const productId = req.query.product_id as string;
-    const forceRefresh = req.query.refresh === 'true';
-    const cacheOnly = req.query.cache_only === 'true';
-    const period = ((req.query.period as string) || 'today').toLowerCase();
+    const forceRefresh = req.query.refresh === "true";
+    const cacheOnly = req.query.cache_only === "true";
+    const period = ((req.query.period as string) || "today").toLowerCase();
     const customStart = req.query.start_date as string;
     const customEnd = req.query.end_date as string;
 
     if (!productId) {
-      return res.status(400).json({ error: 'product_id is required' });
+      return res.status(400).json({ error: "product_id is required" });
     }
 
-    if (period === 'all' || period === 'custom' || period.startsWith('custom_')) {
+    if (
+      period === "all" ||
+      period === "custom" ||
+      period.startsWith("custom_")
+    ) {
       return res.status(400).json({
-        error: 'AI briefs are only available for Today, Last 7 Days, Last 30 Days, or Last 90 Days.',
+        error:
+          "AI briefs are only available for Today, Last 7 Days, Last 30 Days, or Last 90 Days.",
       });
     }
 
-    const allowed = new Set(['today', '7d', '30d', '90d']);
+    const allowed = new Set(["today", "7d", "30d", "90d"]);
     if (!allowed.has(period)) {
-      return res.status(400).json({ error: 'Invalid period for AI brief' });
+      return res.status(400).json({ error: "Invalid period for AI brief" });
     }
 
     const pool = getPool();
     try {
-      if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-      await requireProductAccess(pool, req.user.id, productId, 'brief:read');
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      await requireProductAccess(pool, req.user.id, productId, "brief:read");
 
       // cache_only: return stored brief for period without running AI
       // refresh=true: regenerate and UPSERT into executive_briefs
@@ -186,7 +239,7 @@ router.get(
         period,
         customStart,
         customEnd,
-        { cacheOnly: cacheOnly && !forceRefresh }
+        { cacheOnly: cacheOnly && !forceRefresh },
       );
 
       if (!result.brief) {
@@ -196,20 +249,21 @@ router.get(
           cached: false,
           available: false,
           message: cacheOnly
-            ? 'No stored insights for this period. Generate to create and save them.'
-            : 'No analyzed feedback in this period to generate insights.',
+            ? "No stored insights for this period. Generate to create and save them."
+            : "No analyzed feedback in this period to generate insights.",
         });
       }
 
+      res.setHeader("Cache-Control", "no-store");
       return res.json({ ...result, available: true });
     } catch (err) {
-      logger.error('Executive brief error', {
-        error: err instanceof Error ? err.message : 'unknown',
+      logger.error("Executive brief error", {
+        error: err instanceof Error ? err.message : "unknown",
       });
       const safe = toSafeClientError(err);
       return res.status(safe.status).json(safe.body);
     }
-  }
+  },
 );
 
 export default router;

@@ -25,7 +25,7 @@
     --accent: 210 40% 96%;
     --accent-foreground: 222 47% 11%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
     --success: 142 76% 36%;
@@ -81,8 +81,8 @@
     --accent: 240 3.7% 15.9%;
     --accent-foreground: 0 0% 98%;
 
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 91% 71%;
+    --destructive-foreground: 0 0% 100%;
 
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
@@ -207,18 +207,14 @@
 }
 
 .gradient-background {
-  background: linear-gradient(313deg,
-      #7fcfc7,
-      /* teal */
-      #f2ecd6,
-      /* soft cream */
-      #f6b35f,
-      /* golden orange */
-      #ffad5a61,
-      /* coral red */
-      #f59bb3
-      /* pink */
-    );
+  background: linear-gradient(
+    313deg,
+    #7fcfc7,
+    /* teal */ #f2ecd6,
+    /* soft cream */ #f6b35f,
+    /* golden orange */ #ffad5a61,
+    /* coral red */ #f59bb3 /* pink */
+  );
   background-size: 300% 300%;
   animation: gradient-animation 6s ease infinite;
 }

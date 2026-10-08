@@ -9,13 +9,30 @@ export type Industry =
 
 export type Sentiment = "positive" | "neutral" | "negative" | "mixed";
 
-export type Priority = "low" | "medium" | "high";
+export type Priority = "low" | "medium" | "high" | "critical";
+
+export type SeverityLevel = "low" | "medium" | "high" | "critical" | "none";
+export type UrgencyLevel = "low" | "medium" | "high" | "immediate" | "none";
 
 export interface AspectDetail {
   category: string;
   sentiment: string;
   severity: string;
-  snippet: string;
+  observation?: string;
+  evidence?: string;
+  /** @deprecated prefer observation + evidence */
+  snippet?: string;
+}
+
+export interface FeedbackIssue {
+  /** Preferred field returned by current AI analysis. */
+  issue?: string;
+  /** @deprecated compatibility alias for older analysis payloads. */
+  description?: string;
+  topic?: string;
+  severity?: SeverityLevel | string;
+  urgency?: UrgencyLevel | string;
+  evidence?: string[];
 }
 
 export interface RootCauseHypothesis {
@@ -29,6 +46,13 @@ export interface AIAnalysis {
   category: string;
   categories?: string[];
   priority: Priority;
+  severity?: SeverityLevel | string;
+  urgency?: UrgencyLevel | string;
+  intents?: string[];
+  topics?: string[];
+  issues?: FeedbackIssue[];
+  requestedCapabilities?: string[];
+  positiveAttributes?: string[];
   summary: string;
   aspects?: AspectDetail[];
   actionItems?: string[];
@@ -59,6 +83,13 @@ export interface BackendRawAiMetadata {
   category?: { label?: string; score?: number } | string;
   categories?: string[];
   priority?: { label?: string; score?: number } | string;
+  severity?: string;
+  urgency?: string;
+  intents?: string[];
+  topics?: string[];
+  issues?: FeedbackIssue[];
+  requestedCapabilities?: string[];
+  positiveAttributes?: string[];
   confidence?: number;
   summary?: string;
   executiveSummary?: string;
@@ -129,6 +160,76 @@ export interface CategoryCorrelation {
   high_priority_share_percent: number;
 }
 
+export type AttentionStatus =
+  | "Critical Alert"
+  | "Action Required"
+  | "Needs Attention"
+  | "Stable"
+  | "Healthy";
+
+export type EvidenceStrength = "limited" | "moderate" | "strong";
+export type RecommendationUrgency = "Immediate" | "Soon" | "Monitor";
+
+export interface ExecutiveKeyFinding {
+  finding: string;
+  type:
+    | "negative_signal"
+    | "positive_signal"
+    | "feature_request"
+    | "risk_signal"
+    | "mixed_signal"
+    | "operational_signal";
+  evidence_count: number;
+  evidence_feedback_ids: string[];
+  full_period_count: boolean;
+}
+
+export interface ExecutiveReportedIssue {
+  issue: string;
+  topic: string | null;
+  severity: "low" | "medium" | "high" | "critical" | null;
+  evidence_count: number;
+  evidence_feedback_ids: string[];
+  full_period_count: boolean;
+}
+
+export interface ExecutiveRootCauseHypothesis {
+  hypothesis: string;
+  confidence: "low" | "medium" | "high";
+  evidence_feedback_ids: string[];
+}
+
+export interface ExecutiveRecommendedAction {
+  rank: number;
+  title: string;
+  area: string;
+  urgency: RecommendationUrgency;
+  action: string;
+  reason: string;
+  expected_effect: string | null;
+  evidence_feedback_ids: string[];
+}
+
+export interface ExecutiveStrengthSignal {
+  strength: string;
+  evidence_count: number;
+  evidence_feedback_ids: string[];
+}
+
+export interface ExecutiveDataContext {
+  total_feedback: number;
+  positive: number;
+  negative: number;
+  neutral: number;
+  mixed: number;
+  high_priority: number;
+  medium_priority: number;
+  low_priority: number;
+  average_rating: number | null;
+  evidence_strength: EvidenceStrength;
+  evidence_note: string;
+}
+
 export interface ImpactCorrelationMetrics {
   total_feedback: number;
   total_negative: number;
@@ -138,26 +239,49 @@ export interface ImpactCorrelationMetrics {
   total_high_priority: number;
   total_medium_priority?: number;
   total_low_priority?: number;
-  average_rating: number;
-  primary_culprit_category: string;
-  primary_culprit_neg_share: number;
-  primary_culprit_high_priority_share: number;
-  quantified_impact_statement: string;
+  average_rating: number | null;
+  leading_negative_category?: string | null;
+  leading_negative_category_neg_share?: number;
+  leading_negative_category_high_priority_share?: number;
+  observed_signal_statement?: string;
   categories: CategoryCorrelation[];
   period_key?: string;
   period_label?: string;
   chart_snapshot?: {
     sentiment: Array<{ name: string; value: number }>;
     priority: Array<{ name: string; value: number }>;
-    trend: Array<{ day: string; total: number; positive: number }>;
-    top_issues: Array<{
+    trend: Array<{
+      bucket: string;
+      label: string;
+      total: number;
+      positive: number;
+      negative: number;
+      neutral: number;
+      mixed: number;
+    }>;
+    priority_feedback: Array<{
+      feedback_id: string;
+      text: string;
+      category: string;
+      rating: number | null;
+      sentiment: string;
+      priority: string;
+    }>;
+    /** @deprecated legacy alias */
+    top_issues?: Array<{
       text: string;
       category: string;
       rating: number | null;
     }>;
   };
+  /** @deprecated compatibility fields */
+  primary_culprit_category?: string;
+  primary_culprit_neg_share?: number;
+  primary_culprit_high_priority_share?: number;
+  quantified_impact_statement?: string;
 }
 
+/** @deprecated legacy compatibility shape */
 export interface StrategicDecision {
   rank: number;
   title: string;
@@ -172,19 +296,16 @@ export interface StrategicDecision {
 
 export interface ExecutiveBrief {
   headline: string;
-  macro_health_status:
-    | "Critical Alert"
-    | "Action Required"
-    | "Stable"
-    | "Healthy";
+  attention_status: AttentionStatus;
+  /** @deprecated prefer attention_status */
+  macro_health_status: AttentionStatus;
   executive_summary: string;
-  impact_correlation: {
-    primary_culprit_category: string;
-    quantified_impact_statement: string;
-    root_cause_diagnosis: string;
-  };
-  top_strategic_decisions: StrategicDecision[];
-  strengths_to_reinforce: string[];
+  data_context: ExecutiveDataContext;
+  key_findings: ExecutiveKeyFinding[];
+  reported_issues: ExecutiveReportedIssue[];
+  root_cause_hypotheses: ExecutiveRootCauseHypothesis[];
+  recommended_actions: ExecutiveRecommendedAction[];
+  strengths: ExecutiveStrengthSignal[];
   period_key?: string;
   period_label?: string;
   generated_at: string;
@@ -192,6 +313,16 @@ export interface ExecutiveBrief {
   window_start?: string | null;
   window_end?: string | null;
   is_stale?: boolean;
+  /** @deprecated compatibility fields */
+  impact_correlation?: {
+    primary_culprit_category: string;
+    quantified_impact_statement: string;
+    root_cause_diagnosis: string;
+  };
+  /** @deprecated prefer recommended_actions */
+  top_strategic_decisions?: StrategicDecision[];
+  /** @deprecated prefer strengths */
+  strengths_to_reinforce?: string[];
 }
 
 export type DashboardPeriod = "7d" | "30d" | "90d";

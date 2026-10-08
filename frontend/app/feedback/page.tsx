@@ -23,7 +23,10 @@ import {
   Minus,
   RefreshCw,
   ChevronsUpDown,
+  EqualApproximately,
+  TrendingUpDown,
 } from "lucide-react";
+import { authFetch } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -40,10 +43,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import Link from "next/link";
 import { Sentiment, Priority, Feedback } from "@/types";
 import { normalizeBackendFeedbacks } from "@/lib/normalization";
+import { normalizeEvidenceIds } from "@/lib/dashboard";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 interface DateGroup {
   date_key: string;
@@ -106,10 +112,12 @@ function parseCategoryQuery(raw: string | null): string[] {
   ];
 }
 
-function productCategoryOptions(product: {
-  settings?: { categories?: unknown };
-  config?: { categories?: unknown };
-} | null): string[] {
+function productCategoryOptions(
+  product: {
+    settings?: { categories?: unknown };
+    config?: { categories?: unknown };
+  } | null,
+): string[] {
   if (!product) return [];
   const fromSettings = product.settings?.categories;
   const fromConfig = product.config?.categories;
@@ -120,7 +128,9 @@ function productCategoryOptions(product: {
       : [];
   return [
     ...new Set(
-      raw.filter((c): c is string => typeof c === "string" && c.trim().length > 0),
+      raw.filter(
+        (c): c is string => typeof c === "string" && c.trim().length > 0,
+      ),
     ),
   ].sort();
 }
@@ -202,6 +212,8 @@ function sentimentTextClass(sentiment?: string) {
       return "text-emerald-600 dark:text-emerald-400";
     case "negative":
       return "text-red-600 dark:text-red-400";
+    case "neutral":
+      return "text-amber-600 dark:text-amber-400";
     case "mixed":
       return "text-violet-600 dark:text-violet-400";
     default:
@@ -211,6 +223,8 @@ function sentimentTextClass(sentiment?: string) {
 
 function priorityTextClass(priority?: string) {
   switch (priority) {
+    case "critical":
+      return "text-red-700 dark:text-red-300";
     case "high":
       return "text-red-600 dark:text-red-400";
     case "medium":
@@ -218,6 +232,12 @@ function priorityTextClass(priority?: string) {
     default:
       return "text-muted-foreground";
   }
+}
+
+function formatChipList(items?: string[]) {
+  return (items || []).filter(
+    (s) => typeof s === "string" && s.trim().length > 0,
+  );
 }
 
 function SentimentGlyph({
@@ -231,13 +251,37 @@ function SentimentGlyph({
 }) {
   const iconClass = size === "sm" ? "h-3.5 w-3.5" : "h-5 w-5";
   if (analyzing) {
-    return <Loader2 className={cn(iconClass, "animate-spin text-muted-foreground")} />;
+    return (
+      <Loader2
+        className={cn(iconClass, "animate-spin text-muted-foreground")}
+      />
+    );
   }
   if (sentiment === "positive") {
-    return <ThumbsUp className={cn(iconClass, "text-emerald-600 dark:text-emerald-400")} />;
+    return (
+      <ThumbsUp
+        className={cn(iconClass, "text-emerald-600 dark:text-emerald-400")}
+      />
+    );
   }
   if (sentiment === "negative") {
-    return <ThumbsDown className={cn(iconClass, "text-red-600 dark:text-red-400")} />;
+    return (
+      <ThumbsDown className={cn(iconClass, "text-red-600 dark:text-red-400")} />
+    );
+  }
+  if (sentiment === "neutral") {
+    return (
+      <EqualApproximately
+        className={cn(iconClass, "text-amber-600 dark:text-amber-400")}
+      />
+    );
+  }
+  if (sentiment === "mixed") {
+    return (
+      <TrendingUpDown
+        className={cn(iconClass, "text-violet-600 dark:text-violet-400")}
+      />
+    );
   }
   return <Minus className={cn(iconClass, "text-muted-foreground")} />;
 }
@@ -280,15 +324,17 @@ function FeedbackListRow({
       onClick={onSelect}
       className={cn(
         "group flex w-full items-start gap-3 px-3 py-3.5 text-left transition-colors",
-        selected
-          ? "bg-muted"
-          : "hover:bg-muted/70",
+        selected ? "bg-muted" : "hover:bg-muted/70",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
       )}
       aria-current={selected ? "true" : undefined}
     >
       <span className="mt-0.5 shrink-0" aria-hidden>
-        <SentimentGlyph sentiment={sentiment} analyzing={fb.isAnalyzing} size="sm" />
+        <SentimentGlyph
+          sentiment={sentiment}
+          analyzing={fb.isAnalyzing}
+          size="sm"
+        />
       </span>
       <span className="min-w-0 flex-1 space-y-1.5">
         <span className="flex items-baseline justify-between gap-2">
@@ -367,6 +413,25 @@ function MetaPill({
   );
 }
 
+function AnalysisChipRow({ label, items }: { label: string; items: string[] }) {
+  if (items.length === 0) return null;
+  return (
+    <section>
+      <h3 className="text-base font-semibold text-foreground">{label}</h3>
+      <div className="mt-2.5 flex flex-wrap gap-2">
+        {items.map((item) => (
+          <span
+            key={`${label}-${item}`}
+            className="inline-flex items-center rounded-md border border-border/50 bg-muted/40 px-2.5 py-1 text-sm capitalize text-foreground"
+          >
+            {item.replace(/_/g, " ")}
+          </span>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function FeedbackAnalysisSections({
   analysis,
 }: {
@@ -376,15 +441,56 @@ function FeedbackAnalysisSections({
     analysis.rootCauseHypotheses && analysis.rootCauseHypotheses.length > 0
       ? analysis.rootCauseHypotheses
       : analysis.rootCause
-        ? [{ hypothesis: analysis.rootCause, confidence: undefined as string | undefined }]
+        ? [
+            {
+              hypothesis: analysis.rootCause,
+              confidence: undefined as string | undefined,
+              evidence: [] as string[],
+            },
+          ]
         : [];
-
+  const intents = formatChipList(analysis.intents);
+  const topics = formatChipList(analysis.topics);
+  const capabilities = formatChipList(analysis.requestedCapabilities);
+  const praise = formatChipList(analysis.positiveAttributes);
+  const issues = analysis.issues || [];
   return (
     <div className="space-y-7">
+      <AnalysisChipRow label="Intent" items={intents} />
+      <AnalysisChipRow label="Topics" items={topics} />
+
+      {issues.length > 0 && (
+        <section>
+          <h3 className="text-base font-semibold text-foreground">Issues</h3>
+          <ul className="mt-3 divide-y divide-border/50">
+            {issues.map((issue, idx) => (
+              <li key={idx} className="py-3.5 first:pt-0 last:pb-0">
+                <p className="text-base leading-relaxed text-foreground">
+                  {issue.description}
+                </p>
+                {issue.topic && (
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Topic: {issue.topic}
+                  </p>
+                )}
+                {issue.evidence && issue.evidence.length > 0 && (
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                    “{issue.evidence[0]}”
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <AnalysisChipRow label="Requested capabilities" items={capabilities} />
+      <AnalysisChipRow label="Praise" items={praise} />
+
       {analysis.aspects && analysis.aspects.length > 0 && (
         <section>
           <h3 className="text-base font-semibold text-foreground">
-            Key findings
+            Aspect breakdown
           </h3>
           <ul className="mt-3 divide-y divide-border/50">
             {analysis.aspects.map((asp, idx) => {
@@ -392,16 +498,24 @@ function FeedbackAnalysisSections({
                 ? "positive"
                 : asp.sentiment?.toLowerCase().includes("neg")
                   ? "negative"
-                  : "neutral";
+                  : asp.sentiment?.toLowerCase().includes("mix")
+                    ? "mixed"
+                    : "neutral";
+              const detail = asp.observation || asp.snippet;
+              const quote = asp.evidence || asp.snippet;
+              const severity =
+                asp.severity && !["none", "None"].includes(asp.severity)
+                  ? asp.severity
+                  : null;
               return (
                 <li key={idx} className="py-3.5 first:pt-0 last:pb-0">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span className="text-base font-medium text-foreground">
                       {asp.category}
                     </span>
-                    {asp.severity && asp.severity !== "None" && (
-                      <span className="text-sm text-amber-700 dark:text-amber-400">
-                        {asp.severity} severity
+                    {severity && (
+                      <span className="text-sm capitalize text-amber-700 dark:text-amber-400">
+                        {severity} severity
                       </span>
                     )}
                     {asp.sentiment && (
@@ -415,9 +529,14 @@ function FeedbackAnalysisSections({
                       </span>
                     )}
                   </div>
-                  {asp.snippet && (
-                    <p className="mt-1.5 text-base leading-relaxed text-muted-foreground">
-                      “{asp.snippet}”
+                  {detail && (
+                    <p className="mt-1.5 text-base leading-relaxed text-foreground">
+                      {detail}
+                    </p>
+                  )}
+                  {quote && quote !== detail && (
+                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                      “{quote}”
                     </p>
                   )}
                 </li>
@@ -444,6 +563,13 @@ function FeedbackAnalysisSections({
                     <span className="capitalize">{h.confidence}</span>
                   </p>
                 )}
+                {"evidence" in h &&
+                  Array.isArray(h.evidence) &&
+                  h.evidence.length > 0 && (
+                    <p className="text-sm leading-relaxed text-muted-foreground">
+                      “{h.evidence[0]}”
+                    </p>
+                  )}
               </li>
             ))}
           </ul>
@@ -492,8 +618,19 @@ function FeedbackDetail({ fb }: { fb: Feedback }) {
       analysis.aspects?.length ||
       analysis.rootCauseHypotheses?.length ||
       analysis.rootCause ||
-      analysis.actionItems?.length
+      analysis.actionItems?.length ||
+      analysis.intents?.length ||
+      analysis.topics?.length ||
+      analysis.issues?.length ||
+      analysis.requestedCapabilities?.length ||
+      analysis.positiveAttributes?.length
     );
+  const severity =
+    analysis?.severity && analysis.severity !== "none"
+      ? analysis.severity
+      : null;
+  const urgency =
+    analysis?.urgency && analysis.urgency !== "none" ? analysis.urgency : null;
 
   return (
     <article className="mx-auto max-w-2xl space-y-7 text-base">
@@ -513,12 +650,38 @@ function FeedbackDetail({ fb }: { fb: Feedback }) {
             <MetaPill
               label="Priority"
               value={
-                analysis?.priority
-                  ? `${analysis.priority} priority`
-                  : "Unknown"
+                analysis?.priority ? `${analysis.priority} priority` : "Unknown"
               }
               valueClassName={priorityTextClass(analysis?.priority)}
             />
+            {severity && (
+              <MetaPill
+                label="Severity"
+                value={severity}
+                valueClassName={priorityTextClass(
+                  severity === "critical"
+                    ? "critical"
+                    : severity === "high"
+                      ? "high"
+                      : severity === "medium"
+                        ? "medium"
+                        : "low",
+                )}
+              />
+            )}
+            {urgency && (
+              <MetaPill
+                label="Urgency"
+                value={urgency}
+                valueClassName={priorityTextClass(
+                  urgency === "immediate" || urgency === "high"
+                    ? "high"
+                    : urgency === "medium"
+                      ? "medium"
+                      : "low",
+                )}
+              />
+            )}
             <MetaPill
               label="Received"
               value={new Date(fb.createdAt).toLocaleString([], {
@@ -571,9 +734,7 @@ function FeedbackDetail({ fb }: { fb: Feedback }) {
           <h2 className="text-base font-semibold text-foreground">
             Customer feedback
           </h2>
-          <p className="mt-2 text-lg leading-8 text-foreground">
-            {fb.text}
-          </p>
+          <p className="mt-2 text-lg leading-8 text-foreground">{fb.text}</p>
         </section>
 
         {analysis?.summary && !fb.isAnalyzing && (
@@ -747,7 +908,12 @@ function FeedbackInboxList({
 }
 
 function FeedbackPageContent() {
-  const { currentProduct, isBootstrapping } = useApp();
+  const {
+    currentProduct,
+    setCurrentProduct,
+    products,
+    isBootstrapping,
+  } = useApp();
   const searchParams = useSearchParams();
 
   const initialSentiment = searchParams.get("sentiment");
@@ -755,6 +921,20 @@ function FeedbackPageContent() {
   const initialCategory = searchParams.get("category");
   const highlightId = searchParams.get("highlight");
   const focusDateKey = searchParams.get("date");
+  const productIdFromUrl = searchParams.get("product_id");
+  const evidenceIds = useMemo(
+    () => normalizeEvidenceIds(searchParams.get("ids")?.split(",") ?? []),
+    [searchParams],
+  );
+  const evidenceFilterActive = evidenceIds.length > 0;
+
+  // Evidence / deep links pin the product so a new tab doesn't fall back to products[0]
+  useEffect(() => {
+    if (!productIdFromUrl || products.length === 0) return;
+    if (currentProduct?.id === productIdFromUrl) return;
+    const match = products.find((p) => p.id === productIdFromUrl);
+    if (match) setCurrentProduct(match);
+  }, [productIdFromUrl, products, currentProduct?.id, setCurrentProduct]);
 
   const [sentimentFilter, setSentimentFilter] = useState<Sentiment | "all">(
     initialSentiment === "positive" ||
@@ -811,6 +991,9 @@ function FeedbackPageContent() {
     } else {
       queryParams.set("category", categoryFilter.join(","));
     }
+    if (evidenceIds.length > 0) {
+      queryParams.set("ids", evidenceIds.join(","));
+    }
     return queryParams;
   }, [
     currentProduct,
@@ -818,17 +1001,22 @@ function FeedbackPageContent() {
     priorityFilter,
     categoryFilter,
     statusFilter,
+    evidenceIds,
   ]);
 
   const fetchPage = useCallback(
     async (cursor: string | null) => {
       const queryParams = buildFilterParams();
       if (!queryParams || !currentProduct) {
-        return { pageItems: [] as Feedback[], next: null as string | null, more: false };
+        return {
+          pageItems: [] as Feedback[],
+          next: null as string | null,
+          more: false,
+        };
       }
       if (cursor) queryParams.set("cursor", cursor);
 
-      const res = await fetch(`/api/feedbacks?${queryParams.toString()}`);
+      const res = await authFetch(`/api/feedbacks?${queryParams.toString()}`);
       if (!res.ok) {
         const body = await res.text();
         throw new Error(
@@ -847,7 +1035,8 @@ function FeedbackPageContent() {
   );
 
   const loadMore = useCallback(async () => {
-    if (!hasMoreRef.current || loadingMoreRef.current || !currentProduct) return;
+    if (!hasMoreRef.current || loadingMoreRef.current || !currentProduct)
+      return;
     if (refreshInFlightRef.current) return;
     loadingMoreRef.current = true;
     setIsLoadingMore(true);
@@ -876,7 +1065,8 @@ function FeedbackPageContent() {
   }, [currentProduct, fetchPage]);
 
   const refreshInbox = useCallback(async () => {
-    if (!currentProduct || refreshInFlightRef.current || isInitialLoading) return;
+    if (!currentProduct || refreshInFlightRef.current || isInitialLoading)
+      return;
 
     refreshInFlightRef.current = true;
     setIsRefreshing(true);
@@ -897,7 +1087,10 @@ function FeedbackPageContent() {
       } else {
         groupParams.set("category", categoryFilter.join(","));
       }
-      const groupsRes = await fetch(
+      if (evidenceIds.length > 0) {
+        groupParams.set("ids", evidenceIds.join(","));
+      }
+      const groupsRes = await authFetch(
         `/api/feedbacks/date-groups?${groupParams.toString()}`,
       );
       if (groupsRes.ok) {
@@ -952,12 +1145,15 @@ function FeedbackPageContent() {
     priorityFilter,
     categoryFilter,
     statusFilter,
+    evidenceIds,
     fetchPage,
   ]);
 
   // Initial load + filter changes
   useEffect(() => {
     if (!currentProduct) return;
+    // Wait until deep-linked product is selected (avoids empty evidence fetches)
+    if (productIdFromUrl && currentProduct.id !== productIdFromUrl) return;
 
     let cancelled = false;
     setIsInitialLoading(true);
@@ -984,7 +1180,10 @@ function FeedbackPageContent() {
         } else {
           groupParams.set("category", categoryFilter.join(","));
         }
-        const groupsRes = await fetch(
+        if (evidenceIds.length > 0) {
+          groupParams.set("ids", evidenceIds.join(","));
+        }
+        const groupsRes = await authFetch(
           `/api/feedbacks/date-groups?${groupParams.toString()}`,
         );
         if (groupsRes.ok) {
@@ -1005,7 +1204,7 @@ function FeedbackPageContent() {
           if (focusParams && focusDateKey) {
             focusParams.set("date", focusDateKey);
             focusParams.delete("limit");
-            const focusRes = await fetch(
+            const focusRes = await authFetch(
               `/api/feedbacks?${focusParams.toString()}`,
             );
             if (focusRes.ok && !cancelled) {
@@ -1081,6 +1280,8 @@ function FeedbackPageContent() {
     statusFilter,
     focusDateKey,
     highlightId,
+    evidenceIds,
+    productIdFromUrl,
     fetchPage,
     buildFilterParams,
   ]);
@@ -1103,14 +1304,7 @@ function FeedbackPageContent() {
     if (items.some((f) => f.id === highlightId)) return;
     if (!hasMore || isLoadingMore) return;
     void loadMore();
-  }, [
-    highlightId,
-    items,
-    hasMore,
-    isLoadingMore,
-    isInitialLoading,
-    loadMore,
-  ]);
+  }, [highlightId, items, hasMore, isLoadingMore, isInitialLoading, loadMore]);
 
   const rows: ListRow[] = useMemo(() => {
     const counts = new Map<string, number>();
@@ -1246,6 +1440,20 @@ function FeedbackPageContent() {
           )}
         >
           <div className="flex flex-wrap items-center gap-2">
+            {evidenceFilterActive && (
+              <Badge
+                variant="secondary"
+                className="gap-1.5 py-1 pl-2.5 pr-1 text-xs font-normal"
+              >
+                Evidence set ({evidenceIds.length})
+                <Link
+                  href="/feedback"
+                  className="rounded px-1.5 py-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                  Clear
+                </Link>
+              </Badge>
+            )}
             <Select
               value={sentimentFilter}
               onValueChange={(value) =>
@@ -1309,19 +1517,14 @@ function FeedbackPageContent() {
               aria-label="Refresh feedback"
             >
               <RefreshCw
-                className={cn(
-                  "h-3.5 w-3.5",
-                  isRefreshing && "animate-spin",
-                )}
+                className={cn("h-3.5 w-3.5", isRefreshing && "animate-spin")}
               />
               Refresh
             </Button>
           </div>
         </div>
 
-        {loadError && (
-          <p className="text-xs text-destructive">{loadError}</p>
-        )}
+        {loadError && <p className="text-xs text-destructive">{loadError}</p>}
 
         <div className="grid min-h-0 flex-1 overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm md:grid-cols-[minmax(17rem,24rem)_minmax(0,1fr)]">
           <aside
@@ -1374,10 +1577,7 @@ function FeedbackPageContent() {
                 aria-label="Refresh feedback"
               >
                 <RefreshCw
-                  className={cn(
-                    "h-3.5 w-3.5",
-                    isRefreshing && "animate-spin",
-                  )}
+                  className={cn("h-3.5 w-3.5", isRefreshing && "animate-spin")}
                 />
               </Button>
             </div>
@@ -1399,8 +1599,7 @@ function FeedbackPageContent() {
                     type="button"
                     onClick={() => selectRelative(1)}
                     disabled={
-                      !selectedId ||
-                      items[items.length - 1]?.id === selectedId
+                      !selectedId || items[items.length - 1]?.id === selectedId
                     }
                     className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted disabled:opacity-40"
                     aria-label="Next feedback"
