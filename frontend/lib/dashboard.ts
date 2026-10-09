@@ -62,19 +62,24 @@ export function insightsHref(opts?: {
 }
 
 export function formatChangeTone(change: DashboardChangeDelta | null | undefined): string {
-  if (!change) return "text-muted-foreground";
-  if (change.direction === "up") return "text-destructive";
-  if (change.direction === "down") return "text-emerald-600 dark:text-emerald-400";
-  if (change.direction === "new") return "text-amber-700 dark:text-amber-300";
-  return "text-muted-foreground";
+  if (!change) return "text-slate-500 dark:text-slate-400";
+  if (change.direction === "up" || change.direction === "new") return "text-rose-600 dark:text-rose-400 font-semibold";
+  if (change.direction === "down") return "text-emerald-600 dark:text-emerald-400 font-semibold";
+  return "text-slate-500 dark:text-slate-400";
 }
 
 export function formatPositiveChangeTone(change: DashboardChangeDelta | null | undefined): string {
-  if (!change) return "text-muted-foreground";
-  if (change.direction === "up") return "text-emerald-600 dark:text-emerald-400";
-  if (change.direction === "down") return "text-muted-foreground";
-  if (change.direction === "new") return "text-emerald-600 dark:text-emerald-400";
-  return "text-muted-foreground";
+  if (!change) return "text-slate-500 dark:text-slate-400";
+  if (change.direction === "up" || change.direction === "new") return "text-emerald-600 dark:text-emerald-400 font-semibold";
+  if (change.direction === "down") return "text-amber-600 dark:text-amber-400 font-medium";
+  return "text-slate-500 dark:text-slate-400";
+}
+
+export function formatVolumeChangeTone(change: DashboardChangeDelta | null | undefined): string {
+  if (!change) return "text-slate-500 dark:text-slate-400";
+  if (change.direction === "up" || change.direction === "new") return "text-emerald-600 dark:text-emerald-400 font-semibold";
+  if (change.direction === "down") return "text-amber-600 dark:text-amber-400 font-semibold";
+  return "text-slate-500 dark:text-slate-400 font-medium";
 }
 
 export function formatRangeLabel(fromIso: string, toIso: string): string {

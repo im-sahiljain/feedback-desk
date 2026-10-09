@@ -16,6 +16,7 @@ const {
   computeChangeDelta,
   isDashboardPeriod,
   resolveDashboardWindows,
+  sentimentDirection,
 } = await import('../src/dashboard/summary.js');
 
 test('dashboard periods are restricted to 7d/30d/90d', () => {
@@ -73,3 +74,18 @@ test('comparison windows are contiguous and equal length', () => {
   assert.ok(windows.comparisonFrom.getTime() < windows.comparisonTo.getTime());
   assert.ok(windows.from.getTime() < windows.to.getTime());
 });
+
+test('sentimentDirection returns baseline when previous period has no data but current has enough sample', () => {
+  assert.equal(sentimentDirection(46.7, null, 33.3, null, 15), 'baseline');
+});
+
+test('sentimentDirection returns insufficient when analyzed is below threshold', () => {
+  assert.equal(sentimentDirection(50, 20, 50, 80, 2), 'insufficient');
+});
+
+test('sentimentDirection evaluates improving and worsening correctly', () => {
+  assert.equal(sentimentDirection(20, 30, 60, 50, 10), 'improving');
+  assert.equal(sentimentDirection(35, 20, 40, 55, 10), 'worsening');
+  assert.equal(sentimentDirection(20, 20, 50, 50, 10), 'stable');
+});
+

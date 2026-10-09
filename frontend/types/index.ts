@@ -359,7 +359,7 @@ export interface DashboardSummary {
       negativePct: number | null;
       mixedPct: number | null;
       neutralPct: number | null;
-      direction: "improving" | "worsening" | "stable" | "insufficient";
+      direction: "improving" | "worsening" | "stable" | "insufficient" | "baseline";
     };
     negativeChange: DashboardChangeDelta;
     needsAttention: {

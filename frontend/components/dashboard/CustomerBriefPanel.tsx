@@ -36,7 +36,9 @@ export function CustomerBriefPanel({
           <Sparkles className="h-4 w-4 text-primary" />
           <CardTitle className="text-base">AI Customer Brief</CardTitle>
         </div>
-        <CardDescription>Concise intelligence from your saved executive brief</CardDescription>
+        <CardDescription>
+          Concise intelligence from your saved executive brief
+        </CardDescription>
       </CardHeader>
       <CardContent>
         {loading && !data ? (
@@ -49,7 +51,8 @@ export function CustomerBriefPanel({
           <div className="space-y-3 rounded-lg border border-dashed px-4 py-6 text-center">
             <p className="text-sm font-medium">Executive brief unavailable</p>
             <p className="text-xs text-muted-foreground">
-              Core metrics are still available. Try again or generate a brief in Insights.
+              Core metrics are still available. Try again or generate a brief in
+              Insights.
             </p>
             <div className="flex justify-center gap-2">
               {onRetry && (
@@ -64,10 +67,11 @@ export function CustomerBriefPanel({
           </div>
         ) : !brief?.available ? (
           <div className="space-y-3 rounded-lg border border-dashed bg-muted/20 px-4 py-6 text-center">
-            <p className="text-sm font-medium">No customer brief for this period yet</p>
+            <p className="text-sm font-medium">
+              No customer brief for this period yet
+            </p>
             <p className="text-xs text-muted-foreground">
-              Generate a brief in Insights. Dashboard only shows saved briefs — it never
-              regenerates AI on page load.
+              Generate a brief in Insights.
             </p>
             <Button asChild size="sm" className="gap-1.5">
               <Link href={insightsHref({ period })}>

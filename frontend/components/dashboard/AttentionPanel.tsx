@@ -49,7 +49,9 @@ export function AttentionPanel({
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <ShieldAlert className="h-4 w-4 text-destructive" />
-              <CardTitle className="text-base">Needs your attention</CardTitle>
+              <CardTitle className="text-base">
+                Areas that need your attention
+              </CardTitle>
             </div>
             <CardDescription>
               Ranked feedback areas with elevated negative or high-priority

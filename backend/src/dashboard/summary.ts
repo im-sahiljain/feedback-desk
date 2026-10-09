@@ -38,7 +38,7 @@ export interface DashboardSummaryPayload {
       negativePct: number | null;
       mixedPct: number | null;
       neutralPct: number | null;
-      direction: 'improving' | 'worsening' | 'stable' | 'insufficient';
+      direction: 'improving' | 'worsening' | 'stable' | 'insufficient' | 'baseline';
     };
     negativeChange: ChangeDelta;
     needsAttention: {
@@ -197,15 +197,19 @@ function pctOf(part: number, whole: number): number | null {
   return Math.round((part / whole) * 1000) / 10;
 }
 
-function sentimentDirection(
+export function sentimentDirection(
   currentNegPct: number | null,
   previousNegPct: number | null,
   currentPosPct: number | null,
   previousPosPct: number | null,
   analyzed: number
-): 'improving' | 'worsening' | 'stable' | 'insufficient' {
+): 'improving' | 'worsening' | 'stable' | 'insufficient' | 'baseline' {
   if (analyzed < MIN_SAMPLE_FOR_PCT) return 'insufficient';
-  if (currentNegPct == null || previousNegPct == null) return 'insufficient';
+  if (currentNegPct == null) return 'insufficient';
+
+  if (previousNegPct == null) {
+    return 'baseline';
+  }
 
   const negDelta = currentNegPct - previousNegPct;
   const posDelta =

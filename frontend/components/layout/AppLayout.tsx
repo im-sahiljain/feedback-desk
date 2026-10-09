@@ -25,7 +25,7 @@ export function AppLayout({
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
-    <div className="flex h-svh w-full overflow-hidden bg-background md:bg-muted/70 md:gap-3 md:p-3">
+    <div className="flex fixed inset-0 overflow-hidden bg-background md:bg-muted/70 md:gap-3 md:p-3">
       <LoadingBackdrop />
 
       {/* Desktop rail */}

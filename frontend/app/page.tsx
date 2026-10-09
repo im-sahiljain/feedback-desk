@@ -123,23 +123,26 @@ export default function Dashboard() {
                 )}
               </div>
             </div>
-            <div
-              className="flex flex-wrap items-center gap-1.5 rounded-lg border border-border/60 bg-background/80 p-1"
-              role="group"
-              aria-label="Time period"
-            >
-              {DASHBOARD_PERIODS.map(({ key, label }) => (
-                <Button
-                  key={key}
-                  variant={selectedPeriod === key ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setSelectedPeriod(key)}
-                  className="h-7 px-2.5 text-xs"
-                  aria-pressed={selectedPeriod === key}
-                >
-                  {label}
-                </Button>
-              ))}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-muted-foreground">Last:</span>
+              <div
+                className="flex flex-wrap items-center gap-1.5 rounded-lg border border-border/60 bg-background/80 p-1"
+                role="group"
+                aria-label="Time period"
+              >
+                {DASHBOARD_PERIODS.map(({ key, label }) => (
+                  <Button
+                    key={key}
+                    variant={selectedPeriod === key ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setSelectedPeriod(key)}
+                    className="h-7 px-2.5 text-xs"
+                    aria-pressed={selectedPeriod === key}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -161,57 +164,56 @@ export default function Dashboard() {
           </Card>
         )}
 
-        {isEmpty ? (
-          <Card className="border-dashed">
-            <CardContent className="space-y-4 px-6 py-12 text-center">
-              <h2 className="text-lg font-semibold">
-                Your customer intelligence will appear here once feedback starts arriving.
-              </h2>
-              <p className="mx-auto max-w-md text-sm text-muted-foreground">
-                Share your public feedback link or add feedback manually to start building
-                the command center.
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-2">
+        {isEmpty && (
+          <Card className="border-dashed bg-muted/20">
+            <CardContent className="flex flex-col items-center justify-between gap-4 p-6 text-center sm:flex-row sm:text-left">
+              <div className="space-y-1">
+                <h3 className="text-sm font-semibold">
+                  Awaiting your first customer feedback
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Share your public feedback link or add feedback manually to start populating your dashboard.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
                 {currentProduct.public_feedback_path ? (
-                  <Button size="sm" className="gap-1.5" onClick={copyFeedbackLink}>
+                  <Button size="sm" className="gap-1.5 text-xs" onClick={copyFeedbackLink}>
                     <Copy className="h-3.5 w-3.5" />
                     {copied ? "Copied" : "Copy feedback link"}
                   </Button>
                 ) : null}
-                <Button asChild size="sm" variant="outline">
+                <Button asChild size="sm" variant="outline" className="text-xs">
                   <Link href="/products">Manage product links</Link>
                 </Button>
               </div>
             </CardContent>
           </Card>
-        ) : (
-          <>
-            <DashboardKpiRow data={data} loading={isLoading} />
-
-            <div className="grid gap-4 lg:grid-cols-5">
-              <AttentionPanel data={data} loading={isLoading} period={selectedPeriod} />
-              <CustomerBriefPanel
-                data={data}
-                loading={isLoading}
-                period={selectedPeriod}
-              />
-            </div>
-
-            <div className="grid gap-4 lg:grid-cols-2">
-              <WhatChangedPanel data={data} loading={isLoading} period={selectedPeriod} />
-              <SentimentTrendPanel data={data} loading={isLoading} />
-            </div>
-
-            <TopAreasPanel data={data} loading={isLoading} period={selectedPeriod} />
-
-            <div className="grid gap-4 lg:grid-cols-2">
-              <PositiveSignalsPanel data={data} loading={isLoading} />
-              <CriticalFeedbackPanel data={data} loading={isLoading} />
-            </div>
-
-            <ProcessingStatusPanel data={data} loading={isLoading} />
-          </>
         )}
+
+        <DashboardKpiRow data={data} loading={isLoading} />
+
+        <div className="grid gap-4 lg:grid-cols-5">
+          <AttentionPanel data={data} loading={isLoading} period={selectedPeriod} />
+          <CustomerBriefPanel
+            data={data}
+            loading={isLoading}
+            period={selectedPeriod}
+          />
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <WhatChangedPanel data={data} loading={isLoading} period={selectedPeriod} />
+          <SentimentTrendPanel data={data} loading={isLoading} />
+        </div>
+
+        <TopAreasPanel data={data} loading={isLoading} period={selectedPeriod} />
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <PositiveSignalsPanel data={data} loading={isLoading} />
+          <CriticalFeedbackPanel data={data} loading={isLoading} />
+        </div>
+
+        <ProcessingStatusPanel data={data} loading={isLoading} />
       </div>
     </AppLayout>
   );
