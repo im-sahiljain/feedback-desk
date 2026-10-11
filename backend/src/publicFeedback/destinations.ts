@@ -5,7 +5,7 @@ import { HttpError } from '../errors/httpError.js';
 
 export interface PublicDestination {
   id: string;
-  organization_id: string;
+  organization_id?: string;
   product_id: string;
   public_token: string;
   status: 'active' | 'revoked';
@@ -18,7 +18,7 @@ export async function getActiveDestinationForProduct(
   productId: string
 ): Promise<PublicDestination | null> {
   const result = await pool.query<PublicDestination>(
-    `SELECT id, organization_id, product_id, public_token, status, created_at, revoked_at
+    `SELECT id, product_id, public_token, status, created_at, revoked_at
      FROM public_feedback_destinations
      WHERE product_id = $1 AND status = 'active'
      ORDER BY created_at DESC LIMIT 1`,
@@ -32,11 +32,11 @@ export async function resolvePublicDestination(
   publicToken: string
 ): Promise<{
   destination: PublicDestination;
-  product: { id: string; industry: string | null; settings: Record<string, unknown>; name: string; organization_id: string };
+  product: { id: string; industry: string | null; settings: Record<string, unknown>; name: string; user_id?: string; organization_id?: string };
 } | null> {
   const result = await pool.query(
-    `SELECT d.id, d.organization_id, d.product_id, d.public_token, d.status, d.created_at, d.revoked_at,
-            p.industry, p.settings, p.name, p.deleted_at AS product_deleted
+    `SELECT d.id, d.product_id, d.public_token, d.status, d.created_at, d.revoked_at,
+            p.user_id, p.industry, p.settings, p.name, p.deleted_at AS product_deleted
      FROM public_feedback_destinations d
      JOIN products p ON p.id = d.product_id
      WHERE d.public_token = $1`,
@@ -50,19 +50,20 @@ export async function resolvePublicDestination(
   return {
     destination: {
       id: row.id,
-      organization_id: row.organization_id,
       product_id: row.product_id,
       public_token: row.public_token,
       status: row.status,
       created_at: row.created_at,
       revoked_at: row.revoked_at,
+      organization_id: row.user_id,
     },
     product: {
       id: row.product_id,
       industry: row.industry,
       settings: row.settings || {},
       name: row.name,
-      organization_id: row.organization_id,
+      user_id: row.user_id,
+      organization_id: row.user_id,
     },
   };
 }
@@ -70,9 +71,9 @@ export async function resolvePublicDestination(
 export async function createDestination(
   pool: Pool,
   input: {
-    organizationId: string;
     productId: string;
     createdBy: string;
+    organizationId?: string;
     ip?: string;
     userAgent?: string;
   }
@@ -80,14 +81,13 @@ export async function createDestination(
   const token = generatePublicToken();
   const result = await pool.query<PublicDestination>(
     `INSERT INTO public_feedback_destinations
-     (organization_id, product_id, public_token, status, created_by)
-     VALUES ($1, $2, $3, 'active', $4)
-     RETURNING id, organization_id, product_id, public_token, status, created_at, revoked_at`,
-    [input.organizationId, input.productId, token, input.createdBy]
+     (product_id, public_token, status, created_by)
+     VALUES ($1, $2, 'active', $3)
+     RETURNING id, product_id, public_token, status, created_at, revoked_at`,
+    [input.productId, token, input.createdBy]
   );
 
   await recordAudit(pool, {
-    organizationId: input.organizationId,
     actorUserId: input.createdBy,
     action: 'public_link.generated',
     resourceType: 'public_feedback_destination',
@@ -104,7 +104,7 @@ export async function revokeDestination(
   pool: Pool,
   destinationId: string,
   actorUserId: string,
-  organizationId: string,
+  _organizationId?: string,
   meta?: { ip?: string; userAgent?: string }
 ): Promise<void> {
   const result = await pool.query(
@@ -119,7 +119,6 @@ export async function revokeDestination(
   }
 
   await recordAudit(pool, {
-    organizationId,
     actorUserId,
     action: 'public_link.revoked',
     resourceType: 'public_feedback_destination',
@@ -133,7 +132,7 @@ export async function revokeDestination(
 export async function regenerateDestination(
   pool: Pool,
   productId: string,
-  organizationId: string,
+  _organizationId: string,
   actorUserId: string,
   meta?: { ip?: string; userAgent?: string }
 ): Promise<PublicDestination> {
@@ -150,15 +149,14 @@ export async function regenerateDestination(
     const token = generatePublicToken();
     const result = await client.query<PublicDestination>(
       `INSERT INTO public_feedback_destinations
-       (organization_id, product_id, public_token, status, created_by)
-       VALUES ($1, $2, $3, 'active', $4)
-       RETURNING id, organization_id, product_id, public_token, status, created_at, revoked_at`,
-      [organizationId, productId, token, actorUserId]
+       (product_id, public_token, status, created_by)
+       VALUES ($1, $2, 'active', $3)
+       RETURNING id, product_id, public_token, status, created_at, revoked_at`,
+      [productId, token, actorUserId]
     );
     await client.query('COMMIT');
 
     await recordAudit(pool, {
-      organizationId,
       actorUserId,
       action: 'public_link.regenerated',
       resourceType: 'public_feedback_destination',

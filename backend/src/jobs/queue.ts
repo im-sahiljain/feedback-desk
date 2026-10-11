@@ -29,13 +29,12 @@ export async function enqueueJob(pool: Pool, input: EnqueueJobInput): Promise<{ 
   try {
     const result = await pool.query<{ id: string }>(
       `INSERT INTO background_jobs
-       (job_type, status, payload, organization_id, resource_type, resource_id, idempotency_key, max_attempts, available_at)
-       VALUES ($1, 'queued', $2, $3, $4, $5, $6, $7, $8)
+       (job_type, status, payload, resource_type, resource_id, idempotency_key, max_attempts, available_at)
+       VALUES ($1, 'queued', $2, $3, $4, $5, $6, $7)
        RETURNING id`,
       [
         input.jobType,
         JSON.stringify(input.payload),
-        input.organizationId || null,
         input.resourceType || null,
         input.resourceId || null,
         input.idempotencyKey || null,
@@ -69,7 +68,6 @@ export async function claimNextJob(
   payload: Record<string, unknown>;
   attempts: number;
   max_attempts: number;
-  organization_id: string | null;
   resource_id: string | null;
   created_at: Date;
 } | null> {
@@ -80,7 +78,7 @@ export async function claimNextJob(
     const selectParams: unknown[] = jobTypes && jobTypes.length > 0 ? [jobTypes] : [];
 
     const result = await client.query(
-      `SELECT id, job_type, payload, attempts, max_attempts, organization_id, resource_id, created_at
+      `SELECT id, job_type, payload, attempts, max_attempts, resource_id, created_at
        FROM background_jobs
        WHERE status IN ('queued', 'retrying')
          AND available_at <= now()
@@ -233,7 +231,7 @@ export async function reclaimStaleLocks(
     }
 
     // Orphan analyzing rows (job row missing / never linked) past the same timeout
-    const orphans = await client.query<{ id: string; organization_id: string | null }>(
+    const orphans = await client.query<{ id: string }>(
       `UPDATE feedbacks
        SET processing_status = 'queued',
            status = 'queued',
@@ -243,7 +241,7 @@ export async function reclaimStaleLocks(
          AND processing_status = 'analyzing'
          AND analyzing_at IS NOT NULL
          AND analyzing_at < now() - make_interval(secs => $1)
-       RETURNING id, organization_id`,
+       RETURNING id`,
       [timeoutSec]
     );
     feedbackReset += orphans.rowCount ?? orphans.rows.length;
@@ -287,12 +285,11 @@ export async function reclaimStaleLocks(
       // Insert missing jobs for feedback with no analyze_feedback row at all
       const inserted = await client.query(
         `INSERT INTO background_jobs
-           (job_type, status, payload, organization_id, resource_type, resource_id, idempotency_key, max_attempts, available_at)
+           (job_type, status, payload, resource_type, resource_id, idempotency_key, max_attempts, available_at)
          SELECT
            'analyze_feedback',
            'queued',
            jsonb_build_object('feedbackId', f.id::text),
-           f.organization_id,
            'feedback',
            f.id,
            'analyze:' || f.id::text || ':reclaim:' || extract(epoch from now())::bigint::text,

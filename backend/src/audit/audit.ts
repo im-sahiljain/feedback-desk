@@ -18,10 +18,9 @@ export async function recordAudit(pool: Pool, input: AuditInput): Promise<void> 
     const safeMeta = sanitizeObject(input.metadata || {});
     await pool.query(
       `INSERT INTO audit_events
-       (organization_id, actor_user_id, action, resource_type, resource_id, metadata, ip_address, user_agent)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+       (actor_user_id, action, resource_type, resource_id, metadata, ip_address, user_agent)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       [
-        input.organizationId || null,
         input.actorUserId || null,
         input.action,
         input.resourceType || null,

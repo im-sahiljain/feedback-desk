@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { Loader2, MailCheck, ArrowLeft, RefreshCw, Mail } from "lucide-react"
+import { Loader2, MailCheck, ArrowLeft, RefreshCw, Mail, Sparkles } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 import { useApp } from "@/context/AppContext"
@@ -34,6 +34,7 @@ export function LoginForm() {
     const router = useRouter()
 
     const [isLoading, setIsLoading] = useState(false)
+    const [isDemoLoading, setIsDemoLoading] = useState(false)
     const [isResending, setIsResending] = useState(false)
     const [requiresOtp, setRequiresOtp] = useState(false)
     const [userEmail, setUserEmail] = useState("")
@@ -55,6 +56,27 @@ export function LoginForm() {
         }, 1000)
         return () => clearInterval(timer)
     }, [cooldown])
+
+    async function handleDemoLogin() {
+        setIsDemoLoading(true)
+        try {
+            await api.auth.demoLogin()
+            refetchUser()
+            toast({
+                title: "Welcome to the Demo Workspace!",
+                description: "You are signed in to explore sample data and analytics.",
+            })
+            router.push("/")
+        } catch (error: any) {
+            toast({
+                variant: "destructive",
+                title: "Demo Sign In Error",
+                description: error.message || "Failed to start demo session. Please try again.",
+            })
+        } finally {
+            setIsDemoLoading(false)
+        }
+    }
 
     async function onSubmitEmail(values: z.infer<typeof formSchema>) {
         setIsLoading(true)
@@ -213,7 +235,7 @@ export function LoginForm() {
                         </FormItem>
                     )}
                 />
-                <Button className="w-full" type="submit" disabled={isLoading}>
+                <Button className="w-full" type="submit" disabled={isLoading || isDemoLoading}>
                     {isLoading ? (
                         <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -226,6 +248,38 @@ export function LoginForm() {
                         </>
                     )}
                 </Button>
+
+                <div className="relative my-4">
+                    <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t border-border" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-2 text-muted-foreground">Or look around first</span>
+                    </div>
+                </div>
+
+                <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full border-dashed border-primary/40 hover:border-primary hover:bg-primary/5 transition-all text-sm font-medium py-5"
+                    onClick={handleDemoLogin}
+                    disabled={isLoading || isDemoLoading}
+                >
+                    {isDemoLoading ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin text-primary" />
+                            Starting Demo Workspace...
+                        </>
+                    ) : (
+                        <>
+                            <Sparkles className="mr-2 h-4 w-4 text-amber-500 fill-amber-500/20" />
+                            Explore Live Demo Workspace →
+                        </>
+                    )}
+                </Button>
+                <p className="text-[11px] text-center text-muted-foreground mt-1">
+                    Instant access with sample SaaS data • No sign-up required
+                </p>
             </form>
         </Form>
     )

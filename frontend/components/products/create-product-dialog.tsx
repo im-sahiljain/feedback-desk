@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
+import { useApp } from "@/context/AppContext"
 import { api } from "@/lib/api"
 import {
     INDUSTRY_OPTIONS,
@@ -65,6 +66,7 @@ interface CreateProductDialogProps {
 
 export function CreateProductDialog({ open, onOpenChange, onSuccess }: CreateProductDialogProps) {
     const { toast } = useToast()
+    const { isDemo } = useApp()
     const [isLoading, setIsLoading] = useState(false)
     const [customLabels, setCustomLabels] = useState<string[]>([])
     const [customInput, setCustomInput] = useState('')
@@ -174,6 +176,11 @@ export function CreateProductDialog({ open, onOpenChange, onSuccess }: CreatePro
                     <DialogDescription>
                         Setup a new product for your feedback.
                     </DialogDescription>
+                    {isDemo && (
+                        <div className="mt-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs">
+                            <strong>Demo Sandbox:</strong> Product creation is disabled in demo mode. Create a free account to manage custom products.
+                        </div>
+                    )}
                 </DialogHeader>
 
                 <Form {...form}>
@@ -305,9 +312,9 @@ export function CreateProductDialog({ open, onOpenChange, onSuccess }: CreatePro
                             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                                 Cancel
                             </Button>
-                            <Button type="submit" disabled={isLoading}>
+                            <Button type="submit" disabled={isLoading || isDemo}>
                                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Create Product
+                                {isDemo ? "Disabled in Demo Mode" : "Create Product"}
                             </Button>
                         </div>
                     </form>

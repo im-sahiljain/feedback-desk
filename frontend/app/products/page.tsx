@@ -40,7 +40,7 @@ import { authFetch } from "@/lib/api";
 import { QRCodeSVG } from "qrcode.react";
 
 function ProductsContent() {
-  const { products, refreshProducts, isLoadingProduct } = useApp();
+  const { products, refreshProducts, isLoadingProduct, isDemo } = useApp();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [qrProduct, setQrProduct] = useState<Product | null>(null);
   const [qrUrl, setQrUrl] = useState<string>("");
@@ -54,10 +54,10 @@ function ProductsContent() {
   const action = searchParams.get("action");
 
   useEffect(() => {
-    if (action === "create") {
+    if (action === "create" && !isDemo) {
       setIsCreateOpen(true);
     }
-  }, [action]);
+  }, [action, isDemo]);
 
   const handleCreateOpenChange = (open: boolean) => {
     setIsCreateOpen(open);
@@ -276,16 +276,38 @@ function ProductsContent() {
     <AppLayout title="Products" description="Manage your products">
       <div className="space-y-4 sm:space-y-6">
         {/* Header Actions */}
-        <div className="flex justify-end">
-          <Button onClick={() => setIsCreateOpen(true)} className="max-sm:w-full">
+        <div className="flex justify-end items-center gap-3">
+          {isDemo && (
+            <span className="text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/80 px-2.5 py-1 rounded-md">
+              Product creation disabled in demo
+            </span>
+          )}
+          <Button
+            onClick={() => {
+              if (isDemo) {
+                toast({
+                  title: "Action Disabled in Demo Mode",
+                  description: "Creating new products is disabled in the demo sandbox. Create a free account to manage your own products.",
+                  variant: "destructive",
+                });
+                return;
+              }
+              setIsCreateOpen(true);
+            }}
+            disabled={isDemo}
+            className="max-sm:w-full"
+            title={isDemo ? "Product creation is disabled in demo mode" : undefined}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Create Product
           </Button>
-          <CreateProductDialog
-            open={isCreateOpen}
-            onOpenChange={handleCreateOpenChange}
-            onSuccess={handleProductCreated}
-          />
+          {!isDemo && (
+            <CreateProductDialog
+              open={isCreateOpen}
+              onOpenChange={handleCreateOpenChange}
+              onSuccess={handleProductCreated}
+            />
+          )}
         </div>
 
         {/* Products Grid */}

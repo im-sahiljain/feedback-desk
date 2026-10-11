@@ -25,9 +25,12 @@ import {
   ChevronsUpDown,
   EqualApproximately,
   TrendingUpDown,
+  Search,
+  X,
 } from "lucide-react";
 import { authFetch } from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -919,6 +922,10 @@ function FeedbackPageContent() {
   const initialSentiment = searchParams.get("sentiment");
   const initialPriority = searchParams.get("priority");
   const initialCategory = searchParams.get("category");
+  const initialRating = searchParams.get("rating");
+  const initialPeriod = searchParams.get("period");
+  const initialStatus = searchParams.get("status");
+  const initialSearch = searchParams.get("search");
   const highlightId = searchParams.get("highlight");
   const focusDateKey = searchParams.get("date");
   const productIdFromUrl = searchParams.get("product_id");
@@ -935,6 +942,17 @@ function FeedbackPageContent() {
     const match = products.find((p) => p.id === productIdFromUrl);
     if (match) setCurrentProduct(match);
   }, [productIdFromUrl, products, currentProduct?.id, setCurrentProduct]);
+
+  const [searchInput, setSearchInput] = useState(initialSearch || "");
+  const [searchFilter, setSearchFilter] = useState(initialSearch || "");
+
+  // Debounce search query changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchFilter(searchInput);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   const [sentimentFilter, setSentimentFilter] = useState<Sentiment | "all">(
     initialSentiment === "positive" ||
@@ -954,13 +972,60 @@ function FeedbackPageContent() {
   const [categoryFilter, setCategoryFilter] = useState<string[]>(() =>
     parseCategoryQuery(initialCategory),
   );
-  const [statusFilter] = useState<string>(searchParams.get("status") || "all");
+  const [ratingFilter, setRatingFilter] = useState<string>(
+    initialRating && ["5", "4", "3", "2", "1"].includes(initialRating)
+      ? initialRating
+      : "all",
+  );
+  const [periodFilter, setPeriodFilter] = useState<string>(
+    initialPeriod && ["7d", "30d", "90d"].includes(initialPeriod)
+      ? initialPeriod
+      : "all",
+  );
+  const [statusFilter, setStatusFilter] = useState<string>(
+    initialStatus && ["completed", "pending", "failed"].includes(initialStatus)
+      ? initialStatus
+      : "all",
+  );
   const [availableCategories, setAvailableCategories] = useState<string[]>(
     () => {
       const seed = parseCategoryQuery(initialCategory);
       return seed;
     },
   );
+
+  const resetFilters = useCallback(() => {
+    setSearchInput("");
+    setSearchFilter("");
+    setSentimentFilter("all");
+    setPriorityFilter("all");
+    setCategoryFilter([]);
+    setRatingFilter("all");
+    setPeriodFilter("all");
+    setStatusFilter("all");
+  }, []);
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (searchFilter.trim()) count++;
+    if (sentimentFilter !== "all") count++;
+    if (priorityFilter !== "all") count++;
+    if (categoryFilter.length > 0) count++;
+    if (ratingFilter !== "all") count++;
+    if (periodFilter !== "all") count++;
+    if (statusFilter !== "all") count++;
+    if (evidenceFilterActive) count++;
+    return count;
+  }, [
+    searchFilter,
+    sentimentFilter,
+    priorityFilter,
+    categoryFilter.length,
+    ratingFilter,
+    periodFilter,
+    statusFilter,
+    evidenceFilterActive,
+  ]);
 
   const [items, setItems] = useState<Feedback[]>([]);
   const [hasMore, setHasMore] = useState(false);
@@ -977,19 +1042,27 @@ function FeedbackPageContent() {
   const hasMoreRef = useRef(false);
   const refreshInFlightRef = useRef(false);
 
-  const buildFilterParams = useCallback(() => {
+  const buildBaseFilterParams = useCallback(() => {
     if (!currentProduct) return null;
     const queryParams = new URLSearchParams({
       product_id: currentProduct.id,
       sentiment: sentimentFilter,
       priority: priorityFilter,
       status: statusFilter,
-      limit: String(PAGE_SIZE),
     });
     if (categoryFilter.length === 0) {
       queryParams.set("category", "all");
     } else {
       queryParams.set("category", categoryFilter.join(","));
+    }
+    if (ratingFilter !== "all") {
+      queryParams.set("rating", ratingFilter);
+    }
+    if (periodFilter !== "all") {
+      queryParams.set("period", periodFilter);
+    }
+    if (searchFilter.trim()) {
+      queryParams.set("search", searchFilter.trim());
     }
     if (evidenceIds.length > 0) {
       queryParams.set("ids", evidenceIds.join(","));
@@ -1001,8 +1074,18 @@ function FeedbackPageContent() {
     priorityFilter,
     categoryFilter,
     statusFilter,
+    ratingFilter,
+    periodFilter,
+    searchFilter,
     evidenceIds,
   ]);
+
+  const buildFilterParams = useCallback(() => {
+    const queryParams = buildBaseFilterParams();
+    if (!queryParams) return null;
+    queryParams.set("limit", String(PAGE_SIZE));
+    return queryParams;
+  }, [buildBaseFilterParams]);
 
   const fetchPage = useCallback(
     async (cursor: string | null) => {
@@ -1076,20 +1159,8 @@ function FeedbackPageContent() {
     hasMoreRef.current = false;
 
     try {
-      const groupParams = new URLSearchParams({
-        product_id: currentProduct.id,
-        sentiment: sentimentFilter,
-        priority: priorityFilter,
-        status: statusFilter,
-      });
-      if (categoryFilter.length === 0) {
-        groupParams.set("category", "all");
-      } else {
-        groupParams.set("category", categoryFilter.join(","));
-      }
-      if (evidenceIds.length > 0) {
-        groupParams.set("ids", evidenceIds.join(","));
-      }
+      const groupParams = buildBaseFilterParams();
+      if (!groupParams) return;
       const groupsRes = await authFetch(
         `/api/feedbacks/date-groups?${groupParams.toString()}`,
       );
@@ -1141,11 +1212,8 @@ function FeedbackPageContent() {
   }, [
     currentProduct,
     isInitialLoading,
-    sentimentFilter,
-    priorityFilter,
+    buildBaseFilterParams,
     categoryFilter,
-    statusFilter,
-    evidenceIds,
     fetchPage,
   ]);
 
@@ -1169,32 +1237,21 @@ function FeedbackPageContent() {
     const run = async () => {
       try {
         // Total count from date-groups (single request)
-        const groupParams = new URLSearchParams({
-          product_id: currentProduct.id,
-          sentiment: sentimentFilter,
-          priority: priorityFilter,
-          status: statusFilter,
-        });
-        if (categoryFilter.length === 0) {
-          groupParams.set("category", "all");
-        } else {
-          groupParams.set("category", categoryFilter.join(","));
-        }
-        if (evidenceIds.length > 0) {
-          groupParams.set("ids", evidenceIds.join(","));
-        }
-        const groupsRes = await authFetch(
-          `/api/feedbacks/date-groups?${groupParams.toString()}`,
-        );
-        if (groupsRes.ok) {
-          const groups = await groupsRes.json();
-          if (!cancelled && Array.isArray(groups)) {
-            setTotalCount(
-              groups.reduce(
-                (acc: number, g: { count?: number }) => acc + (g.count || 0),
-                0,
-              ),
-            );
+        const groupParams = buildBaseFilterParams();
+        if (groupParams) {
+          const groupsRes = await authFetch(
+            `/api/feedbacks/date-groups?${groupParams.toString()}`,
+          );
+          if (groupsRes.ok) {
+            const groups = await groupsRes.json();
+            if (!cancelled && Array.isArray(groups)) {
+              setTotalCount(
+                groups.reduce(
+                  (acc: number, g: { count?: number }) => acc + (g.count || 0),
+                  0,
+                ),
+              );
+            }
           }
         }
 
@@ -1274,13 +1331,10 @@ function FeedbackPageContent() {
     };
   }, [
     currentProduct,
-    sentimentFilter,
-    priorityFilter,
+    buildBaseFilterParams,
     categoryFilter,
-    statusFilter,
     focusDateKey,
     highlightId,
-    evidenceIds,
     productIdFromUrl,
     fetchPage,
     buildFilterParams,
@@ -1435,7 +1489,7 @@ function FeedbackPageContent() {
       <div className="flex min-h-0 flex-1 flex-col gap-3">
         <div
           className={cn(
-            "shrink-0 flex-col gap-2 sm:flex-row sm:items-center",
+            "shrink-0 flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between",
             mobileShowDetail ? "hidden md:flex" : "flex",
           )}
         >
@@ -1454,6 +1508,32 @@ function FeedbackPageContent() {
                 </Link>
               </Badge>
             )}
+
+            <div className="relative min-w-[180px] max-w-xs flex-1">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search feedback or email…"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="h-8 pl-8 pr-7 text-xs bg-background"
+                aria-label="Search feedback or email"
+              />
+              {searchInput && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchInput("");
+                    setSearchFilter("");
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  aria-label="Clear search"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+
             <Select
               value={sentimentFilter}
               onValueChange={(value) =>
@@ -1461,7 +1541,7 @@ function FeedbackPageContent() {
               }
             >
               <SelectTrigger
-                className="h-8 w-[140px] text-xs"
+                className="h-8 w-[130px] text-xs"
                 aria-label="Sentiment filter"
               >
                 <SelectValue placeholder="Sentiment" />
@@ -1474,6 +1554,7 @@ function FeedbackPageContent() {
                 <SelectItem value="mixed">Mixed</SelectItem>
               </SelectContent>
             </Select>
+
             <Select
               value={priorityFilter}
               onValueChange={(value) =>
@@ -1481,7 +1562,7 @@ function FeedbackPageContent() {
               }
             >
               <SelectTrigger
-                className="h-8 w-[130px] text-xs"
+                className="h-8 w-[120px] text-xs"
                 aria-label="Priority filter"
               >
                 <SelectValue placeholder="Priority" />
@@ -1493,19 +1574,91 @@ function FeedbackPageContent() {
                 <SelectItem value="low">Low</SelectItem>
               </SelectContent>
             </Select>
+
+            <Select
+              value={ratingFilter}
+              onValueChange={setRatingFilter}
+            >
+              <SelectTrigger
+                className="h-8 w-[125px] text-xs"
+                aria-label="Rating filter"
+              >
+                <SelectValue placeholder="Rating" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All ratings</SelectItem>
+                <SelectItem value="5">5 Stars ★★★★★</SelectItem>
+                <SelectItem value="4">4 Stars ★★★★☆</SelectItem>
+                <SelectItem value="3">3 Stars ★★★☆☆</SelectItem>
+                <SelectItem value="2">2 Stars ★★☆☆☆</SelectItem>
+                <SelectItem value="1">1 Star  ★☆☆☆☆</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={periodFilter}
+              onValueChange={setPeriodFilter}
+            >
+              <SelectTrigger
+                className="h-8 w-[120px] text-xs"
+                aria-label="Time period filter"
+              >
+                <SelectValue placeholder="Period" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All time</SelectItem>
+                <SelectItem value="7d">Last 7 days</SelectItem>
+                <SelectItem value="30d">Last 30 days</SelectItem>
+                <SelectItem value="90d">Last 90 days</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={statusFilter}
+              onValueChange={setStatusFilter}
+            >
+              <SelectTrigger
+                className="h-8 w-[125px] text-xs"
+                aria-label="Status filter"
+              >
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All status</SelectItem>
+                <SelectItem value="completed">Analyzed</SelectItem>
+                <SelectItem value="pending">Processing</SelectItem>
+                <SelectItem value="failed">Failed</SelectItem>
+              </SelectContent>
+            </Select>
+
             <CategoryMultiSelect
               options={availableCategories}
               selected={categoryFilter}
               onChange={setCategoryFilter}
             />
+
+            {activeFilterCount > 0 && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground"
+                onClick={resetFilters}
+                aria-label="Clear all filters"
+              >
+                <X className="h-3.5 w-3.5" />
+                Reset ({activeFilterCount})
+              </Button>
+            )}
           </div>
-          <div className="flex items-center gap-2 sm:ml-auto">
+
+          <div className="flex items-center gap-2 shrink-0 sm:ml-auto">
             <p className="text-[11px] text-muted-foreground">
               {isInitialLoading
                 ? "Loading…"
                 : isRefreshing
                   ? "Refreshing…"
-                  : `${items.length}${hasMore ? "+" : ""} loaded`}
+                  : `${totalCount > 0 ? `${items.length} of ${totalCount}` : `${items.length}${hasMore ? "+" : ""}`} items`}
             </p>
             <Button
               type="button"
@@ -1539,8 +1692,19 @@ function FeedbackPageContent() {
                 Loading timeline…
               </div>
             ) : items.length === 0 ? (
-              <div className="flex h-full items-center justify-center px-6 text-center text-xs text-muted-foreground">
-                No feedback matches your filters.
+              <div className="flex h-full flex-col items-center justify-center gap-2.5 px-6 text-center text-xs text-muted-foreground">
+                <p>No feedback matches your filters.</p>
+                {activeFilterCount > 0 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={resetFilters}
+                    className="h-7 px-2.5 text-xs"
+                  >
+                    Clear filters
+                  </Button>
+                )}
               </div>
             ) : (
               <FeedbackInboxList

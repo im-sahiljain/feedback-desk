@@ -62,7 +62,7 @@ async function persistFeedbackAndEnqueue(
   pool: ReturnType<typeof getPool>,
   args: {
     productId: string;
-    organizationId: string;
+    organizationId?: string;
     destinationId: string | null;
     feedback: string;
     email: string;
@@ -102,13 +102,12 @@ async function persistFeedbackAndEnqueue(
 
   const insert = await pool.query(
     `INSERT INTO feedbacks
-     (product_id, organization_id, public_destination_id, feedback, email, rating,
+     (product_id, public_destination_id, feedback, email, rating,
       status, processing_status, received_at, queued_at, idempotency_key, submission_fingerprint, sanitized_feedback)
-     VALUES ($1,$2,$3,$4,$5,$6,'received','queued', now(), now(), $7, $8, $9)
+     VALUES ($1,$2,$3,$4,$5,'received','queued', now(), now(), $6, $7, $8)
      RETURNING id, created_at`,
     [
       args.productId,
-      args.organizationId,
       args.destinationId,
       args.feedback,
       args.email || null,
@@ -124,7 +123,6 @@ async function persistFeedbackAndEnqueue(
   await enqueueJob(pool, {
     jobType: JOB_ANALYZE_FEEDBACK,
     payload: { feedbackId },
-    organizationId: args.organizationId,
     resourceType: 'feedback',
     resourceId: feedbackId,
     idempotencyKey: `analyze:${feedbackId}`,
@@ -178,7 +176,6 @@ router.post('/public/:token', feedbackSubmitLimiter, publicDestinationLimiter, a
 
     const result = await persistFeedbackAndEnqueue(pool, {
       productId: resolved.product.id,
-      organizationId: resolved.product.organization_id,
       destinationId: resolved.destination.id,
       feedback,
       email,
@@ -238,7 +235,7 @@ router.post('/submit', feedbackSubmitLimiter, async (req: Request, res: Response
 
     const pool = getPool();
     const prodRes = await pool.query(
-      `SELECT id, user_id, organization_id, industry, deleted_at
+      `SELECT id, user_id, industry, deleted_at
        FROM products WHERE id = $1`,
       [productId]
     );
@@ -255,9 +252,6 @@ router.post('/submit', feedbackSubmitLimiter, async (req: Request, res: Response
     ) {
       return res.status(403).json({ error: 'Invalid feedback link' });
     }
-    if (!prodRes.rows[0].organization_id) {
-      return res.status(403).json({ error: 'Product is not configured for public feedback' });
-    }
 
     // Prefer active opaque destination if present (legacy URL still works)
     const destRes = await pool.query(
@@ -268,7 +262,6 @@ router.post('/submit', feedbackSubmitLimiter, async (req: Request, res: Response
 
     const result = await persistFeedbackAndEnqueue(pool, {
       productId: String(productId),
-      organizationId: prodRes.rows[0].organization_id,
       destinationId: destRes.rows[0]?.id || null,
       feedback,
       email,
@@ -353,9 +346,46 @@ router.get('/date-groups', authenticateUser as any, async (req: AuthenticatedReq
       paramIndex++;
     }
     if (statusFilter && statusFilter !== 'all') {
-      conditions.push(`processing_status = $${paramIndex}`);
-      values.push(statusFilter);
+      if (statusFilter === 'processing' || statusFilter === 'pending') {
+        conditions.push(`processing_status IN ('queued', 'analyzing', 'received')`);
+      } else if (statusFilter === 'analyzed' || statusFilter === 'completed') {
+        conditions.push(`processing_status = 'analyzed'`);
+      } else {
+        conditions.push(`processing_status = $${paramIndex}`);
+        values.push(statusFilter);
+        paramIndex++;
+      }
+    }
+
+    const ratingFilter = req.query.rating as string;
+    if (ratingFilter && ratingFilter !== 'all') {
+      conditions.push(`rating = $${paramIndex}::int`);
+      values.push(ratingFilter);
       paramIndex++;
+    }
+
+    const searchFilter = (req.query.search as string)?.trim();
+    if (searchFilter) {
+      conditions.push(`(feedback ILIKE $${paramIndex} OR email ILIKE $${paramIndex})`);
+      values.push(`%${searchFilter}%`);
+      paramIndex++;
+    }
+
+    const period = req.query.period as string;
+    const customStart = req.query.start_date as string;
+    const customEnd = req.query.end_date as string;
+    if (period && period !== 'all') {
+      const { startDate, endDate } = parsePeriodBounds(period, customStart, customEnd);
+      if (startDate) {
+        conditions.push(`created_at >= $${paramIndex}`);
+        values.push(startDate);
+        paramIndex++;
+      }
+      if (endDate) {
+        conditions.push(`created_at <= $${paramIndex}`);
+        values.push(endDate);
+        paramIndex++;
+      }
     }
 
     const query = `
@@ -440,8 +470,28 @@ router.get('/', authenticateUser as any, async (req: AuthenticatedRequest, res: 
       paramIndex++;
     }
     if (statusFilter && statusFilter !== 'all') {
-      conditions.push(`processing_status = $${paramIndex}`);
-      values.push(statusFilter);
+      if (statusFilter === 'processing' || statusFilter === 'pending') {
+        conditions.push(`processing_status IN ('queued', 'analyzing', 'received')`);
+      } else if (statusFilter === 'analyzed' || statusFilter === 'completed') {
+        conditions.push(`processing_status = 'analyzed'`);
+      } else {
+        conditions.push(`processing_status = $${paramIndex}`);
+        values.push(statusFilter);
+        paramIndex++;
+      }
+    }
+
+    const ratingFilter = req.query.rating as string;
+    if (ratingFilter && ratingFilter !== 'all') {
+      conditions.push(`rating = $${paramIndex}::int`);
+      values.push(ratingFilter);
+      paramIndex++;
+    }
+
+    const searchFilter = (req.query.search as string)?.trim();
+    if (searchFilter) {
+      conditions.push(`(feedback ILIKE $${paramIndex} OR email ILIKE $${paramIndex})`);
+      values.push(`%${searchFilter}%`);
       paramIndex++;
     }
 
@@ -478,7 +528,7 @@ router.get('/', authenticateUser as any, async (req: AuthenticatedRequest, res: 
     values.push(limit + 1);
     const query = `
       SELECT
-        id, product_id, organization_id, feedback, email, rating, status, processing_status,
+        id, product_id, feedback, email, rating, status, processing_status,
         categories, category_name, sentiment_label, priority_label, confidence,
         raw_ai_metadata, analysis_version, created_at, received_at, analyzed_at, analysis_failed_at
       FROM feedbacks
@@ -519,7 +569,7 @@ router.delete('/:id', authenticateUser as any, async (req: AuthenticatedRequest,
 
     const feedbackId = String(Array.isArray(id) ? id[0] : id);
     const fb = await pool.query(
-      `SELECT f.id, f.product_id, f.organization_id
+      `SELECT f.id, f.product_id
        FROM feedbacks f
        WHERE f.id = $1 AND f.deleted_at IS NULL`,
       [feedbackId]
@@ -528,12 +578,11 @@ router.delete('/:id', authenticateUser as any, async (req: AuthenticatedRequest,
       return res.status(404).json({ error: 'Resource not found' });
     }
 
-    const access = await requireProductAccess(pool, req.user.id, fb.rows[0].product_id, 'feedback:delete');
+    await requireProductAccess(pool, req.user.id, fb.rows[0].product_id, 'feedback:delete');
 
     await pool.query(`UPDATE feedbacks SET deleted_at = now() WHERE id = $1`, [feedbackId]);
 
     await recordAudit(pool, {
-      organizationId: access.organizationId,
       actorUserId: req.user.id,
       action: 'feedback.deleted',
       resourceType: 'feedback',

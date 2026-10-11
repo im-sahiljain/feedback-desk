@@ -85,6 +85,18 @@ test('RBAC permissions', () => {
   assert.equal(roleHasPermission('owner', 'org:delete'), true);
   assert.equal(roleHasPermission('member', 'public_link:manage'), false);
   assert.equal(roleHasPermission('admin', 'public_link:manage'), true);
+  // Demo role permissions
+  assert.equal(roleHasPermission('demo', 'feedback:read'), true);
+  assert.equal(roleHasPermission('demo', 'product:read'), true);
+  assert.equal(roleHasPermission('demo', 'analytics:read'), true);
+  assert.equal(roleHasPermission('demo', 'brief:read'), true);
+  assert.equal(roleHasPermission('demo', 'feedback:delete'), false);
+  assert.equal(roleHasPermission('demo', 'product:create'), false);
+  assert.equal(roleHasPermission('demo', 'product:update'), false);
+  assert.equal(roleHasPermission('demo', 'product:delete'), false);
+  assert.equal(roleHasPermission('demo', 'org:manage'), false);
+  assert.equal(roleHasPermission('demo', 'settings:update'), false);
+  assert.equal(roleHasPermission('demo', 'public_link:manage'), false);
 });
 
 test('qualitative confidence only', () => {

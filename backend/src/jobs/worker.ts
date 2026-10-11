@@ -48,7 +48,6 @@ export async function processAnalyzeFeedbackJob(job: {
   payload: Record<string, unknown>;
   attempts: number;
   max_attempts: number;
-  organization_id: string | null;
   resource_id: string | null;
   created_at: Date;
 }): Promise<void> {
@@ -62,11 +61,10 @@ export async function processAnalyzeFeedbackJob(job: {
     id: string;
     feedback: string;
     product_id: string;
-    organization_id: string | null;
     processing_status: string;
     analysis_version: string | null;
   }>(
-    `SELECT id, feedback, product_id, organization_id, processing_status, analysis_version
+    `SELECT id, feedback, product_id, processing_status, analysis_version
      FROM feedbacks WHERE id = $1 AND deleted_at IS NULL`,
     [feedbackId]
   );
@@ -158,13 +156,12 @@ export async function processAnalyzeFeedbackJob(job: {
 
   await pool.query(
     `INSERT INTO ai_processing_metrics
-     (job_id, feedback_id, organization_id, provider, model_name, success, latency_ms, queue_wait_ms,
+     (job_id, feedback_id, provider, model_name, success, latency_ms, queue_wait_ms,
       retry_count, parse_failure, prompt_version, schema_version, analysis_version)
-     VALUES ($1::uuid,$2::uuid,$3::uuid,$4::text,$5::text,TRUE,$6::integer,$7::integer,$8::integer,$9::boolean,$10::text,$11::text,$12::text)`,
+     VALUES ($1::uuid,$2::uuid,$3::text,$4::text,TRUE,$5::integer,$6::integer,$7::integer,$8::boolean,$9::text,$10::text,$11::text)`,
     [
       job.id,
       feedbackId,
-      feedback.organization_id || job.organization_id,
       analysis.model_provider,
       analysis.model_name,
       latencyMs,
@@ -181,7 +178,7 @@ export async function processAnalyzeFeedbackJob(job: {
 }
 
 async function handleJobFailure(
-  job: { id: string; attempts: number; max_attempts: number; resource_id: string | null; payload: Record<string, unknown>; organization_id: string | null },
+  job: { id: string; attempts: number; max_attempts: number; resource_id: string | null; payload: Record<string, unknown> },
   err: unknown
 ): Promise<void> {
   const pool = getPool();
@@ -205,13 +202,12 @@ async function handleJobFailure(
 
   await pool.query(
     `INSERT INTO ai_processing_metrics
-     (job_id, feedback_id, organization_id, provider, model_name, success, retry_count, parse_failure, error_code,
+     (job_id, feedback_id, provider, model_name, success, retry_count, parse_failure, error_code,
       prompt_version, schema_version, analysis_version)
-     VALUES ($1::uuid,$2::uuid,$3::uuid,'google',$4::text,FALSE,$5::integer,TRUE,$6::text,$7::text,$8::text,$9::text)`,
+     VALUES ($1::uuid,$2::uuid,'google',$3::text,FALSE,$4::integer,TRUE,$5::text,$6::text,$7::text,$8::text)`,
     [
       job.id,
       feedbackId || null,
-      job.organization_id,
       MODEL_PLACEHOLDER,
       Math.max(0, job.attempts - 1),
       'analysis_error',

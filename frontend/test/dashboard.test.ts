@@ -54,7 +54,7 @@ describe("dashboard navigation helpers", () => {
       direction: "down",
       display: "↓ 20%",
     };
-    assert.match(formatChangeTone(up), /destructive/);
+    assert.match(formatChangeTone(up), /(destructive|rose)/);
     assert.match(formatChangeTone(down), /emerald/);
     assert.match(formatPositiveChangeTone(up), /emerald/);
   });

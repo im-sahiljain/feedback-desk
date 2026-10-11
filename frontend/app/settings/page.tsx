@@ -16,7 +16,7 @@ import { toast } from '@/hooks/use-toast';
 import { authFetch } from '@/lib/api';
 
 export default function Settings() {
-  const { currentProduct, setCurrentProduct, refreshProducts, isBootstrapping } = useApp();
+  const { currentProduct, setCurrentProduct, refreshProducts, isBootstrapping, isDemo } = useApp();
   const [editedProduct, setEditedProduct] = useState<Product | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [newCategory, setNewCategory] = useState('');
@@ -233,8 +233,29 @@ export default function Settings() {
           </div>
 
           <div className="flex items-center gap-2.5 self-end sm:self-auto">
+            {isDemo && (
+              <span className="text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/80 px-2.5 py-1 rounded-md">
+                Settings read-only in demo
+              </span>
+            )}
             {!isEditing ? (
-              <Button onClick={() => setIsEditing(true)} size="sm" className="text-xs h-9 gap-1.5 min-w-[100px]">
+              <Button
+                onClick={() => {
+                  if (isDemo) {
+                    toast({
+                      title: "Action Disabled in Demo Mode",
+                      description: "Product settings are read-only in the demo sandbox.",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  setIsEditing(true);
+                }}
+                disabled={isDemo}
+                title={isDemo ? "Settings are read-only in demo mode" : undefined}
+                size="sm"
+                className="text-xs h-9 gap-1.5 min-w-[100px]"
+              >
                 <Edit3 className="h-3.5 w-3.5" />
                 Edit
               </Button>

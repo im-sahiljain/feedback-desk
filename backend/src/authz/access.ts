@@ -1,6 +1,6 @@
 import { Pool } from 'pg';
 import { HttpError } from '../errors/httpError.js';
-import { OrgRole, Permission, roleHasPermission } from '../organizations/roles.js';
+import { OrgRole, Permission } from '../organizations/roles.js';
 
 export interface Membership {
   organizationId: string;
@@ -10,42 +10,25 @@ export interface Membership {
 
 export interface ProductAccess {
   productId: string;
-  organizationId: string;
+  organizationId?: string;
+  userId: string;
   role: OrgRole;
   industry: string | null;
   settings: Record<string, unknown>;
   name: string;
 }
 
-export async function requireOrganizationMembership(
-  pool: Pool,
-  userId: string,
-  organizationId: string,
-  permission?: Permission
-): Promise<Membership> {
-  const result = await pool.query<{ organization_id: string; user_id: string; role: OrgRole }>(
-    `SELECT organization_id, user_id, role
-     FROM organization_members
-     WHERE organization_id = $1 AND user_id = $2`,
-    [organizationId, userId]
-  );
-
-  if (result.rows.length === 0) {
-    throw new HttpError(404, 'Resource not found');
-  }
-
-  const membership = {
-    organizationId: result.rows[0].organization_id,
-    userId: result.rows[0].user_id,
-    role: result.rows[0].role,
-  };
-
-  if (permission && !roleHasPermission(membership.role, permission)) {
-    throw new HttpError(403, 'Insufficient permissions');
-  }
-
-  return membership;
-}
+const WRITE_PERMISSIONS: Permission[] = [
+  'product:create',
+  'product:update',
+  'product:delete',
+  'feedback:delete',
+  'settings:update',
+  'public_link:manage',
+  'org:manage',
+  'org:members',
+  'org:delete',
+];
 
 export async function requireProductAccess(
   pool: Pool,
@@ -55,91 +38,93 @@ export async function requireProductAccess(
 ): Promise<ProductAccess> {
   const result = await pool.query<{
     id: string;
-    organization_id: string;
+    user_id: string;
     industry: string | null;
     settings: Record<string, unknown>;
     name: string;
     role: OrgRole;
   }>(
-    `SELECT p.id, p.organization_id, p.industry, p.settings, p.name, om.role
+    `SELECT p.id, p.user_id, p.industry, p.settings, p.name, COALESCE(u.role, 'user') as role
      FROM products p
-     JOIN organization_members om
-       ON om.organization_id = p.organization_id AND om.user_id = $2
-     WHERE p.id = $1
-       AND p.deleted_at IS NULL
-       AND p.organization_id IS NOT NULL`,
+     JOIN users u ON u.id::text = $2::text
+     WHERE p.id::text = $1::text
+       AND p.user_id::text = $2::text
+       AND p.deleted_at IS NULL`,
     [productId, userId]
   );
 
   if (result.rows.length === 0) {
-    // Hide existence from other tenants
     throw new HttpError(404, 'Resource not found');
   }
 
   const row = result.rows[0];
-  if (!roleHasPermission(row.role, permission)) {
-    throw new HttpError(403, 'Insufficient permissions');
+
+  if (WRITE_PERMISSIONS.includes(permission) && row.role === 'demo') {
+    throw new HttpError(403, 'User not allowed: This action is disabled in demo mode', 'DEMO_USER_NOT_ALLOWED');
   }
 
   return {
     productId: row.id,
-    organizationId: row.organization_id,
+    userId: row.user_id,
     role: row.role,
     industry: row.industry,
     settings: row.settings || {},
     name: row.name,
+    organizationId: row.user_id, // Backwards compatibility for existing references
+  };
+}
+
+export async function requireOrganizationMembership(
+  pool: Pool,
+  userId: string,
+  _organizationId?: string,
+  permission?: Permission
+): Promise<Membership> {
+  const userRes = await pool.query<{ id: string; role: OrgRole }>(
+    `SELECT id, COALESCE(role, 'user') as role FROM users WHERE id::text = $1::text`,
+    [userId]
+  );
+
+  if (userRes.rows.length === 0) {
+    throw new HttpError(404, 'User not found');
+  }
+
+  const user = userRes.rows[0];
+
+  if (permission && WRITE_PERMISSIONS.includes(permission) && user.role === 'demo') {
+    throw new HttpError(403, 'User not allowed: This action is disabled in demo mode', 'DEMO_USER_NOT_ALLOWED');
+  }
+
+  return {
+    organizationId: user.id,
+    userId: user.id,
+    role: user.role,
   };
 }
 
 export async function requireRole(
   pool: Pool,
   userId: string,
-  organizationId: string,
+  _organizationId: string,
   allowed: OrgRole[]
 ): Promise<Membership> {
-  const membership = await requireOrganizationMembership(pool, userId, organizationId);
+  const membership = await requireOrganizationMembership(pool, userId);
   if (!allowed.includes(membership.role)) {
-    throw new HttpError(403, 'Insufficient permissions');
+    if (membership.role === 'demo') {
+      throw new HttpError(403, 'User not allowed: This action is disabled in demo mode', 'DEMO_USER_NOT_ALLOWED');
+    }
+    throw new HttpError(403, 'User not allowed: Insufficient permissions', 'FORBIDDEN');
   }
   return membership;
 }
 
 /**
- * Ensure user has a personal organization (for first product create / signup).
+ * Backwards compatibility helper: returns userId.
  */
 export async function ensurePersonalOrganization(
-  pool: Pool,
+  _pool: Pool,
   userId: string,
-  displayName?: string
+  _displayName?: string
 ): Promise<string> {
-  const existing = await pool.query<{ organization_id: string }>(
-    `SELECT organization_id FROM organization_members
-     WHERE user_id = $1 AND role = 'owner'
-     ORDER BY created_at ASC LIMIT 1`,
-    [userId]
-  );
-  if (existing.rows[0]) return existing.rows[0].organization_id;
-
-  const userRes = await pool.query<{ email: string; name: string | null }>(
-    'SELECT email, name FROM users WHERE id = $1',
-    [userId]
-  );
-  const user = userRes.rows[0];
-  const name =
-    displayName ||
-    (user?.name ? `${user.name}'s Organization` : `${(user?.email || 'user').split('@')[0]}'s Organization`);
-
-  const org = await pool.query<{ id: string }>(
-    `INSERT INTO organizations (name, slug, created_by)
-     VALUES ($1, $2, $3) RETURNING id`,
-    [name, `org-${userId.replace(/-/g, '')}`, userId]
-  );
-
-  await pool.query(
-    `INSERT INTO organization_members (organization_id, user_id, role)
-     VALUES ($1, $2, 'owner')`,
-    [org.rows[0].id, userId]
-  );
-
-  return org.rows[0].id;
+  return userId;
 }

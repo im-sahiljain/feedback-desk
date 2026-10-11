@@ -1,8 +1,10 @@
 async function parseErrorResponse(response: Response, defaultMessage: string): Promise<Error> {
     let message = defaultMessage;
+    let code: string | undefined;
     try {
         const errorData = await response.json();
         message = errorData.error || errorData.message || defaultMessage;
+        code = errorData.code;
     } catch {
         try {
             const text = await response.text();
@@ -13,6 +15,7 @@ async function parseErrorResponse(response: Response, defaultMessage: string): P
     }
     const err: any = new Error(message);
     err.status = response.status;
+    err.code = code;
     return err;
 }
 
@@ -43,6 +46,7 @@ const AUTH_SKIP_REFRESH_PREFIXES = [
     '/api/auth/resend-otp',
     '/api/auth/refresh',
     '/api/auth/logout',
+    '/api/auth/demo-login',
 ];
 
 /**
@@ -140,6 +144,20 @@ export const api = {
             if (!response.ok) {
                 throw await parseErrorResponse(response, 'Session refresh failed');
             }
+            return response.json();
+        },
+        demoLogin: async () => {
+            const response = await fetch('/api/auth/demo-login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                throw await parseErrorResponse(response, 'Failed to start demo session');
+            }
+
             return response.json();
         },
         logout: async () => {

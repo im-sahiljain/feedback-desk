@@ -1,10 +1,12 @@
-export type OrgRole = 'owner' | 'admin' | 'member' | 'analyst';
+export type OrgRole = 'owner' | 'admin' | 'member' | 'analyst' | 'demo';
+export type UserRole = 'user' | 'admin' | 'demo';
 
 export const ROLE_RANK: Record<OrgRole, number> = {
   owner: 4,
   admin: 3,
   member: 2,
   analyst: 1,
+  demo: 0,
 };
 
 /** Permission matrix — backend is authoritative */
@@ -15,11 +17,11 @@ export const PERMISSIONS = {
   'product:create': ['owner', 'admin'] as OrgRole[],
   'product:update': ['owner', 'admin'] as OrgRole[],
   'product:delete': ['owner', 'admin'] as OrgRole[],
-  'product:read': ['owner', 'admin', 'member', 'analyst'] as OrgRole[],
-  'feedback:read': ['owner', 'admin', 'member', 'analyst'] as OrgRole[],
+  'product:read': ['owner', 'admin', 'member', 'analyst', 'demo'] as OrgRole[],
+  'feedback:read': ['owner', 'admin', 'member', 'analyst', 'demo'] as OrgRole[],
   'feedback:delete': ['owner', 'admin'] as OrgRole[],
-  'analytics:read': ['owner', 'admin', 'member', 'analyst'] as OrgRole[],
-  'brief:read': ['owner', 'admin', 'member', 'analyst'] as OrgRole[],
+  'analytics:read': ['owner', 'admin', 'member', 'analyst', 'demo'] as OrgRole[],
+  'brief:read': ['owner', 'admin', 'member', 'analyst', 'demo'] as OrgRole[],
   'settings:update': ['owner', 'admin'] as OrgRole[],
   'public_link:manage': ['owner', 'admin'] as OrgRole[],
 } as const;

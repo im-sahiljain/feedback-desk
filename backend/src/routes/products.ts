@@ -4,8 +4,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { getPool } from '../db.js';
 import { authenticateUser, AuthenticatedRequest } from './auth.js';
-import { ensurePersonalOrganization, requireProductAccess } from '../authz/access.js';
-import { toSafeClientError } from '../errors/httpError.js';
+import { requireProductAccess } from '../authz/access.js';
+import { HttpError, toSafeClientError } from '../errors/httpError.js';
 import { logger } from '../logging/logger.js';
 import { recordAudit } from '../audit/audit.js';
 import {
@@ -54,8 +54,7 @@ router.get('/', authenticateUser as any, async (req: AuthenticatedRequest, res: 
     const result = await pool.query(
       `SELECT p.*
        FROM products p
-       JOIN organization_members om ON om.organization_id = p.organization_id
-       WHERE om.user_id = $1 AND p.deleted_at IS NULL
+       WHERE p.user_id::text = $1::text AND p.deleted_at IS NULL
        ORDER BY p.created_at DESC`,
       [req.user.id]
     );
@@ -87,11 +86,14 @@ router.post('/', authenticateUser as any, async (req: AuthenticatedRequest, res:
   try {
     if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
 
-    const orgId = await ensurePersonalOrganization(pool, req.user.id);
+    const userRes = await pool.query<{ role: string }>('SELECT role FROM users WHERE id::text = $1::text', [req.user.id]);
+    if (userRes.rows[0]?.role === 'demo') {
+      throw new HttpError(403, 'User not allowed: This action is disabled in demo mode', 'DEMO_USER_NOT_ALLOWED');
+    }
 
     const existing = await pool.query(
-      'SELECT id FROM products WHERE organization_id = $1 AND name = $2 AND deleted_at IS NULL',
-      [orgId, name]
+      'SELECT id FROM products WHERE user_id::text = $1::text AND name = $2 AND deleted_at IS NULL',
+      [req.user.id, name]
     );
     if (existing.rows.length > 0) {
       return res.status(400).json({ error: 'Product with same name already exists' });
@@ -101,14 +103,13 @@ router.post('/', authenticateUser as any, async (req: AuthenticatedRequest, res:
     if (categories) settings.categories = categories;
 
     const result = await pool.query(
-      `INSERT INTO products (user_id, organization_id, name, industry, description, settings)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [req.user.id, orgId, name, industry, description, settings]
+      `INSERT INTO products (user_id, name, industry, description, settings)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [req.user.id, name, industry, description, settings]
     );
 
     const product = result.rows[0];
     await createDestination(pool, {
-      organizationId: orgId,
       productId: product.id,
       createdBy: req.user.id,
       ip: req.ip,
@@ -116,7 +117,6 @@ router.post('/', authenticateUser as any, async (req: AuthenticatedRequest, res:
     });
 
     await recordAudit(pool, {
-      organizationId: orgId,
       actorUserId: req.user.id,
       action: 'product.created',
       resourceType: 'product',
@@ -161,10 +161,10 @@ router.post('/:id/public-link/revoke', authenticateUser as any, async (req: Auth
   const pool = getPool();
   try {
     if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-    const access = await requireProductAccess(pool, req.user.id, paramId(req.params.id), 'public_link:manage');
+    await requireProductAccess(pool, req.user.id, paramId(req.params.id), 'public_link:manage');
     const dest = await getActiveDestinationForProduct(pool, paramId(req.params.id));
     if (!dest) return res.status(404).json({ error: 'No active public feedback link' });
-    await revokeDestination(pool, dest.id, req.user.id, access.organizationId, {
+    await revokeDestination(pool, dest.id, req.user.id, undefined, {
       ip: req.ip,
       userAgent: req.headers['user-agent'],
     });
@@ -179,8 +179,8 @@ router.post('/:id/public-link/regenerate', authenticateUser as any, async (req: 
   const pool = getPool();
   try {
     if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-    const access = await requireProductAccess(pool, req.user.id, paramId(req.params.id), 'public_link:manage');
-    const dest = await regenerateDestination(pool, paramId(req.params.id), access.organizationId, req.user.id, {
+    await requireProductAccess(pool, req.user.id, paramId(req.params.id), 'public_link:manage');
+    const dest = await regenerateDestination(pool, paramId(req.params.id), '', req.user.id, {
       ip: req.ip,
       userAgent: req.headers['user-agent'],
     });
@@ -227,7 +227,7 @@ router.put('/:id', authenticateUser as any, async (req: AuthenticatedRequest, re
   const pool = getPool();
   try {
     if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-    const access = await requireProductAccess(pool, req.user.id, id, 'product:update');
+    await requireProductAccess(pool, req.user.id, id, 'product:update');
 
     const prodCheck = await pool.query('SELECT * FROM products WHERE id = $1 AND deleted_at IS NULL', [id]);
     const existingSettings = prodCheck.rows[0].settings || {};
@@ -244,13 +244,12 @@ router.put('/:id', authenticateUser as any, async (req: AuthenticatedRequest, re
            industry = COALESCE($2, industry),
            description = COALESCE($3, description),
            settings = $4
-       WHERE id = $5 AND organization_id = $6
+       WHERE id::text = $5::text AND user_id::text = $6::text
        RETURNING *`,
-      [name || null, industry || null, description || null, JSON.stringify(updatedSettings), id, access.organizationId]
+      [name || null, industry || null, description || null, JSON.stringify(updatedSettings), id, req.user.id]
     );
 
     await recordAudit(pool, {
-      organizationId: access.organizationId,
       actorUserId: req.user.id,
       action: 'product.settings_changed',
       resourceType: 'product',
@@ -270,12 +269,12 @@ router.delete('/:id', authenticateUser as any, async (req: AuthenticatedRequest,
   const pool = getPool();
   try {
     if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-    const access = await requireProductAccess(pool, req.user.id, paramId(req.params.id), 'product:delete');
+    await requireProductAccess(pool, req.user.id, paramId(req.params.id), 'product:delete');
 
     // Soft-delete product; cascade soft-delete related feedback; revoke public links
     await pool.query(
-      `UPDATE products SET deleted_at = now() WHERE id = $1 AND organization_id = $2`,
-      [paramId(req.params.id), access.organizationId]
+      `UPDATE products SET deleted_at = now() WHERE id::text = $1::text AND user_id::text = $2::text`,
+      [paramId(req.params.id), req.user.id]
     );
     await pool.query(
       `UPDATE feedbacks SET deleted_at = now() WHERE product_id = $1 AND deleted_at IS NULL`,
@@ -289,7 +288,6 @@ router.delete('/:id', authenticateUser as any, async (req: AuthenticatedRequest,
     );
 
     await recordAudit(pool, {
-      organizationId: access.organizationId,
       actorUserId: req.user.id,
       action: 'product.deleted',
       resourceType: 'product',
@@ -298,6 +296,7 @@ router.delete('/:id', authenticateUser as any, async (req: AuthenticatedRequest,
 
     return res.json({ message: 'Product deleted' });
   } catch (err) {
+    logger.error('Delete product error', { error: err instanceof Error ? err.message : 'unknown' });
     const safe = toSafeClientError(err);
     return res.status(safe.status).json(safe.body);
   }

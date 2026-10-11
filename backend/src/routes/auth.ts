@@ -11,10 +11,10 @@ import {
   REFRESH_TOKEN_TTL_SECONDS,
 } from '../security/tokens.js';
 import { normalizeEmail } from '../organizations/roles.js';
-import { ensurePersonalOrganization } from '../authz/access.js';
 import { logger } from '../logging/logger.js';
 import { toSafeClientError } from '../errors/httpError.js';
 import { recordAudit } from '../audit/audit.js';
+import { getOrCreateDemoAccount } from '../demo/seedDemoAccount.js';
 
 const router = express.Router();
 const OTP_COOLDOWN_SECONDS = 60;
@@ -213,6 +213,27 @@ router.post('/login', authLimiter, async (req: Request, res: Response) => {
   }
 });
 
+router.post('/demo-login', authLimiter, async (req: Request, res: Response) => {
+  const pool = getPool();
+  const userAgent = req.headers['user-agent'] as string | undefined;
+  const ipAddress = req.ip || '';
+  try {
+    const demoUser = await getOrCreateDemoAccount(pool);
+    const session = await issueSession(String(demoUser.id), userAgent, ipAddress);
+
+    return res.json({
+      message: 'Demo session started successfully',
+      user: sanitizeUser(demoUser),
+      token: session.accessToken,
+      accessToken: session.accessToken,
+      refreshToken: session.refreshToken,
+    });
+  } catch (err) {
+    logger.error('Demo login error', { error: err instanceof Error ? err.message : 'unknown' });
+    return res.status(500).json({ error: 'Unable to start demo session' });
+  }
+});
+
 router.post('/resend-otp', authLimiter, async (req: Request, res: Response) => {
   const { email, purpose = 'login' } = req.body;
   if (!email || typeof email !== 'string' || !email.includes('@')) {
@@ -345,13 +366,6 @@ router.post('/verify-otp', otpVerifyLimiter, async (req: Request, res: Response)
         [challengeEmail, userName]
       );
       user = insertRes.rows[0];
-      await ensurePersonalOrganization(pool, String(user.id), `${userName}'s Organization`);
-      await recordAudit(pool, {
-        actorUserId: String(user.id),
-        action: 'organization.created',
-        resourceType: 'user',
-        resourceId: String(user.id),
-      });
     } else {
       const updateRes = await pool.query(
         `UPDATE users
@@ -367,7 +381,6 @@ router.post('/verify-otp', otpVerifyLimiter, async (req: Request, res: Response)
         ]
       );
       user = updateRes.rows[0];
-      await ensurePersonalOrganization(pool, String(user.id));
     }
 
     const session = await issueSession(String(user.id), userAgent, ipAddress);
@@ -496,7 +509,7 @@ router.get('/me', authenticateUser as any, async (req: AuthenticatedRequest, res
       return res.status(401).json({ error: 'Unauthorized' });
     }
     const result = await pool.query(
-      'SELECT id, email, name, is_verified, email_verified_at, account_status, created_at FROM users WHERE id = $1',
+      'SELECT id, email, name, role, is_verified, email_verified_at, account_status, created_at FROM users WHERE id = $1',
       [req.user.id]
     );
     if (result.rows.length === 0) {

@@ -1,12 +1,14 @@
 "use client";
 
 import { ReactNode, useState } from "react";
-import { PanelLeft } from "lucide-react";
+import Link from "next/link";
+import { PanelLeft, Sparkles } from "lucide-react";
 import { AppNavRail } from "./AppNavRail";
 import { LoadingBackdrop } from "./LoadingBackdrop";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { useApp } from "@/context/AppContext";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -23,6 +25,7 @@ export function AppLayout({
   fill = false,
 }: AppLayoutProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const { isDemo } = useApp();
 
   return (
     <div className="flex fixed inset-0 overflow-hidden bg-background md:bg-muted/70 md:gap-3 md:p-3">
@@ -47,6 +50,25 @@ export function AppLayout({
       </Sheet>
 
       <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-background md:rounded-[1.75rem] md:border md:border-border/60 md:shadow-sm">
+        {isDemo && (
+          <div className="flex items-center justify-between gap-3 px-4 py-2 bg-amber-500/10 border-b border-amber-500/20 text-amber-900 dark:text-amber-200 text-xs shrink-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <Sparkles className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+              <span className="font-semibold shrink-0">Demo Sandbox</span>
+              <span className="text-muted-foreground truncate hidden sm:inline">
+                • Exploring Acme Cloud Platform with sample SaaS feedback.
+                Actions are restricted.
+              </span>
+            </div>
+            <Link
+              href="/signup"
+              className="shrink-0 font-medium text-amber-700 dark:text-amber-400 hover:underline flex items-center gap-1 text-xs"
+            >
+              Create Free Account →
+            </Link>
+          </div>
+        )}
+
         <div className="flex shrink-0 items-start gap-3 px-4 pt-4 md:gap-4 md:px-7 md:pt-6">
           <Button
             variant="ghost"

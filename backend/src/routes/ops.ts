@@ -15,16 +15,11 @@ router.get('/metrics', authenticateUser as any, async (req: AuthenticatedRequest
   try {
     if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
 
-    // Only organization owners/admins across any membership can read global-ish ops metrics for their orgs
-    const membership = await pool.query(
-      `SELECT organization_id, role FROM organization_members
-       WHERE user_id = $1 AND role IN ('owner', 'admin')`,
+    const userProducts = await pool.query<{ id: string }>(
+      'SELECT id FROM products WHERE user_id::text = $1::text AND deleted_at IS NULL',
       [req.user.id]
     );
-    if (membership.rows.length === 0) {
-      return res.status(403).json({ error: 'Insufficient permissions' });
-    }
-    const orgIds = membership.rows.map((r) => r.organization_id);
+    const productIds = userProducts.rows.map((p) => p.id);
 
     const depth = await getQueueDepth(pool);
     const ai = await pool.query(
@@ -35,29 +30,27 @@ router.get('/metrics', authenticateUser as any, async (req: AuthenticatedRequest
          AVG(latency_ms) FILTER (WHERE latency_ms IS NOT NULL) AS avg_latency_ms,
          AVG(queue_wait_ms) FILTER (WHERE queue_wait_ms IS NOT NULL) AS avg_queue_wait_ms
        FROM ai_processing_metrics
-       WHERE organization_id = ANY($1::uuid[])
-         AND created_at > now() - interval '24 hours'`,
-      [orgIds]
+       WHERE created_at > now() - interval '24 hours'`
     );
 
     const submissions = await pool.query(
       `SELECT COUNT(*)::int AS count
        FROM feedbacks
-       WHERE organization_id = ANY($1::uuid[])
+       WHERE (product_id::text = ANY($1::text[]))
          AND created_at > now() - interval '24 hours'
          AND deleted_at IS NULL`,
-      [orgIds]
+      [productIds]
     );
 
     return res.json({
       queue: depth,
       last_24h: {
-        feedback_submissions: submissions.rows[0].count,
-        ai_successes: Number(ai.rows[0].successes || 0),
-        ai_failures: Number(ai.rows[0].failures || 0),
-        ai_parse_failures: Number(ai.rows[0].parse_failures || 0),
-        avg_ai_latency_ms: ai.rows[0].avg_latency_ms ? Number(ai.rows[0].avg_latency_ms) : null,
-        avg_queue_wait_ms: ai.rows[0].avg_queue_wait_ms ? Number(ai.rows[0].avg_queue_wait_ms) : null,
+        feedback_submissions: submissions.rows[0]?.count || 0,
+        ai_successes: Number(ai.rows[0]?.successes || 0),
+        ai_failures: Number(ai.rows[0]?.failures || 0),
+        ai_parse_failures: Number(ai.rows[0]?.parse_failures || 0),
+        avg_ai_latency_ms: ai.rows[0]?.avg_latency_ms ? Number(ai.rows[0].avg_latency_ms) : null,
+        avg_queue_wait_ms: ai.rows[0]?.avg_queue_wait_ms ? Number(ai.rows[0].avg_queue_wait_ms) : null,
       },
     });
   } catch (err) {

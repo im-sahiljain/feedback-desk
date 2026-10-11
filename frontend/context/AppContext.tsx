@@ -5,10 +5,12 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Product } from '@/types';
 import { authFetch } from '@/lib/api';
 
-interface User {
-  id: number;
+export interface User {
+  id: string | number;
   email: string;
   name: string;
+  role?: 'user' | 'admin' | 'demo';
+  account_status?: string;
 }
 
 interface AppContextType {
@@ -29,6 +31,7 @@ interface AppContextType {
 
   // User
   user: User | null;
+  isDemo: boolean;
   refetchUser: () => void;
   refreshProducts: () => void;
 }
@@ -159,6 +162,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
   }, [resolvedTheme, setTheme]);
 
+  const isDemo = user?.role === 'demo';
+
   const value: AppContextType = {
     isDarkMode,
     toggleDarkMode,
@@ -169,6 +174,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     isBootstrapping,
     products,
     user,
+    isDemo,
     refetchUser: fetchUser,
     refreshProducts,
   };
