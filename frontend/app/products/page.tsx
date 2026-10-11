@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -25,13 +24,11 @@ import { INDUSTRY_ICONS, INDUSTRY_LABELS, Product } from "@/types";
 import {
   Plus,
   Package,
-  Link,
   QrCode,
   Share2,
-  Copy,
   Loader2,
-  RefreshCw,
   Download,
+  UserCheck,
 } from "lucide-react";
 import { CreateProductDialog } from "@/components/products/create-product-dialog";
 import { toast } from "@/hooks/use-toast";
@@ -45,9 +42,11 @@ function ProductsContent() {
   const [qrProduct, setQrProduct] = useState<Product | null>(null);
   const [qrUrl, setQrUrl] = useState<string>("");
   const [isGeneratingQr, setIsGeneratingQr] = useState<boolean>(false);
-  const [isRegenerating, setIsRegenerating] = useState<boolean>(false);
   const [isDownloadingQr, setIsDownloadingQr] = useState(false);
   const qrSvgRef = useRef<SVGSVGElement | null>(null);
+
+  // Simple 1-click single-use link generation state
+  const [copyingInviteId, setCopyingInviteId] = useState<string | null>(null);
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -89,14 +88,18 @@ function ProductsContent() {
       }
       if (response.status === 404) {
         // No active link — regenerate one
-        const regen = await authFetch(`/api/products/${product.id}/public-link/regenerate`, {
-          method: "POST",
-        });
+        const regen = await authFetch(
+          `/api/products/${product.id}/public-link/regenerate`,
+          {
+            method: "POST",
+          },
+        );
         if (!regen.ok) {
           throw new Error("Failed to create public link");
         }
         const regenData = await regen.json();
-        const path = regenData.path || (regenData.token ? `/f/${regenData.token}` : null);
+        const path =
+          regenData.path || (regenData.token ? `/f/${regenData.token}` : null);
         if (!path) throw new Error("Failed to create public link");
         return `${window.location.origin}${path}`;
       }
@@ -107,24 +110,6 @@ function ProductsContent() {
     const path = data.path || (data.token ? `/f/${data.token}` : null);
     if (!path) throw new Error("Public link missing from response");
     return `${window.location.origin}${path}`;
-  };
-
-  const handleCopyLink = async (product: Product) => {
-    try {
-      const url = await getProductPublicUrl(product);
-      await navigator.clipboard.writeText(url);
-      toast({
-        title: "Link copied",
-        description: "Long-lived feedback link copied. Share it with your users.",
-      });
-    } catch (error) {
-      console.error("Failed to copy public link:", error);
-      toast({
-        title: "Error",
-        description: "Failed to copy feedback link.",
-        variant: "destructive",
-      });
-    }
   };
 
   const handleShareOS = async (product: Product) => {
@@ -140,7 +125,8 @@ function ProductsContent() {
         await navigator.clipboard.writeText(url);
         toast({
           title: "Link copied to clipboard",
-          description: "OS sharing is not available on this browser. Link copied instead.",
+          description:
+            "OS sharing is not available on this browser. Link copied instead.",
         });
       }
     } catch (err: any) {
@@ -155,61 +141,11 @@ function ProductsContent() {
     }
   };
 
-  const handleOpenQr = async (product: Product) => {
+  const handleOpenQr = (product: Product) => {
     setQrProduct(product);
-    setIsGeneratingQr(true);
-    try {
-      const url = await getProductPublicUrl(product);
-      setQrUrl(url);
-    } catch (error) {
-      console.error("Failed to generate QR code:", error);
-      setQrProduct(null);
-      toast({
-        title: "Error",
-        description: "Failed to generate QR code.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsGeneratingQr(false);
-    }
-  };
-
-  const handleRegenerateLink = async () => {
-    if (!qrProduct) return;
-    const confirmed = window.confirm(
-      "Regenerate this feedback link? The current link will stop working immediately."
-    );
-    if (!confirmed) return;
-
-    setIsRegenerating(true);
-    try {
-      const response = await authFetch(
-        `/api/products/${qrProduct.id}/public-link/regenerate`,
-        { method: "POST" }
-      );
-      if (!response.ok) {
-        throw new Error("Failed to regenerate link");
-      }
-      const data = await response.json();
-      const path = data.path || (data.token ? `/f/${data.token}` : null);
-      if (!path) throw new Error("Missing path in regenerate response");
-      const url = `${window.location.origin}${path}`;
-      setQrUrl(url);
-      toast({
-        title: "Link regenerated",
-        description: "Previous link is now inactive. Copy the new link to share.",
-      });
-      refreshProducts();
-    } catch (error) {
-      console.error("Failed to regenerate link:", error);
-      toast({
-        title: "Error",
-        description: "Failed to regenerate public link.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsRegenerating(false);
-    }
+    const url = `${window.location.origin}/f/scan/${product.id}`;
+    setQrUrl(url);
+    setIsGeneratingQr(false);
   };
 
   const handleDownloadQr = async () => {
@@ -225,7 +161,11 @@ function ProductsContent() {
       });
       const objectUrl = URL.createObjectURL(svgBlob);
 
-      const size = Math.max(svg.width.baseVal.value, svg.height.baseVal.value, 200);
+      const size = Math.max(
+        svg.width.baseVal.value,
+        svg.height.baseVal.value,
+        200,
+      );
       const canvas = document.createElement("canvas");
       canvas.width = size;
       canvas.height = size;
@@ -244,11 +184,13 @@ function ProductsContent() {
       ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
       URL.revokeObjectURL(objectUrl);
 
-      const filename = `${qrProduct.name
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "") || "product"}-qr.png`;
+      const filename = `${
+        qrProduct.name
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "") || "product"
+      }-qr.png`;
 
       const pngUrl = canvas.toDataURL("image/png");
       const anchor = document.createElement("a");
@@ -272,6 +214,45 @@ function ProductsContent() {
     }
   };
 
+  const handleCopySingleUseLink = async (product: Product) => {
+    if (isDemo) {
+      toast({
+        title: "Action Disabled in Demo Mode",
+        description:
+          "Generating customer invitation links is disabled in the demo sandbox.",
+      });
+      return;
+    }
+
+    setCopyingInviteId(product.id);
+    try {
+      const response = await authFetch(`/api/products/${product.id}/invites`, {
+        method: "POST",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to generate link");
+      }
+      const data = await response.json();
+      const path = data.path || `/f/invite/${data.token}`;
+      const url = `${window.location.origin}${path}`;
+      await navigator.clipboard.writeText(url);
+      toast({
+        title: "1-Time Link Copied!",
+        description:
+          "Fresh link copied to clipboard. Automatically closes after 1 customer submission.",
+      });
+    } catch (error) {
+      console.error("Failed to generate single-use link:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate single-use link.",
+        variant: "destructive",
+      });
+    } finally {
+      setCopyingInviteId(null);
+    }
+  };
+
   return (
     <AppLayout title="Products" description="Manage your products">
       <div className="space-y-4 sm:space-y-6">
@@ -287,7 +268,8 @@ function ProductsContent() {
               if (isDemo) {
                 toast({
                   title: "Action Disabled in Demo Mode",
-                  description: "Creating new products is disabled in the demo sandbox. Create a free account to manage your own products.",
+                  description:
+                    "Creating new products is disabled in the demo sandbox. Create a free account to manage your own products.",
                   variant: "destructive",
                 });
                 return;
@@ -296,7 +278,9 @@ function ProductsContent() {
             }}
             disabled={isDemo}
             className="max-sm:w-full"
-            title={isDemo ? "Product creation is disabled in demo mode" : undefined}
+            title={
+              isDemo ? "Product creation is disabled in demo mode" : undefined
+            }
           >
             <Plus className="h-4 w-4 mr-2" />
             Create Product
@@ -338,7 +322,8 @@ function ProductsContent() {
               <Package className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
               <h3 className="font-semibold text-lg mb-2">No Products Yet</h3>
               <p className="text-muted-foreground mb-4">
-                Create your first product workspace to start collecting feedback.
+                Create your first product workspace to start collecting
+                feedback.
               </p>
               <Button onClick={() => setIsCreateOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
@@ -357,14 +342,18 @@ function ProductsContent() {
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
                     <div className="flex items-center gap-3 min-w-0">
                       <span className="text-2xl shrink-0">
-                        {INDUSTRY_ICONS[product.industry] || '🏢'}
+                        {INDUSTRY_ICONS[product.industry] || "🏢"}
                       </span>
                       <div className="min-w-0 flex-1">
                         <CardTitle className="text-base font-semibold truncate">
                           {product.name}
                         </CardTitle>
-                        <Badge variant="outline" className="mt-1 max-w-full text-xs font-normal truncate">
-                          {INDUSTRY_LABELS[product.industry] || product.industry}
+                        <Badge
+                          variant="outline"
+                          className="mt-1 max-w-full text-xs font-normal truncate"
+                        >
+                          {INDUSTRY_LABELS[product.industry] ||
+                            product.industry}
                         </Badge>
                       </div>
                     </div>
@@ -394,11 +383,16 @@ function ProductsContent() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleCopyLink(product)}
-                        title="Copy feedback link"
-                        className="h-9 w-9 sm:h-8 sm:w-8 text-muted-foreground hover:text-foreground"
+                        onClick={() => handleCopySingleUseLink(product)}
+                        disabled={copyingInviteId === product.id}
+                        title="Copy 1-time customer link"
+                        className="h-9 w-9 sm:h-8 sm:w-8 text-primary hover:text-primary hover:bg-primary/10"
                       >
-                        <Link className="h-4 w-4" />
+                        {copyingInviteId === product.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <UserCheck className="h-4 w-4" />
+                        )}
                       </Button>
                     </div>
                   </div>
@@ -422,16 +416,22 @@ function ProductsContent() {
         )}
 
         {/* QR Code Modal Dialog */}
-        <Dialog open={!!qrProduct} onOpenChange={(open) => { if (!open) setQrProduct(null); }}>
+        <Dialog
+          open={!!qrProduct}
+          onOpenChange={(open) => {
+            if (!open) setQrProduct(null);
+          }}
+        >
           {qrProduct && (
             <DialogContent className="sm:max-w-[420px]">
               <DialogHeader className="text-center sm:text-center pb-2">
                 <DialogTitle className="text-base flex items-center justify-center gap-2">
-                  <span>{INDUSTRY_ICONS[qrProduct.industry] || '🏢'}</span>
-                  {qrProduct.name} QR Code
+                  <span>{INDUSTRY_ICONS[qrProduct.industry] || "🏢"}</span>
+                  {qrProduct.name} Counter QR Code
                 </DialogTitle>
                 <DialogDescription className="text-xs">
-                  Scan this QR code with any mobile camera to open the feedback form. Link does not expire.
+                  Print or display this at your counter or tables to receive
+                  feedback from customers.
                 </DialogDescription>
               </DialogHeader>
 
@@ -439,7 +439,9 @@ function ProductsContent() {
                 {isGeneratingQr ? (
                   <div className="flex flex-col items-center py-8 gap-2">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <span className="text-xs text-muted-foreground">Generating QR Code...</span>
+                    <span className="text-xs text-muted-foreground">
+                      Generating QR Code...
+                    </span>
                   </div>
                 ) : (
                   <div className="p-4 bg-white rounded-xl shadow-md border border-zinc-200">
@@ -454,24 +456,6 @@ function ProductsContent() {
                 )}
               </div>
 
-              <div className="flex items-center gap-2 pt-2">
-                <Input value={qrUrl} readOnly className="text-xs font-mono" />
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    navigator.clipboard.writeText(qrUrl);
-                    toast({
-                      title: "Link copied",
-                      description: "Feedback link copied to clipboard.",
-                    });
-                  }}
-                  className="shrink-0 text-xs gap-1"
-                >
-                  <Copy className="h-3.5 w-3.5" /> Copy
-                </Button>
-              </div>
-
               <Button
                 size="sm"
                 onClick={handleDownloadQr}
@@ -483,22 +467,7 @@ function ProductsContent() {
                 ) : (
                   <Download className="h-3.5 w-3.5" />
                 )}
-                Download QR image
-              </Button>
-
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={handleRegenerateLink}
-                disabled={isRegenerating || isGeneratingQr || !qrUrl}
-                className="w-full mt-2 text-xs gap-1.5"
-              >
-                {isRegenerating ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <RefreshCw className="h-3.5 w-3.5" />
-                )}
-                Regenerate link
+                Download QR
               </Button>
             </DialogContent>
           )}

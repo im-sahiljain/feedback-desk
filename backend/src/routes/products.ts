@@ -14,6 +14,9 @@ import {
   regenerateDestination,
   revokeDestination,
 } from '../publicFeedback/destinations.js';
+import {
+  createSingleUseInvitation,
+} from '../publicFeedback/invitations.js';
 
 const router = express.Router();
 
@@ -191,6 +194,30 @@ router.post('/:id/public-link/regenerate', authenticateUser as any, async (req: 
       created_at: dest.created_at,
       message: 'New public feedback link generated. Previous link is now inactive.',
     });
+  } catch (err) {
+    const safe = toSafeClientError(err);
+    return res.status(safe.status).json(safe.body);
+  }
+});
+
+/**
+ * Generate a fresh single-use invitation link for a product (1-Click)
+ */
+router.post('/:id/invites', authenticateUser as any, async (req: AuthenticatedRequest, res: Response) => {
+  const pool = getPool();
+  try {
+    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+    const productId = paramId(req.params.id);
+    await requireProductAccess(pool, req.user.id, productId, 'public_link:manage');
+
+    const result = await createSingleUseInvitation(pool, {
+      productId,
+      createdBy: req.user.id,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
+
+    return res.status(201).json(result);
   } catch (err) {
     const safe = toSafeClientError(err);
     return res.status(safe.status).json(safe.body);

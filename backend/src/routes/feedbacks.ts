@@ -6,6 +6,11 @@ import { verifyParams } from '../crypto.js';
 import { feedbackSubmitLimiter, publicDestinationLimiter } from '../middleware/rateLimiters.js';
 import { requireProductAccess } from '../authz/access.js';
 import { resolvePublicDestination } from '../publicFeedback/destinations.js';
+import {
+  verifyInvitation,
+  submitInvitationFeedback,
+  dispenseCounterInvitation,
+} from '../publicFeedback/invitations.js';
 import { enqueueJob } from '../jobs/queue.js';
 import { JOB_ANALYZE_FEEDBACK } from '../jobs/worker.js';
 import { hashPayload } from '../security/crypto.js';
@@ -295,6 +300,91 @@ router.get('/public/:token/meta', feedbackSubmitLimiter, async (req: Request, re
       product_name: resolved.product.name,
       industry: resolved.product.industry,
       token: resolved.destination.public_token,
+    });
+  } catch (err) {
+    const safe = toSafeClientError(err);
+    return res.status(safe.status).json(safe.body);
+  }
+});
+
+/**
+ * Counter QR Dispenser.
+ * When a customer scans a printed counter QR code, this endpoint dynamically
+ * dispenses a fresh, private single-use invitation token for this visit.
+ */
+router.post('/scan/:identifier/dispense', feedbackSubmitLimiter, async (req: Request, res: Response) => {
+  const pool = getPool();
+  const identifier = String(Array.isArray(req.params.identifier) ? req.params.identifier[0] : req.params.identifier);
+
+  try {
+    const result = await dispenseCounterInvitation(pool, identifier);
+    return res.status(201).json(result);
+  } catch (err) {
+    const safe = toSafeClientError(err);
+    return res.status(safe.status).json(safe.body);
+  }
+});
+
+router.get('/scan/:identifier/dispense', feedbackSubmitLimiter, async (req: Request, res: Response) => {
+  const pool = getPool();
+  const identifier = String(Array.isArray(req.params.identifier) ? req.params.identifier[0] : req.params.identifier);
+
+  try {
+    const result = await dispenseCounterInvitation(pool, identifier);
+    return res.status(200).json(result);
+  } catch (err) {
+    const safe = toSafeClientError(err);
+    return res.status(safe.status).json(safe.body);
+  }
+});
+
+/**
+ * Single-use customer invitation verification.
+ * Checks that the token is active and has not been submitted yet.
+ */
+router.get('/invite/:token/meta', feedbackSubmitLimiter, async (req: Request, res: Response) => {
+  const pool = getPool();
+  const token = String(Array.isArray(req.params.token) ? req.params.token[0] : req.params.token);
+
+  try {
+    const result = await verifyInvitation(pool, token);
+
+    return res.json({
+      product_id: result.product.id,
+      product_name: result.product.name,
+      industry: result.product.industry,
+      token: result.token,
+    });
+  } catch (err) {
+    const safe = toSafeClientError(err);
+    return res.status(safe.status).json(safe.body);
+  }
+});
+
+/**
+ * Single-use customer feedback submission.
+ * Atomically consumes and burns the invitation token.
+ */
+router.post('/invite/:token/submit', feedbackSubmitLimiter, async (req: Request, res: Response) => {
+  const pool = getPool();
+  const maxChars = PUBLIC_SUBMIT_MAX_CHARS;
+  const token = String(Array.isArray(req.params.token) ? req.params.token[0] : req.params.token);
+
+  try {
+    const { feedback, email, rating } = validateFeedbackBody(req.body, maxChars);
+
+    const result = await submitInvitationFeedback(pool, {
+      token,
+      feedback,
+      email,
+      rating,
+      clientIp: req.ip,
+    });
+
+    return res.status(201).json({
+      message: 'Feedback received and securely recorded. Thank you!',
+      id: result.feedbackId,
+      status: 'completed',
     });
   } catch (err) {
     const safe = toSafeClientError(err);
