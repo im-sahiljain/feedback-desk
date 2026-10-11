@@ -17,7 +17,7 @@ import {
   relativeTimeLabel,
 } from "@/lib/dashboard";
 import type { DashboardSummary } from "@/types";
-import { ArrowRight, ThumbsUp } from "lucide-react";
+import { ArrowRight, ThumbsUp, AlertTriangle } from "lucide-react";
 
 export function PositiveSignalsPanel({
   data,
@@ -88,7 +88,10 @@ export function CriticalFeedbackPanel({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <CardTitle className="text-base">Recent feedback requiring attention</CardTitle>
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+              <CardTitle className="text-base">Recent feedback requiring attention</CardTitle>
+            </div>
             <CardDescription>High-priority, failed, or elevated negative items</CardDescription>
           </div>
           <Button asChild variant="outline" size="sm" className="shrink-0 gap-1.5">

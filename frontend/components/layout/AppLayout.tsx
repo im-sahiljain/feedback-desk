@@ -27,6 +27,16 @@ export function AppLayout({
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { isDemo } = useApp();
 
+  const handleExitDemoToSignup = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // ignore
+    }
+    window.location.href = "/signup";
+  };
+
   return (
     <div className="flex fixed inset-0 overflow-hidden bg-background md:bg-muted/70 md:gap-3 md:p-3">
       <LoadingBackdrop />
@@ -61,7 +71,8 @@ export function AppLayout({
               </span>
             </div>
             <Link
-              href="/signup"
+              href="/signup?from=demo"
+              onClick={handleExitDemoToSignup}
               className="shrink-0 font-medium text-amber-700 dark:text-amber-400 hover:underline flex items-center gap-1 text-xs"
             >
               Create Free Account →
@@ -69,7 +80,7 @@ export function AppLayout({
           </div>
         )}
 
-        <div className="flex shrink-0 items-start gap-3 px-4 pt-4 md:gap-4 md:px-7 md:pt-6">
+        <div className="flex shrink-0 items-start gap-3 px-4 py-4 md:gap-4 md:px-7 md:py-6">
           <Button
             variant="ghost"
             size="icon"

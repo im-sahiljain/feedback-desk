@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -29,6 +29,33 @@ const SERIES = [
   { key: "mixed", label: "Mixed", color: "hsl(var(--info))" },
 ] as const;
 
+function getNiceYAxisConfig(max: number) {
+  // Add 1 value more above the maximum so wave peaks have headroom and do not hit the top edge
+  const upper = Math.max(max + 1, 2);
+  if (upper <= 5) {
+    return {
+      domain: [0, upper] as [number, number],
+      ticks: Array.from({ length: upper + 1 }, (_, i) => i),
+    };
+  }
+  const targetTicks = 4;
+  const rawStep = upper / targetTicks;
+  const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
+  const normalized = rawStep / magnitude;
+  let niceStepNormalized = 1;
+  if (normalized > 5) niceStepNormalized = 10;
+  else if (normalized > 2) niceStepNormalized = 5;
+  else if (normalized > 1) niceStepNormalized = 2;
+
+  const step = Math.max(1, Math.round(niceStepNormalized * magnitude));
+  const niceMax = Math.ceil(upper / step) * step;
+  const ticks: number[] = [];
+  for (let t = 0; t <= niceMax; t += step) {
+    ticks.push(t);
+  }
+  return { domain: [0, niceMax] as [number, number], ticks };
+}
+
 export function SentimentTrendPanel({
   data,
   loading,
@@ -52,11 +79,23 @@ export function SentimentTrendPanel({
     });
   };
 
+  const yAxisConfig = useMemo(() => {
+    let max = 0;
+    const activeKeys = SERIES.map((s) => s.key).filter((k) => !hiddenSeries.has(k));
+    for (const item of trend) {
+      for (const k of activeKeys) {
+        const val = Number((item as any)[k]) || 0;
+        if (val > max) max = val;
+      }
+    }
+    return getNiceYAxisConfig(max);
+  }, [trend, hiddenSeries]);
+
   return (
     <Card className="border-border shadow-sm flex flex-col h-full">
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
           <CardTitle className="text-base">Customer sentiment trend</CardTitle>
         </div>
         <CardDescription>
@@ -73,7 +112,7 @@ export function SentimentTrendPanel({
         ) : (
           <div className="flex-1 w-full min-h-[280px]" role="img" aria-label="Sentiment trend chart">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={trend} margin={{ left: -15, right: 8, top: 12, bottom: 0 }}>
+              <AreaChart data={trend} margin={{ left: -15, right: 8, top: 16, bottom: 0 }}>
                 <defs>
                   {SERIES.map((s) => (
                     <linearGradient key={`grad-${s.key}`} id={`grad-${s.key}`} x1="0" y1="0" x2="0" y2="1">
@@ -92,6 +131,8 @@ export function SentimentTrendPanel({
                 />
                 <YAxis
                   allowDecimals={false}
+                  domain={yAxisConfig.domain}
+                  ticks={yAxisConfig.ticks}
                   tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
                   width={30}
                   tickLine={false}

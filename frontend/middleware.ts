@@ -15,6 +15,34 @@ export function middleware(request: NextRequest) {
     // Check if the current path is a public path
     const isPublicPath = publicPaths.includes(pathname);
 
+    const isDemo =
+        request.cookies.get('isDemo')?.value === 'true' ||
+        request.nextUrl.searchParams.get('from') === 'demo';
+
+    // If a demo user accesses /signup, clear demo session cookies and allow access to /signup
+    if (pathname === '/signup' && (isDemo || request.nextUrl.searchParams.get('from') === 'demo')) {
+        const url = new URL('/signup', request.url);
+        const hadFromDemo = url.searchParams.has('from');
+        url.searchParams.delete('from');
+        const response = hadFromDemo
+            ? NextResponse.redirect(url)
+            : NextResponse.next();
+
+        const isProduction = process.env.NODE_ENV === 'production';
+        const cookieOptions = {
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: 'lax' as const,
+            maxAge: 0,
+            path: '/',
+        };
+        response.cookies.set('accessToken', '', cookieOptions);
+        response.cookies.set('token', '', cookieOptions);
+        response.cookies.set('refreshToken', '', cookieOptions);
+        response.cookies.set('isDemo', '', { ...cookieOptions, httpOnly: false });
+        return response;
+    }
+
     // If the user has auth cookies and tries to access a public path (like login),
     // redirect them to the dashboard
     if (isPublicPath && hasAuth) {

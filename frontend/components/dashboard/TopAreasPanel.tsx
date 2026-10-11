@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Layers } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { feedbackFilterHref, formatChangeTone, insightsHref } from "@/lib/dashboard";
@@ -42,7 +43,10 @@ export function TopAreasPanel({
       <CardHeader className="pb-3">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <CardTitle className="text-base">Top feedback areas</CardTitle>
+            <div className="flex items-center gap-2">
+              <Layers className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <CardTitle className="text-base">Top feedback areas</CardTitle>
+            </div>
             <CardDescription>
               Category concentrations from analyzed feedback — not issue clusters
             </CardDescription>

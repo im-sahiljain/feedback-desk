@@ -6,6 +6,7 @@ import {
   useLayoutEffect,
   useRef,
   useCallback,
+  useMemo,
   Suspense,
   type ReactNode,
 } from "react";
@@ -37,6 +38,9 @@ import {
   Clock,
   ChevronDown,
   Download,
+  SmilePlus,
+  Flag,
+  BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -49,6 +53,7 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
+  CartesianGrid,
 } from "recharts";
 import { ExecutiveBrief, Feedback, ImpactCorrelationMetrics } from "@/types";
 import { normalizeBackendFeedbacks } from "@/lib/normalization";
@@ -149,37 +154,67 @@ function InsightsContent() {
   const [generateError, setGenerateError] = useState<string | null>(null);
   const [briefOpen, setBriefOpen] = useState(true);
   const briefBadgesRef = useRef<HTMLDivElement>(null);
-  const briefBadgesFirstRect = useRef<DOMRect | null>(null);
+  const starIconRef = useRef<HTMLDivElement>(null);
+  const headerTitleRef = useRef<HTMLHeadingElement>(null);
+
+  const flipFirstRects = useRef<{
+    badges: DOMRect | null;
+    star: DOMRect | null;
+    title: DOMRect | null;
+  }>({
+    badges: null,
+    star: null,
+    title: null,
+  });
 
   const toggleBriefOpen = () => {
     if (briefBadgesRef.current) {
-      briefBadgesFirstRect.current =
+      flipFirstRects.current.badges =
         briefBadgesRef.current.getBoundingClientRect();
+    }
+    if (starIconRef.current) {
+      flipFirstRects.current.star =
+        starIconRef.current.getBoundingClientRect();
+    }
+    if (headerTitleRef.current) {
+      flipFirstRects.current.title =
+        headerTitleRef.current.getBoundingClientRect();
     }
     setBriefOpen((open) => !open);
   };
 
   useLayoutEffect(() => {
-    const el = briefBadgesRef.current;
-    const first = briefBadgesFirstRect.current;
-    if (!el || !first) return;
-    briefBadgesFirstRect.current = null;
+    const animateEl = (el: HTMLElement | null, first: DOMRect | null) => {
+      if (!el || !first) return;
+      const last = el.getBoundingClientRect();
+      const dx = first.left - last.left;
+      const dy = first.top - last.top;
+      if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
 
-    const last = el.getBoundingClientRect();
-    const dx = first.left - last.left;
-    const dy = first.top - last.top;
-    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
+      if (typeof el.animate === "function") {
+        el.getAnimations?.().forEach((a) => a.cancel());
+        el.animate(
+          [
+            { transform: `translate(${dx}px, ${dy}px)` },
+            { transform: "translate(0, 0)" },
+          ],
+          {
+            duration: 480,
+            easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+          },
+        );
+      }
+    };
 
-    el.animate(
-      [
-        { transform: `translate(${dx}px, ${dy}px)` },
-        { transform: "translate(0, 0)" },
-      ],
-      {
-        duration: 480,
-        easing: "cubic-bezier(0.22, 1, 0.36, 1)",
-      },
-    );
+    animateEl(briefBadgesRef.current, flipFirstRects.current.badges);
+    animateEl(starIconRef.current, flipFirstRects.current.star);
+    animateEl(headerTitleRef.current, flipFirstRects.current.title);
+
+    flipFirstRects.current = {
+      badges: null,
+      star: null,
+      title: null,
+    };
   }, [briefOpen]);
 
   /** Live charts/metrics for the selected period + optional stored AI brief */
@@ -403,20 +438,82 @@ function InsightsContent() {
       ? impactMetrics.categories
       : localImpactCategories;
 
-  const trendData = Array.from({ length: 7 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - (6 - i));
-    const dayFeedback = feedback.filter((f) => {
-      const fbDate = new Date(f.createdAt);
-      return fbDate.toDateString() === date.toDateString();
+  const trendData = useMemo(() => {
+    const now = new Date();
+    if (selectedPeriod === "today") {
+      return Array.from({ length: 24 }, (_, i) => {
+        const start = new Date(now);
+        start.setHours(i, 0, 0, 0);
+        const end = new Date(now);
+        end.setHours(i + 1, 0, 0, 0);
+        const hourFeedback = feedback.filter((f) => {
+          const d = new Date(f.createdAt);
+          return d >= start && d < end;
+        });
+        const hourLabel =
+          i === 0
+            ? "12 AM"
+            : i === 12
+              ? "12 PM"
+              : i > 12
+                ? `${i - 12} PM`
+                : `${i} AM`;
+        return {
+          day: hourLabel,
+          dateLabel: `Today at ${hourLabel}`,
+          total: hourFeedback.length,
+          positive: hourFeedback.filter(
+            (f) => f.analysis?.sentiment === "positive"
+          ).length,
+          negative: hourFeedback.filter(
+            (f) => f.analysis?.sentiment === "negative"
+          ).length,
+        };
+      });
+    }
+
+    const daysCount =
+      selectedPeriod === "7d" ? 7 : selectedPeriod === "30d" ? 30 : 90;
+
+    return Array.from({ length: daysCount }, (_, i) => {
+      const date = new Date(now);
+      date.setDate(date.getDate() - (daysCount - 1 - i));
+      const dayFeedback = feedback.filter((f) => {
+        const fbDate = new Date(f.createdAt);
+        return fbDate.toDateString() === date.toDateString();
+      });
+      const shortDay = date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+      const fullDate = date.toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      });
+
+      return {
+        day: shortDay,
+        dateLabel: fullDate,
+        total: dayFeedback.length,
+        positive: dayFeedback.filter(
+          (f) => f.analysis?.sentiment === "positive"
+        ).length,
+        negative: dayFeedback.filter(
+          (f) => f.analysis?.sentiment === "negative"
+        ).length,
+      };
     });
-    return {
-      day: date.toLocaleDateString("en-US", { weekday: "short" }),
-      total: dayFeedback.length,
-      positive: dayFeedback.filter((f) => f.analysis?.sentiment === "positive")
-        .length,
-    };
-  });
+  }, [feedback, selectedPeriod]);
+
+  const trendTotal = trendData.reduce((acc, d) => acc + d.total, 0);
+  const trendPositive = trendData.reduce((acc, d) => acc + d.positive, 0);
+  const trendNegative = trendData.reduce((acc, d) => acc + d.negative, 0);
+  const peakDay = trendData.reduce(
+    (max, d) => (d.total > max.total ? d : max),
+    trendData[0] || { day: "-", total: 0 }
+  );
+  const dailyAverage = (trendTotal / Math.max(1, trendData.length)).toFixed(1);
 
   const topIssues = analyzedFeedback
     .filter(
@@ -579,7 +676,10 @@ function InsightsContent() {
             )}
           >
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
+              <div
+                ref={starIconRef}
+                className="p-2 rounded-lg bg-primary/10 text-primary shrink-0 will-change-transform"
+              >
                 <Sparkles className="h-5 w-5" />
               </div>
 
@@ -591,7 +691,10 @@ function InsightsContent() {
                     : "flex flex-wrap items-center gap-x-2 gap-y-1.5",
                 )}
               >
-                <CardTitle className="truncate text-lg font-semibold tracking-tight leading-tight sm:text-2xl sm:leading-snug">
+                <CardTitle
+                  ref={headerTitleRef}
+                  className="truncate text-lg font-semibold tracking-tight leading-tight will-change-transform sm:text-2xl sm:leading-snug"
+                >
                   AI Executive Brief
                 </CardTitle>
                 <div
@@ -622,7 +725,15 @@ function InsightsContent() {
 
               <div className="flex items-center gap-1 shrink-0">
                 {executiveBrief && (
-                  <>
+                  <div
+                    className={cn(
+                      "flex items-center gap-1 transition-opacity duration-300 ease-out",
+                      briefOpen
+                        ? "opacity-100"
+                        : "opacity-0 pointer-events-none",
+                    )}
+                    aria-hidden={!briefOpen}
+                  >
                     <Button
                       type="button"
                       variant="outline"
@@ -631,48 +742,47 @@ function InsightsContent() {
                       className="h-8 w-8"
                       aria-label="Download AI brief as PDF"
                       title="Download PDF"
+                      tabIndex={briefOpen ? 0 : -1}
                     >
                       <Download className="h-4 w-4" />
                     </Button>
-                    {briefOpen && (
-                      <>
-                        <Button
-                          variant={
-                            executiveBrief.is_stale ? "default" : "outline"
-                          }
-                          size="icon"
-                          onClick={handleRegenerateBrief}
-                          disabled={isRefreshingBrief || isBriefLoading}
-                          className="h-8 w-8 sm:hidden"
-                          aria-label={
-                            isRefreshingBrief || isBriefLoading
-                              ? "Synthesizing brief"
-                              : "Regenerate brief"
-                          }
-                        >
-                          <RefreshCw
-                            className={`h-4 w-4 ${isRefreshingBrief || isBriefLoading ? "animate-spin" : ""}`}
-                          />
-                        </Button>
-                        <Button
-                          variant={
-                            executiveBrief.is_stale ? "default" : "outline"
-                          }
-                          size="sm"
-                          onClick={handleRegenerateBrief}
-                          disabled={isRefreshingBrief || isBriefLoading}
-                          className="hidden gap-2 sm:inline-flex"
-                        >
-                          <RefreshCw
-                            className={`h-4 w-4 ${isRefreshingBrief || isBriefLoading ? "animate-spin" : ""}`}
-                          />
-                          {isRefreshingBrief || isBriefLoading
-                            ? "Synthesizing..."
-                            : "Regenerate"}
-                        </Button>
-                      </>
-                    )}
-                  </>
+                    <Button
+                      variant={
+                        executiveBrief.is_stale ? "default" : "outline"
+                      }
+                      size="icon"
+                      onClick={handleRegenerateBrief}
+                      disabled={isRefreshingBrief || isBriefLoading}
+                      className="h-8 w-8 sm:hidden"
+                      aria-label={
+                        isRefreshingBrief || isBriefLoading
+                          ? "Synthesizing brief"
+                          : "Regenerate brief"
+                      }
+                      tabIndex={briefOpen ? 0 : -1}
+                    >
+                      <RefreshCw
+                        className={`h-4 w-4 ${isRefreshingBrief || isBriefLoading ? "animate-spin" : ""}`}
+                      />
+                    </Button>
+                    <Button
+                      variant={
+                        executiveBrief.is_stale ? "default" : "outline"
+                      }
+                      size="sm"
+                      onClick={handleRegenerateBrief}
+                      disabled={isRefreshingBrief || isBriefLoading}
+                      className="hidden gap-2 sm:inline-flex"
+                      tabIndex={briefOpen ? 0 : -1}
+                    >
+                      <RefreshCw
+                        className={`h-4 w-4 ${isRefreshingBrief || isBriefLoading ? "animate-spin" : ""}`}
+                      />
+                      {isRefreshingBrief || isBriefLoading
+                        ? "Synthesizing..."
+                        : "Regenerate"}
+                    </Button>
+                  </div>
                 )}
                 <Button
                   type="button"
@@ -701,13 +811,13 @@ function InsightsContent() {
               className={cn(
                 "grid transition-[grid-template-rows,opacity] duration-500 ease-out",
                 briefOpen && executiveBrief
-                  ? "mt-3 grid-rows-[1fr] opacity-100"
-                  : "grid-rows-[0fr] opacity-0",
+                  ? "grid-rows-[1fr] opacity-100"
+                  : "grid-rows-[0fr] opacity-0 pointer-events-none",
               )}
             >
-              <div className="overflow-hidden">
+              <div className="min-h-0 overflow-hidden">
                 {executiveBrief && (
-                  <div className="text-sm text-muted-foreground leading-relaxed sm:pl-12">
+                  <div className="pt-2.5 text-sm text-muted-foreground leading-relaxed sm:pl-12">
                     <p className="flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-1.5">
                       <span>
                         Generated On:{" "}
@@ -744,10 +854,10 @@ function InsightsContent() {
               "grid transition-[grid-template-rows,opacity] duration-500 ease-out",
               briefOpen
                 ? "grid-rows-[1fr] opacity-100"
-                : "grid-rows-[0fr] opacity-0",
+                : "grid-rows-[0fr] opacity-0 pointer-events-none",
             )}
           >
-            <div className="overflow-hidden">
+            <div className="min-h-0 overflow-hidden">
               <CardContent className="pt-4">
             {isLoading || isBriefLoading ? (
               <div className="space-y-4 py-10">
@@ -1150,8 +1260,17 @@ function InsightsContent() {
 
           <div className="grid md:grid-cols-3 gap-6">
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Sentiment Breakdown</CardTitle>
+              <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <SmilePlus className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    <CardTitle className="text-base">Sentiment Breakdown</CardTitle>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">Distribution across sentiments</p>
+                </div>
+                <Badge variant="secondary" className="text-[11px] font-normal">
+                  {stats.analyzed} total
+                </Badge>
               </CardHeader>
               <CardContent>
                 {stats.analyzed === 0 ? (
@@ -1169,9 +1288,9 @@ function InsightsContent() {
                             data={sentimentData.filter((d) => d.value > 0)}
                             cx="50%"
                             cy="50%"
-                            innerRadius={45}
-                            outerRadius={70}
-                            paddingAngle={5}
+                            innerRadius={48}
+                            outerRadius={72}
+                            paddingAngle={4}
                             dataKey="value"
                           >
                             {sentimentData
@@ -1183,6 +1302,24 @@ function InsightsContent() {
                                 />
                               ))}
                           </Pie>
+                          <text
+                            x="50%"
+                            y="46%"
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                            className="text-2xl font-bold fill-foreground"
+                          >
+                            {stats.analyzed}
+                          </text>
+                          <text
+                            x="50%"
+                            y="60%"
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                            className="text-[11px] font-medium fill-muted-foreground"
+                          >
+                            items
+                          </text>
                           <Tooltip
                             contentStyle={{
                               backgroundColor: "hsl(var(--card))",
@@ -1206,7 +1343,7 @@ function InsightsContent() {
                           <span className="text-muted-foreground">
                             {item.name}
                           </span>
-                          <span className="font-medium">{item.value}</span>
+                          <span className="font-semibold text-foreground">{item.value}</span>
                         </div>
                       ))}
                     </div>
@@ -1216,10 +1353,19 @@ function InsightsContent() {
             </Card>
 
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">
-                  Priority Distribution
-                </CardTitle>
+              <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Flag className="h-4 w-4 text-rose-600 dark:text-rose-400" />
+                    <CardTitle className="text-base">
+                      Priority Distribution
+                    </CardTitle>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">Triage severity allocation</p>
+                </div>
+                <Badge variant="secondary" className="text-[11px] font-normal">
+                  {stats.analyzed} total
+                </Badge>
               </CardHeader>
               <CardContent>
                 {stats.analyzed === 0 ? (
@@ -1237,9 +1383,9 @@ function InsightsContent() {
                             data={priorityData.filter((d) => d.value > 0)}
                             cx="50%"
                             cy="50%"
-                            innerRadius={45}
-                            outerRadius={70}
-                            paddingAngle={5}
+                            innerRadius={48}
+                            outerRadius={72}
+                            paddingAngle={4}
                             dataKey="value"
                           >
                             {priorityData
@@ -1251,6 +1397,24 @@ function InsightsContent() {
                                 />
                               ))}
                           </Pie>
+                          <text
+                            x="50%"
+                            y="46%"
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                            className="text-2xl font-bold fill-foreground"
+                          >
+                            {stats.analyzed}
+                          </text>
+                          <text
+                            x="50%"
+                            y="60%"
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                            className="text-[11px] font-medium fill-muted-foreground"
+                          >
+                            items
+                          </text>
                           <Tooltip
                             contentStyle={{
                               backgroundColor: "hsl(var(--card))",
@@ -1261,7 +1425,7 @@ function InsightsContent() {
                         </PieChart>
                       </ResponsiveContainer>
                     </div>
-                    <div className="flex justify-center gap-3 mt-2">
+                    <div className="flex justify-center gap-3 mt-2 flex-wrap">
                       {priorityData.map((item) => (
                         <div
                           key={item.name}
@@ -1274,7 +1438,7 @@ function InsightsContent() {
                           <span className="text-muted-foreground">
                             {item.name}
                           </span>
-                          <span className="font-medium">{item.value}</span>
+                          <span className="font-semibold text-foreground">{item.value}</span>
                         </div>
                       ))}
                     </div>
@@ -1284,8 +1448,25 @@ function InsightsContent() {
             </Card>
 
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Activity Trend</CardTitle>
+              <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Activity className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                    <CardTitle className="text-base">Activity Trend</CardTitle>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {selectedPeriod === "today"
+                      ? "Hourly feedback volume (Today)"
+                      : `Daily feedback volume (${periodLabel})`}
+                  </p>
+                </div>
+                {trendTotal > 0 && (
+                  <Badge variant="secondary" className="text-[11px] font-normal">
+                    {selectedPeriod === "today"
+                      ? `Avg ${dailyAverage}/hr`
+                      : `Avg ${dailyAverage}/day`}
+                  </Badge>
+                )}
               </CardHeader>
               <CardContent>
                 {trendData.every((d) => d.total === 0) ? (
@@ -1295,28 +1476,123 @@ function InsightsContent() {
                     </p>
                   </div>
                 ) : (
-                  <div className="h-[200px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={trendData}>
-                        <XAxis dataKey="day" tick={{ fontSize: 12 }} />
-                        <YAxis hide />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "hsl(var(--card))",
-                            border: "1px solid hsl(var(--border))",
-                            borderRadius: "8px",
-                          }}
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="total"
-                          stroke="hsl(var(--primary))"
-                          fill="hsl(var(--primary) / 0.2)"
-                          strokeWidth={2}
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
+                  <>
+                    <div className="h-[200px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart
+                          data={trendData}
+                          margin={{ top: 12, right: 12, left: 0, bottom: 4 }}
+                        >
+                          <defs>
+                            <linearGradient id="activityTrendGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.35} />
+                              <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            vertical={false}
+                            stroke="hsl(var(--border) / 0.6)"
+                          />
+                          <XAxis
+                            dataKey="day"
+                            tick={{ fontSize: 10.5, fill: "hsl(var(--muted-foreground))" }}
+                            tickLine={false}
+                            axisLine={{ stroke: "hsl(var(--border))" }}
+                            interval={trendData.length <= 7 ? 0 : "preserveStartEnd"}
+                            minTickGap={trendData.length <= 7 ? 0 : 25}
+                            dy={4}
+                          />
+                          <YAxis
+                            allowDecimals={false}
+                            domain={[0, (dataMax: number) => Math.max(dataMax + 1, 2)]}
+                            ticks={
+                              peakDay.total <= 3
+                                ? Array.from({ length: Math.max(peakDay.total + 2, 3) }, (_, i) => i)
+                                : undefined
+                            }
+                            tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                            width={24}
+                            tickLine={false}
+                            axisLine={false}
+                          />
+                          <Tooltip
+                            content={({ active, payload }) => {
+                              if (active && payload && payload.length) {
+                                const d = payload[0].payload;
+                                return (
+                                  <div className="rounded-lg border border-border bg-card p-2.5 shadow-md text-xs space-y-1">
+                                    <p className="font-semibold text-foreground">
+                                      {d.dateLabel || d.day}
+                                    </p>
+                                    <div className="pt-1 space-y-0.5 border-t border-border/50">
+                                      <p className="text-muted-foreground flex items-center justify-between gap-4">
+                                        <span>Total Feedback:</span>
+                                        <span className="font-semibold text-foreground">{d.total}</span>
+                                      </p>
+                                      {d.positive > 0 && (
+                                        <p className="text-emerald-600 dark:text-emerald-400 flex items-center justify-between gap-4">
+                                          <span>Positive:</span>
+                                          <span className="font-medium">{d.positive}</span>
+                                        </p>
+                                      )}
+                                      {d.negative > 0 && (
+                                        <p className="text-rose-600 dark:text-rose-400 flex items-center justify-between gap-4">
+                                          <span>Negative:</span>
+                                          <span className="font-medium">{d.negative}</span>
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            }}
+                          />
+                          <Area
+                            type="monotone"
+                            dataKey="total"
+                            name="Feedback"
+                            stroke="hsl(var(--primary))"
+                            strokeWidth={2.5}
+                            fill="url(#activityTrendGrad)"
+                            dot={{
+                              r: 3.5,
+                              fill: "hsl(var(--primary))",
+                              strokeWidth: 1.5,
+                              stroke: "hsl(var(--card))",
+                            }}
+                            activeDot={{
+                              r: 5.5,
+                              strokeWidth: 2,
+                              stroke: "hsl(var(--card))",
+                            }}
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="flex justify-center gap-3 mt-2 flex-wrap">
+                      <div className="flex items-center gap-1.5 text-xs">
+                        <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+                        <span className="text-muted-foreground">Total</span>
+                        <span className="font-semibold text-foreground">{trendTotal}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs">
+                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                        <span className="text-muted-foreground">Positive</span>
+                        <span className="font-semibold text-foreground">{trendPositive}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs">
+                        <div className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                        <span className="text-muted-foreground">Negative</span>
+                        <span className="font-semibold text-foreground">{trendNegative}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs">
+                        <span className="text-muted-foreground">Peak:</span>
+                        <span className="font-semibold text-foreground">{peakDay.day} ({peakDay.total})</span>
+                      </div>
+                    </div>
+                  </>
                 )}
               </CardContent>
             </Card>
@@ -1325,9 +1601,12 @@ function InsightsContent() {
           <div className="grid md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">
-                  Category Volume Distribution
-                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                  <CardTitle className="text-base">
+                    Category Volume Distribution
+                  </CardTitle>
+                </div>
                 <CardDescription>
                   Mentions across categories ({periodLabel})
                 </CardDescription>

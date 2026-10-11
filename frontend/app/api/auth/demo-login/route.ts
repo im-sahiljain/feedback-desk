@@ -31,6 +31,12 @@ export async function POST(request: Request) {
                 accessToken: data.accessToken || data.token,
                 refreshToken: data.refreshToken,
             });
+            nextResponse.cookies.set('isDemo', 'true', {
+                path: '/',
+                maxAge: 30 * 24 * 60 * 60,
+                sameSite: 'lax',
+                httpOnly: false,
+            });
         }
 
         return nextResponse;

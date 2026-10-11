@@ -37,13 +37,15 @@ export function AttentionPanel({
   data,
   loading,
   period,
+  className,
 }: {
   data: DashboardSummary | null;
   loading: boolean;
   period: DashboardPeriod;
+  className?: string;
 }) {
   return (
-    <Card className="border-border shadow-sm lg:col-span-3">
+    <Card className={cn("border-border shadow-sm lg:col-span-3", className)}>
       <CardHeader className="pb-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1">

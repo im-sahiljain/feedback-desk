@@ -15,12 +15,16 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   ChevronDown,
+  Sun,
+  Moon,
+  Check,
+  Laptop,
 } from "lucide-react";
+import { useTheme } from "next-themes";
 import { useApp } from "@/context/AppContext";
 import { INDUSTRY_ICONS, INDUSTRY_LABELS } from "@/types";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
@@ -36,7 +40,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ModeToggle } from "@/components/mode-toggle";
 
 const STORAGE_KEY = "nav-rail:expanded";
 const ICON_SLOT = "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl";
@@ -120,11 +123,13 @@ export function AppNavRail({
     products,
     user,
   } = useApp();
+  const { setTheme, theme } = useTheme();
 
   const [expandedState, setExpanded] = useState(() =>
     typeof lastExpanded === "boolean" ? lastExpanded : false,
   );
   const [productsOpen, setProductsOpen] = useState(false);
+  const [themeOpen, setThemeOpen] = useState(false);
 
   useEffect(() => {
     if (forceExpanded) return;
@@ -248,9 +253,9 @@ export function AppNavRail({
         {/* Product switcher — accordion on mobile drawer, dropdown on desktop */}
         {forceExpanded ? (
           <div className="mb-2 overflow-hidden">
-            <Button
-              variant="ghost"
-              className="h-10 w-full justify-start overflow-hidden rounded-xl px-0 hover:bg-background/80"
+            <button
+              type="button"
+              className="flex h-10 w-full items-center overflow-hidden rounded-xl hover:bg-background/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
               onClick={() => setProductsOpen((o) => !o)}
               aria-expanded={productsOpen}
             >
@@ -270,7 +275,7 @@ export function AppNavRail({
                   productsOpen && "rotate-180",
                 )}
               />
-            </Button>
+            </button>
             <div
               className={cn(
                 "grid transition-[grid-template-rows] duration-200 ease-out",
@@ -289,9 +294,9 @@ export function AppNavRail({
             <Tooltip>
               <TooltipTrigger asChild>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="mb-2 h-10 w-full justify-start overflow-hidden rounded-xl px-0 hover:bg-background/80"
+                  <button
+                    type="button"
+                    className="mb-2 flex h-10 w-full items-center overflow-hidden rounded-xl hover:bg-background/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
                   >
                     <span className={cn(ICON_SLOT, "text-base leading-none")}>
                       {currentProduct ? (
@@ -303,7 +308,7 @@ export function AppNavRail({
                     <RailLabel expanded={expanded}>
                       {currentProduct?.name || "Add product"}
                     </RailLabel>
-                  </Button>
+                  </button>
                 </DropdownMenuTrigger>
               </TooltipTrigger>
               {!expanded && (
@@ -410,17 +415,153 @@ export function AppNavRail({
         </nav>
 
         <div className="mt-auto flex flex-col gap-1 overflow-hidden">
-          <div className="flex h-10 w-full items-center overflow-hidden">
-            <ModeToggle />
-            <RailLabel expanded={expanded}>Theme</RailLabel>
-          </div>
+          {/* Theme Switch — accordion on mobile drawer, dropdown on desktop */}
+          {forceExpanded ? (
+            <div className="overflow-hidden">
+              <button
+                type="button"
+                className="flex h-10 w-full items-center overflow-hidden rounded-xl text-muted-foreground hover:bg-background/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+                onClick={() => setThemeOpen((o) => !o)}
+                aria-expanded={themeOpen}
+                aria-label="Toggle theme options"
+              >
+                <span className={cn(ICON_SLOT, "relative")}>
+                  <Sun className="h-[18px] w-[18px] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                  <Moon className="absolute h-[18px] w-[18px] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                </span>
+                <span className="ml-2.5 min-w-0 flex-1 truncate text-left text-sm font-medium">
+                  Theme
+                </span>
+                <ChevronDown
+                  className={cn(
+                    "mr-2 h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200",
+                    themeOpen && "rotate-180",
+                  )}
+                />
+              </button>
+              <div
+                className={cn(
+                  "grid transition-[grid-template-rows] duration-200 ease-out",
+                  themeOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+                )}
+              >
+                <div className="overflow-hidden">
+                  <div className="mt-1 space-y-0.5 rounded-xl border border-border/60 bg-muted/40 p-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setTheme("light")}
+                      className={cn(
+                        "flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-xs transition-colors",
+                        theme === "light"
+                          ? "bg-background font-medium text-foreground shadow-sm"
+                          : "text-muted-foreground hover:bg-background/50 hover:text-foreground",
+                      )}
+                    >
+                      <span className="flex items-center gap-2">
+                        <Sun className="h-3.5 w-3.5" />
+                        Light
+                      </span>
+                      {theme === "light" && (
+                        <Check className="h-3.5 w-3.5 text-primary" />
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTheme("dark")}
+                      className={cn(
+                        "flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-xs transition-colors",
+                        theme === "dark"
+                          ? "bg-background font-medium text-foreground shadow-sm"
+                          : "text-muted-foreground hover:bg-background/50 hover:text-foreground",
+                      )}
+                    >
+                      <span className="flex items-center gap-2">
+                        <Moon className="h-3.5 w-3.5" />
+                        Dark
+                      </span>
+                      {theme === "dark" && (
+                        <Check className="h-3.5 w-3.5 text-primary" />
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTheme("system")}
+                      className={cn(
+                        "flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-xs transition-colors",
+                        theme === "system"
+                          ? "bg-background font-medium text-foreground shadow-sm"
+                          : "text-muted-foreground hover:bg-background/50 hover:text-foreground",
+                      )}
+                    >
+                      <span className="flex items-center gap-2">
+                        <Laptop className="h-3.5 w-3.5" />
+                        System
+                      </span>
+                      {theme === "system" && (
+                        <Check className="h-3.5 w-3.5 text-primary" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <DropdownMenu>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className="flex h-10 w-full items-center overflow-hidden rounded-xl text-muted-foreground hover:bg-background/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+                      aria-label="Toggle theme"
+                    >
+                      <span className={cn(ICON_SLOT, "relative")}>
+                        <Sun className="h-[18px] w-[18px] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                        <Moon className="absolute h-[18px] w-[18px] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                      </span>
+                      <RailLabel expanded={expanded}>Theme</RailLabel>
+                    </button>
+                  </DropdownMenuTrigger>
+                </TooltipTrigger>
+                {!expanded && (
+                  <TooltipContent side="right" sideOffset={8}>
+                    Theme
+                  </TooltipContent>
+                )}
+              </Tooltip>
+              <DropdownMenuContent side="right" align="end" sideOffset={8} className="w-36">
+                <DropdownMenuItem onClick={() => setTheme("light")} className="cursor-pointer flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <Sun className="h-4 w-4" />
+                    Light
+                  </span>
+                  {theme === "light" && <Check className="ml-auto h-4 w-4" />}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTheme("dark")} className="cursor-pointer flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <Moon className="h-4 w-4" />
+                    Dark
+                  </span>
+                  {theme === "dark" && <Check className="ml-auto h-4 w-4" />}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTheme("system")} className="cursor-pointer flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <Laptop className="h-4 w-4" />
+                    System
+                  </span>
+                  {theme === "system" && <Check className="ml-auto h-4 w-4" />}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
+          {/* Collapse/Expand Sidebar */}
           {!forceExpanded && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="h-10 w-full justify-start overflow-hidden rounded-xl px-0 text-muted-foreground hover:text-foreground"
+                <button
+                  type="button"
+                  className="flex h-10 w-full items-center overflow-hidden rounded-xl text-muted-foreground hover:bg-background/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
                   onClick={toggleExpanded}
                   aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}
                 >
@@ -432,7 +573,7 @@ export function AppNavRail({
                     )}
                   </span>
                   <RailLabel expanded={expanded}>Collapse</RailLabel>
-                </Button>
+                </button>
               </TooltipTrigger>
               {!expanded && (
                 <TooltipContent side="right" sideOffset={8}>
@@ -442,12 +583,17 @@ export function AppNavRail({
             </Tooltip>
           )}
 
+          {/* User Profile or Logout */}
           {user ? (
             <DropdownMenu>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex h-10 w-full items-center overflow-hidden rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    <button
+                      type="button"
+                      className="flex h-10 w-full items-center overflow-hidden rounded-xl text-muted-foreground hover:bg-background/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+                      aria-label="User account menu"
+                    >
                       <span className={ICON_SLOT}>
                         <Avatar className="h-8 w-8 border border-border/60 shadow-sm">
                           <AvatarFallback className="bg-primary text-[11px] font-semibold text-primary-foreground">
@@ -493,16 +639,17 @@ export function AppNavRail({
           ) : (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="h-10 w-full justify-start overflow-hidden rounded-xl px-0 text-muted-foreground hover:text-destructive"
+                <button
+                  type="button"
+                  className="flex h-10 w-full items-center overflow-hidden rounded-xl text-muted-foreground hover:bg-background/70 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
                   onClick={() => api.auth.logout()}
+                  aria-label="Logout"
                 >
                   <span className={ICON_SLOT}>
-                    <LogOut className="h-4 w-4" />
+                    <LogOut className="h-[18px] w-[18px]" />
                   </span>
                   <RailLabel expanded={expanded}>Logout</RailLabel>
-                </Button>
+                </button>
               </TooltipTrigger>
               {!expanded && (
                 <TooltipContent side="right" sideOffset={8}>

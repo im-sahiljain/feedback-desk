@@ -139,12 +139,17 @@ export function WhatChangedPanel({
   loading: boolean;
   period: DashboardPeriod;
 }) {
+  const daysText =
+    period === "7d" ? "7 days" : period === "30d" ? "30 days" : "90 days";
+
   return (
     <Card className="border-border shadow-sm flex flex-col h-full">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
-          <GitCompareArrows className="h-4 w-4 text-muted-foreground" />
-          <CardTitle className="text-base">What changed</CardTitle>
+          <GitCompareArrows className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+          <CardTitle className="text-base">
+            What changed (in the last {daysText})
+          </CardTitle>
         </div>
         <CardDescription>
           Meaningful differences vs the previous{" "}

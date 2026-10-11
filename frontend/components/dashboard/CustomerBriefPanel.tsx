@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { feedbackFilterHref, insightsHref } from "@/lib/dashboard";
+import { cn } from "@/lib/utils";
 import type { DashboardPeriod, DashboardSummary } from "@/types";
 import { ArrowRight, Sparkles } from "lucide-react";
 
@@ -20,17 +21,19 @@ export function CustomerBriefPanel({
   period,
   error,
   onRetry,
+  className,
 }: {
   data: DashboardSummary | null;
   loading: boolean;
   period: DashboardPeriod;
   error?: string | null;
   onRetry?: () => void;
+  className?: string;
 }) {
   const brief = data?.brief;
 
   return (
-    <Card className="border-border shadow-sm lg:col-span-2">
+    <Card className={cn("border-border shadow-sm lg:col-span-2", className)}>
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-primary" />

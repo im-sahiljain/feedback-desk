@@ -30,21 +30,24 @@ export default function Dashboard() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const loadDashboard = useCallback((productId: string, period: DashboardPeriod) => {
-    setIsLoading(true);
-    setError(null);
+  const loadDashboard = useCallback(
+    (productId: string, period: DashboardPeriod) => {
+      setIsLoading(true);
+      setError(null);
 
-    api.analytics
-      .getDashboard(productId, period)
-      .then((payload: DashboardSummary) => {
-        setData(payload);
-      })
-      .catch(() => {
-        setData(null);
-        setError("Unable to load dashboard right now.");
-      })
-      .finally(() => setIsLoading(false));
-  }, []);
+      api.analytics
+        .getDashboard(productId, period)
+        .then((payload: DashboardSummary) => {
+          setData(payload);
+        })
+        .catch(() => {
+          setData(null);
+          setError("Unable to load dashboard right now.");
+        })
+        .finally(() => setIsLoading(false));
+    },
+    [],
+  );
 
   useEffect(() => {
     if (currentProduct) {
@@ -82,7 +85,8 @@ export default function Dashboard() {
           <div className="max-w-sm space-y-2 text-center">
             <h2 className="text-lg font-semibold">No product selected</h2>
             <p className="text-sm text-muted-foreground">
-              Choose a product from the sidebar to see your customer intelligence overview.
+              Choose a product from the sidebar to see your customer
+              intelligence overview.
             </p>
             <Button asChild size="sm" variant="outline" className="mt-2">
               <Link href="/products">Go to Products</Link>
@@ -109,7 +113,11 @@ export default function Dashboard() {
               </div>
               <div className="space-y-0.5">
                 <p className="text-sm font-medium">
-                  Customer feedback overview · {DASHBOARD_PERIODS.find((p) => p.key === selectedPeriod)?.label}
+                  Customer feedback overview ·{" "}
+                  {
+                    DASHBOARD_PERIODS.find((p) => p.key === selectedPeriod)
+                      ?.label
+                  }
                 </p>
                 {data ? (
                   <p className="text-xs text-muted-foreground">
@@ -124,7 +132,9 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-muted-foreground">Last:</span>
+              <span className="text-xs font-medium text-muted-foreground">
+                Last:
+              </span>
               <div
                 className="flex flex-wrap items-center gap-1.5 rounded-lg border border-border/60 bg-background/80 p-1"
                 role="group"
@@ -172,12 +182,17 @@ export default function Dashboard() {
                   Awaiting your first customer feedback
                 </h3>
                 <p className="text-xs text-muted-foreground">
-                  Share your public feedback link or add feedback manually to start populating your dashboard.
+                  Share your public feedback link or add feedback manually to
+                  start populating your dashboard.
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 {currentProduct.public_feedback_path ? (
-                  <Button size="sm" className="gap-1.5 text-xs" onClick={copyFeedbackLink}>
+                  <Button
+                    size="sm"
+                    className="gap-1.5 text-xs"
+                    onClick={copyFeedbackLink}
+                  >
                     <Copy className="h-3.5 w-3.5" />
                     {copied ? "Copied" : "Copy feedback link"}
                   </Button>
@@ -193,20 +208,34 @@ export default function Dashboard() {
         <DashboardKpiRow data={data} loading={isLoading} />
 
         <div className="grid gap-4 lg:grid-cols-5">
-          <AttentionPanel data={data} loading={isLoading} period={selectedPeriod} />
+          <AttentionPanel
+            data={data}
+            loading={isLoading}
+            period={selectedPeriod}
+            className="order-2 lg:order-1"
+          />
           <CustomerBriefPanel
             data={data}
             loading={isLoading}
             period={selectedPeriod}
+            className="order-1 lg:order-2"
           />
         </div>
 
         <div className="grid gap-4 lg:grid-cols-2">
-          <WhatChangedPanel data={data} loading={isLoading} period={selectedPeriod} />
+          <WhatChangedPanel
+            data={data}
+            loading={isLoading}
+            period={selectedPeriod}
+          />
           <SentimentTrendPanel data={data} loading={isLoading} />
         </div>
 
-        <TopAreasPanel data={data} loading={isLoading} period={selectedPeriod} />
+        <TopAreasPanel
+          data={data}
+          loading={isLoading}
+          period={selectedPeriod}
+        />
 
         <div className="grid gap-4 lg:grid-cols-2">
           <PositiveSignalsPanel data={data} loading={isLoading} />

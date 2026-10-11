@@ -73,6 +73,7 @@ export function clearBffCookies(response: NextResponse) {
     response.cookies.set('accessToken', '', cookieOptions);
     response.cookies.set('token', '', cookieOptions);
     response.cookies.set('refreshToken', '', cookieOptions);
+    response.cookies.set('isDemo', '', { ...cookieOptions, httpOnly: false });
 }
 
 type RefreshedTokens = {

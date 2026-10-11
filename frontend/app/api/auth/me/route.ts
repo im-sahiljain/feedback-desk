@@ -16,6 +16,21 @@ export async function GET() {
         const userData = await response.json();
         const nextResponse = NextResponse.json({ user: userData }, { status: 200 });
         applyAuthCookies(nextResponse);
+
+        if (userData?.role === 'demo') {
+            nextResponse.cookies.set('isDemo', 'true', {
+                path: '/',
+                maxAge: 30 * 24 * 60 * 60,
+                sameSite: 'lax',
+                httpOnly: false,
+            });
+        } else {
+            nextResponse.cookies.set('isDemo', '', {
+                path: '/',
+                maxAge: 0,
+            });
+        }
+
         return nextResponse;
     } catch (error) {
         console.error('Auth Me Error:', error);
