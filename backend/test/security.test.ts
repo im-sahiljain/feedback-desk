@@ -20,6 +20,7 @@ const { sanitizeForAi } = await import('../src/ai/sanitize.js');
 const { sanitizeImpactClaim } = await import('../src/executive_brief.js');
 const { roleHasPermission } = await import('../src/organizations/roles.js');
 const { toQualitativeConfidence } = await import('../src/ai/types.js');
+const { estimateCostUsd } = await import('../src/ai/classify.js');
 
 test('config fails closed without JWT_SECRET', () => {
   resetConfigCache();
@@ -104,3 +105,20 @@ test('qualitative confidence only', () => {
   assert.equal(toQualitativeConfidence(0.9), 'high');
   assert.equal(toQualitativeConfidence(0.4), 'low');
 });
+
+test('estimateCostUsd calculates accurate token pricing', () => {
+  // gemini-3.5-flash-lite: input $0.30/M, output $2.50/M
+  // 1,000 input tokens = $0.000300
+  // 500 output tokens = $0.001250
+  // Total = $0.001550
+  const costLite = estimateCostUsd('gemini-3.5-flash-lite', 1000, 500);
+  assert.equal(costLite, 0.00155);
+
+  // Pro model tier
+  const costPro = estimateCostUsd('gemini-1.5-pro', 1000, 500);
+  assert.equal(costPro, 0.00875);
+
+  // Zero tokens
+  assert.equal(estimateCostUsd('gemini-3.5-flash-lite', 0, 0), 0);
+});
+

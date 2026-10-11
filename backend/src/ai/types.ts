@@ -98,6 +98,9 @@ export interface DeepAnalysisResult {
   prompt_version: string;
   model_provider: string;
   model_name: string;
+  token_input?: number;
+  token_output?: number;
+  estimated_cost_usd?: number;
 }
 
 export function toQualitativeConfidence(value: unknown): QualitativeConfidence {

@@ -32,6 +32,36 @@ export { ANALYSIS_VERSION, SCHEMA_VERSION, PROMPT_VERSION } from "./types.js";
 const MODEL_NAME = "gemini-3.5-flash-lite";
 
 /**
+ * Estimate cost in USD for model token usage.
+ * Default pricing is based on Gemini 3.5 Flash-Lite rates:
+ * - Input: $0.30 per 1M tokens ($0.00000030/token)
+ * - Output: $2.50 per 1M tokens ($0.00000250/token)
+ */
+export function estimateCostUsd(
+  modelName: string,
+  tokenInput: number = 0,
+  tokenOutput: number = 0
+): number {
+  const model = (modelName || "").toLowerCase();
+  let inputRatePerM = 0.30;
+  let outputRatePerM = 2.50;
+
+  if (model.includes("pro")) {
+    inputRatePerM = 3.50;
+    outputRatePerM = 10.50;
+  } else if (model.includes("flash-lite")) {
+    inputRatePerM = 0.30;
+    outputRatePerM = 2.50;
+  } else if (model.includes("flash")) {
+    inputRatePerM = 0.15;
+    outputRatePerM = 0.60;
+  }
+
+  const cost = (tokenInput * inputRatePerM + tokenOutput * outputRatePerM) / 1_000_000;
+  return Number(cost.toFixed(6));
+}
+
+/**
  * Individual-feedback analysis contract
  * -------------------------------------
  * This module analyzes ONE feedback record only.
@@ -1087,6 +1117,15 @@ Before returning JSON verify:
     });
 
     const latency = Date.now() - started;
+    const promptTokens = response.usageMetadata?.promptTokenCount;
+    const candidateTokens = response.usageMetadata?.candidatesTokenCount;
+    const tokenInput = typeof promptTokens === "number" ? promptTokens : undefined;
+    const tokenOutput = typeof candidateTokens === "number" ? candidateTokens : undefined;
+    const estimatedCostUsd =
+      tokenInput !== undefined || tokenOutput !== undefined
+        ? estimateCostUsd(MODEL_NAME, tokenInput ?? 0, tokenOutput ?? 0)
+        : undefined;
+
     const rawJson = response.text || "{}";
     const parsed = JSON.parse(rawJson);
 
@@ -1234,6 +1273,9 @@ Before returning JSON verify:
 
       model_provider: "google",
       model_name: MODEL_NAME,
+      token_input: tokenInput,
+      token_output: tokenOutput,
+      estimated_cost_usd: estimatedCostUsd,
     };
 
     logger.info("AI analysis completed", {
@@ -1244,6 +1286,9 @@ Before returning JSON verify:
       issueCount: issues.length,
       rootCauseHypothesisCount: hypotheses.length,
       category: primaryCat,
+      tokenInput,
+      tokenOutput,
+      estimatedCostUsd,
     });
 
     return result;
@@ -1376,5 +1421,8 @@ function generateFallbackDeepAnalysis(
 
     model_provider: "fallback",
     model_name: "heuristic",
+    token_input: 0,
+    token_output: 0,
+    estimated_cost_usd: 0,
   };
 }

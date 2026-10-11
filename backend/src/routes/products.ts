@@ -11,8 +11,6 @@ import { recordAudit } from '../audit/audit.js';
 import {
   createDestination,
   getActiveDestinationForProduct,
-  regenerateDestination,
-  revokeDestination,
 } from '../publicFeedback/destinations.js';
 import {
   createSingleUseInvitation,
@@ -139,66 +137,6 @@ router.post('/', authenticateUser as any, async (req: AuthenticatedRequest, res:
   }
 });
 
-router.get('/:id/public-link', authenticateUser as any, async (req: AuthenticatedRequest, res: Response) => {
-  const pool = getPool();
-  try {
-    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-    await requireProductAccess(pool, req.user.id, paramId(req.params.id), 'product:read');
-    const dest = await getActiveDestinationForProduct(pool, paramId(req.params.id));
-    if (!dest) {
-      return res.status(404).json({ error: 'No active public feedback link' });
-    }
-    return res.json({
-      token: dest.public_token,
-      path: `/f/${dest.public_token}`,
-      status: dest.status,
-      created_at: dest.created_at,
-    });
-  } catch (err) {
-    const safe = toSafeClientError(err);
-    return res.status(safe.status).json(safe.body);
-  }
-});
-
-router.post('/:id/public-link/revoke', authenticateUser as any, async (req: AuthenticatedRequest, res: Response) => {
-  const pool = getPool();
-  try {
-    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-    await requireProductAccess(pool, req.user.id, paramId(req.params.id), 'public_link:manage');
-    const dest = await getActiveDestinationForProduct(pool, paramId(req.params.id));
-    if (!dest) return res.status(404).json({ error: 'No active public feedback link' });
-    await revokeDestination(pool, dest.id, req.user.id, undefined, {
-      ip: req.ip,
-      userAgent: req.headers['user-agent'],
-    });
-    return res.json({ message: 'Public feedback link revoked' });
-  } catch (err) {
-    const safe = toSafeClientError(err);
-    return res.status(safe.status).json(safe.body);
-  }
-});
-
-router.post('/:id/public-link/regenerate', authenticateUser as any, async (req: AuthenticatedRequest, res: Response) => {
-  const pool = getPool();
-  try {
-    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-    await requireProductAccess(pool, req.user.id, paramId(req.params.id), 'public_link:manage');
-    const dest = await regenerateDestination(pool, paramId(req.params.id), '', req.user.id, {
-      ip: req.ip,
-      userAgent: req.headers['user-agent'],
-    });
-    return res.json({
-      token: dest.public_token,
-      path: `/f/${dest.public_token}`,
-      status: dest.status,
-      created_at: dest.created_at,
-      message: 'New public feedback link generated. Previous link is now inactive.',
-    });
-  } catch (err) {
-    const safe = toSafeClientError(err);
-    return res.status(safe.status).json(safe.body);
-  }
-});
 
 /**
  * Generate a fresh single-use invitation link for a product (1-Click)

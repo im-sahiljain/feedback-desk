@@ -157,8 +157,10 @@ export async function processAnalyzeFeedbackJob(job: {
   await pool.query(
     `INSERT INTO ai_processing_metrics
      (job_id, feedback_id, provider, model_name, success, latency_ms, queue_wait_ms,
-      retry_count, parse_failure, prompt_version, schema_version, analysis_version)
-     VALUES ($1::uuid,$2::uuid,$3::text,$4::text,TRUE,$5::integer,$6::integer,$7::integer,$8::boolean,$9::text,$10::text,$11::text)`,
+      retry_count, parse_failure, prompt_version, schema_version, analysis_version,
+      token_input, token_output, estimated_cost_usd)
+     VALUES ($1::uuid,$2::uuid,$3::text,$4::text,TRUE,$5::integer,$6::integer,$7::integer,$8::boolean,$9::text,$10::text,$11::text,
+             $12::integer,$13::integer,$14::numeric)`,
     [
       job.id,
       feedbackId,
@@ -171,6 +173,9 @@ export async function processAnalyzeFeedbackJob(job: {
       PROMPT_VERSION,
       SCHEMA_VERSION,
       ANALYSIS_VERSION,
+      analysis.token_input ?? null,
+      analysis.token_output ?? null,
+      analysis.estimated_cost_usd ?? null,
     ]
   );
 

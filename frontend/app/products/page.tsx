@@ -28,7 +28,6 @@ import {
   Share2,
   Loader2,
   Download,
-  UserCheck,
 } from "lucide-react";
 import { CreateProductDialog } from "@/components/products/create-product-dialog";
 import { toast } from "@/hooks/use-toast";
@@ -45,8 +44,8 @@ function ProductsContent() {
   const [isDownloadingQr, setIsDownloadingQr] = useState(false);
   const qrSvgRef = useRef<SVGSVGElement | null>(null);
 
-  // Simple 1-click single-use link generation state
-  const [copyingInviteId, setCopyingInviteId] = useState<string | null>(null);
+  // 1-time single-use share state
+  const [sharingProductId, setSharingProductId] = useState<string | null>(null);
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -69,75 +68,75 @@ function ProductsContent() {
     refreshProducts();
   };
 
-  /** Prefer long-lived opaque /f/{token} public links over legacy signed URLs. */
-  const getProductPublicUrl = async (product: Product): Promise<string> => {
-    const existingPath = product.public_feedback_path;
-    if (existingPath && typeof existingPath === "string") {
-      return `${window.location.origin}${existingPath.startsWith("/") ? existingPath : `/${existingPath}`}`;
-    }
-
-    const response = await authFetch(`/api/products/${product.id}/public-link`);
-    if (!response.ok) {
-      if (response.status === 401) {
-        toast({
-          title: "Authentication required",
-          description: "Please log in to generate the link.",
-          variant: "destructive",
-        });
-        throw new Error("Authentication required");
-      }
-      if (response.status === 404) {
-        // No active link — regenerate one
-        const regen = await authFetch(
-          `/api/products/${product.id}/public-link/regenerate`,
-          {
-            method: "POST",
-          },
-        );
-        if (!regen.ok) {
-          throw new Error("Failed to create public link");
-        }
-        const regenData = await regen.json();
-        const path =
-          regenData.path || (regenData.token ? `/f/${regenData.token}` : null);
-        if (!path) throw new Error("Failed to create public link");
-        return `${window.location.origin}${path}`;
-      }
-      throw new Error("Failed to fetch public link");
-    }
-
-    const data = await response.json();
-    const path = data.path || (data.token ? `/f/${data.token}` : null);
-    if (!path) throw new Error("Public link missing from response");
-    return `${window.location.origin}${path}`;
-  };
-
   const handleShareOS = async (product: Product) => {
+    if (isDemo) {
+      toast({
+        title: "Action Disabled in Demo Mode",
+        description:
+          "Generating customer invitation links is disabled in the demo sandbox.",
+      });
+      return;
+    }
+
+    setSharingProductId(product.id);
     try {
-      const url = await getProductPublicUrl(product);
-      if (typeof navigator !== "undefined" && navigator.share) {
-        await navigator.share({
-          title: product.name,
-          text: `Share feedback for ${product.name}`,
-          url: url,
-        });
-      } else {
+      const response = await authFetch(`/api/products/${product.id}/invites`, {
+        method: "POST",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to generate link");
+      }
+      const data = await response.json();
+      const path = data.path || `/f/invite/${data.token}`;
+      const url = `${window.location.origin}${path}`;
+
+      // Always copy to clipboard immediately so the user can paste anywhere
+      try {
         await navigator.clipboard.writeText(url);
+      } catch {
+        // Clipboard write fallback
+      }
+
+      // If mobile or OS share drawer is available, open the share tray
+      if (typeof navigator !== "undefined" && navigator.share) {
+        try {
+          await navigator.share({
+            title: product.name,
+            text: `Share feedback for ${product.name}`,
+            url: url,
+          });
+          toast({
+            title: "1-Time Link Shared!",
+            description: "Fresh link copied to clipboard and shared via OS.",
+          });
+        } catch (shareErr: any) {
+          if (shareErr.name === "AbortError") {
+            // User dismissed native share tray, link is still in clipboard!
+            toast({
+              title: "1-Time Link Copied!",
+              description: "Fresh link copied to your clipboard.",
+            });
+          } else {
+            throw shareErr;
+          }
+        }
+      } else {
+        // Desktop / no native share
         toast({
-          title: "Link copied to clipboard",
+          title: "1-Time Link Copied!",
           description:
-            "OS sharing is not available on this browser. Link copied instead.",
+            "Fresh link copied to clipboard. Automatically closes after 1 customer submission.",
         });
       }
     } catch (err: any) {
-      if (err.name !== "AbortError") {
-        console.error("Failed to share:", err);
-        toast({
-          title: "Error",
-          description: "Failed to share link.",
-          variant: "destructive",
-        });
-      }
+      console.error("Failed to share link:", err);
+      toast({
+        title: "Error",
+        description: "Failed to generate and share 1-time link.",
+        variant: "destructive",
+      });
+    } finally {
+      setSharingProductId(null);
     }
   };
 
@@ -214,44 +213,6 @@ function ProductsContent() {
     }
   };
 
-  const handleCopySingleUseLink = async (product: Product) => {
-    if (isDemo) {
-      toast({
-        title: "Action Disabled in Demo Mode",
-        description:
-          "Generating customer invitation links is disabled in the demo sandbox.",
-      });
-      return;
-    }
-
-    setCopyingInviteId(product.id);
-    try {
-      const response = await authFetch(`/api/products/${product.id}/invites`, {
-        method: "POST",
-      });
-      if (!response.ok) {
-        throw new Error("Failed to generate link");
-      }
-      const data = await response.json();
-      const path = data.path || `/f/invite/${data.token}`;
-      const url = `${window.location.origin}${path}`;
-      await navigator.clipboard.writeText(url);
-      toast({
-        title: "1-Time Link Copied!",
-        description:
-          "Fresh link copied to clipboard. Automatically closes after 1 customer submission.",
-      });
-    } catch (error) {
-      console.error("Failed to generate single-use link:", error);
-      toast({
-        title: "Error",
-        description: "Failed to generate single-use link.",
-        variant: "destructive",
-      });
-    } finally {
-      setCopyingInviteId(null);
-    }
-  };
 
   return (
     <AppLayout title="Products" description="Manage your products">
@@ -358,41 +319,31 @@ function ProductsContent() {
                       </div>
                     </div>
 
-                    {/* Action buttons: OS Share, QR Code, Copy Link */}
-                    <div className="flex items-center justify-end gap-0.5 sm:gap-1 shrink-0 max-sm:-mx-1 max-sm:border-t max-sm:border-border/60 max-sm:pt-2">
+                    {/* Action buttons: Share 1-Time Link, Counter QR Code */}
+                    <div className="flex items-center justify-end gap-1 shrink-0">
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => handleShareOS(product)}
-                        title="Share via OS"
+                        disabled={sharingProductId === product.id}
+                        title="Share 1-time customer link"
                         className="h-9 w-9 sm:h-8 sm:w-8 text-muted-foreground hover:text-foreground"
                       >
-                        <Share2 className="h-4 w-4" />
+                        {sharingProductId === product.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                        ) : (
+                          <Share2 className="h-4 w-4" />
+                        )}
                       </Button>
 
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => handleOpenQr(product)}
-                        title="View QR Code"
+                        title="View Counter QR Code"
                         className="h-9 w-9 sm:h-8 sm:w-8 text-muted-foreground hover:text-foreground"
                       >
                         <QrCode className="h-4 w-4" />
-                      </Button>
-
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleCopySingleUseLink(product)}
-                        disabled={copyingInviteId === product.id}
-                        title="Copy 1-time customer link"
-                        className="h-9 w-9 sm:h-8 sm:w-8 text-primary hover:text-primary hover:bg-primary/10"
-                      >
-                        {copyingInviteId === product.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <UserCheck className="h-4 w-4" />
-                        )}
                       </Button>
                     </div>
                   </div>

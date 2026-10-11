@@ -168,41 +168,10 @@ function validateFeedbackBody(body: Record<string, unknown>, maxChars: number) {
   return { feedback, email, rating, idempotencyKey };
 }
 
-router.post('/public/:token', feedbackSubmitLimiter, publicDestinationLimiter, async (req: Request, res: Response) => {
-  const pool = getPool();
-  const maxChars = PUBLIC_SUBMIT_MAX_CHARS;
-  try {
-    const resolved = await resolvePublicDestination(pool, String(Array.isArray(req.params.token)?req.params.token[0]:req.params.token));
-    if (!resolved) {
-      return res.status(404).json({ error: 'Feedback link not found' });
-    }
-
-    const { feedback, email, rating, idempotencyKey } = validateFeedbackBody(req.body, maxChars);
-
-    const result = await persistFeedbackAndEnqueue(pool, {
-      productId: resolved.product.id,
-      destinationId: resolved.destination.id,
-      feedback,
-      email,
-      rating,
-      idempotencyKey,
-      clientIp: req.ip,
-    });
-
-    return res.status(result.duplicate ? 200 : 201).json({
-      message: result.duplicate
-        ? 'Feedback already received'
-        : 'Feedback received and queued for analysis',
-      id: result.id,
-      processing_status: 'queued',
-    });
-  } catch (err) {
-    logger.error('Public feedback submit error', {
-      error: err instanceof Error ? err.message : 'unknown',
-    });
-    const safe = toSafeClientError(err);
-    return res.status(safe.status).json(safe.body);
-  }
+router.post('/public/:token', feedbackSubmitLimiter, async (_req: Request, res: Response) => {
+  return res.status(410).json({
+    error: 'Generic public feedback links have been retired. Please use single-use customer links or scan the counter QR code.',
+  });
 });
 
 /**
@@ -291,20 +260,10 @@ router.post('/submit', feedbackSubmitLimiter, async (req: Request, res: Response
   }
 });
 
-router.get('/public/:token/meta', feedbackSubmitLimiter, async (req: Request, res: Response) => {
-  const pool = getPool();
-  try {
-    const resolved = await resolvePublicDestination(pool, String(Array.isArray(req.params.token)?req.params.token[0]:req.params.token));
-    if (!resolved) return res.status(404).json({ error: 'Feedback link not found' });
-    return res.json({
-      product_name: resolved.product.name,
-      industry: resolved.product.industry,
-      token: resolved.destination.public_token,
-    });
-  } catch (err) {
-    const safe = toSafeClientError(err);
-    return res.status(safe.status).json(safe.body);
-  }
+router.get('/public/:token/meta', feedbackSubmitLimiter, async (_req: Request, res: Response) => {
+  return res.status(410).json({
+    error: 'Generic public feedback links have been retired. Please use single-use customer links or scan the counter QR code.',
+  });
 });
 
 /**
