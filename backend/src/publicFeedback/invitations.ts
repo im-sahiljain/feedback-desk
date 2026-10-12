@@ -90,31 +90,6 @@ export async function dispenseCounterInvitation(
   }
 
   if (!product) {
-    const destRes = await pool.query<{
-      id: string;
-      name: string;
-      industry: string | null;
-      dest_status: string;
-      revoked_at: Date | null;
-      deleted_at: Date | null;
-    }>(
-      `SELECT p.id, p.name, p.industry, d.status AS dest_status, d.revoked_at, p.deleted_at
-       FROM public_feedback_destinations d
-       JOIN products p ON p.id = d.product_id
-       WHERE d.public_token = $1`,
-      [identifier]
-    );
-
-    const row = destRes.rows[0];
-    if (row) {
-      if (row.dest_status !== 'active' || row.revoked_at || row.deleted_at) {
-        throw new HttpError(410, 'This counter QR code has been revoked or is no longer active.');
-      }
-      product = { id: row.id, name: row.name, industry: row.industry };
-    }
-  }
-
-  if (!product) {
     throw new HttpError(404, 'Product or counter QR code not found.');
   }
 
@@ -203,6 +178,24 @@ export async function submitInvitationFeedback(
         409,
         'Feedback has already been submitted for this link. Responses cannot be modified or resubmitted.'
       );
+    }
+
+    // Anti-Spam Layer 3: Email Cooldown Check (if customer provided email)
+    if (input.email && input.email.trim()) {
+      const emailCooldownRes = await client.query(
+        `SELECT id FROM feedbacks
+         WHERE product_id = $1
+           AND LOWER(email) = LOWER($2)
+           AND received_at > NOW() - INTERVAL '30 days'
+         LIMIT 1`,
+        [invite.product_id, input.email.trim()]
+      );
+      if (emailCooldownRes.rows.length > 0) {
+        throw new HttpError(
+          409,
+          'A review from this email address has already been recorded for this product in the last 30 days.'
+        );
+      }
     }
 
     const { sanitized } = sanitizeForAi(input.feedback);

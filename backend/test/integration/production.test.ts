@@ -21,8 +21,8 @@ const { hashOtp } = await import('../../src/security/crypto.js');
 const { signAccessToken } = await import('../../src/security/tokens.js');
 const { enqueueJob, claimNextJob, completeJob, failJob } = await import('../../src/jobs/queue.js');
 const { processAnalyzeFeedbackJob, JOB_ANALYZE_FEEDBACK } = await import('../../src/jobs/worker.js');
-const { createDestination, revokeDestination, resolvePublicDestination } =
-  await import('../../src/publicFeedback/destinations.js');
+const { createSingleUseInvitation, verifyInvitation, submitInvitationFeedback } =
+  await import('../../src/publicFeedback/invitations.js');
 const { ensurePersonalOrganization, requireProductAccess } = await import('../../src/authz/access.js');
 const { normalizeEmail } = await import('../../src/organizations/roles.js');
 
@@ -65,8 +65,8 @@ test('migrations apply on empty/upgraded database', async () => {
     `SELECT table_name FROM information_schema.tables
      WHERE table_schema = 'public'
        AND table_name IN (
-         'organizations','organization_members','public_feedback_destinations',
-         'background_jobs','audit_events','schema_migrations','auth_otp_challenges'
+         'background_jobs','audit_events','schema_migrations','auth_otp_challenges',
+         'users','products','feedbacks','feedback_invitations'
        )`
   );
   assert.ok(tables.rows.length >= 6);
@@ -165,23 +165,27 @@ test('tenant isolation: user A cannot access user B product resources', async ()
   assert.equal(access.productId, productB);
 });
 
-test('public destination revoke blocks resolution', async () => {
+test('single-use invitation: creation, verification, and burn on submit', async () => {
   const user = await seedUser(`pub-${randomUUID().slice(0, 8)}@example.com`);
   const productId = await createProduct(user.userId, user.orgId, `PubProd-${randomUUID().slice(0, 6)}`);
-  const dest = await createDestination(getPool(), {
-    organizationId: user.orgId,
+  const invite = await createSingleUseInvitation(getPool(), {
     productId,
     createdBy: user.userId,
   });
 
-  const ok = await resolvePublicDestination(getPool(), dest.public_token);
-  assert.ok(ok);
-  assert.equal(ok!.product.id, productId);
+  const verified = await verifyInvitation(getPool(), invite.token);
+  assert.equal(verified.product.id, productId);
 
-  await revokeDestination(getPool(), dest.id, user.userId, user.orgId);
+  const res = await submitInvitationFeedback(getPool(), {
+    token: invite.token,
+    feedback: 'Excellent integration test review',
+    rating: 5,
+  });
+  assert.ok(res.feedbackId);
+
   await assert.rejects(
-    () => resolvePublicDestination(getPool(), dest.public_token),
-    /no longer active/i
+    () => verifyInvitation(getPool(), invite.token),
+    /already been submitted/i
   );
 });
 

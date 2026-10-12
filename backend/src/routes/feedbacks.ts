@@ -5,7 +5,6 @@ import { parsePeriodBounds } from '../executive_brief.js';
 import { verifyParams } from '../crypto.js';
 import { feedbackSubmitLimiter, publicDestinationLimiter } from '../middleware/rateLimiters.js';
 import { requireProductAccess } from '../authz/access.js';
-import { resolvePublicDestination } from '../publicFeedback/destinations.js';
 import {
   verifyInvitation,
   submitInvitationFeedback,
@@ -68,7 +67,6 @@ async function persistFeedbackAndEnqueue(
   args: {
     productId: string;
     organizationId?: string;
-    destinationId: string | null;
     feedback: string;
     email: string;
     rating: number | null;
@@ -107,13 +105,12 @@ async function persistFeedbackAndEnqueue(
 
   const insert = await pool.query(
     `INSERT INTO feedbacks
-     (product_id, public_destination_id, feedback, email, rating,
+     (product_id, feedback, email, rating,
       status, processing_status, received_at, queued_at, idempotency_key, submission_fingerprint, sanitized_feedback)
-     VALUES ($1,$2,$3,$4,$5,'received','queued', now(), now(), $6, $7, $8)
+     VALUES ($1,$2,$3,$4,'received','queued', now(), now(), $5, $6, $7)
      RETURNING id, created_at`,
     [
       args.productId,
-      args.destinationId,
       args.feedback,
       args.email || null,
       args.rating,
@@ -132,13 +129,6 @@ async function persistFeedbackAndEnqueue(
     resourceId: feedbackId,
     idempotencyKey: `analyze:${feedbackId}`,
   });
-
-  if (args.destinationId) {
-    await pool.query(
-      `INSERT INTO public_submit_fingerprints (destination_id, fingerprint) VALUES ($1, $2)`,
-      [args.destinationId, fingerprint]
-    );
-  }
 
   return { id: feedbackId, created_at: insert.rows[0].created_at, duplicate: false as const };
 }
@@ -227,16 +217,8 @@ router.post('/submit', feedbackSubmitLimiter, async (req: Request, res: Response
       return res.status(403).json({ error: 'Invalid feedback link' });
     }
 
-    // Prefer active opaque destination if present (legacy URL still works)
-    const destRes = await pool.query(
-      `SELECT id FROM public_feedback_destinations
-       WHERE product_id = $1 AND status = 'active' LIMIT 1`,
-      [productId]
-    );
-
     const result = await persistFeedbackAndEnqueue(pool, {
       productId: String(productId),
-      destinationId: destRes.rows[0]?.id || null,
       feedback,
       email,
       rating,

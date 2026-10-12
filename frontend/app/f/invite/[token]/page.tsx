@@ -17,7 +17,7 @@ interface InviteMeta {
     token?: string;
 }
 
-type PageState = 'loading' | 'active' | 'already_submitted' | 'invalid' | 'success';
+type PageState = 'loading' | 'active' | 'already_submitted' | 'device_cooldown' | 'invalid' | 'success';
 
 export default function SingleUseFeedbackPage() {
     const params = useParams();
@@ -54,6 +54,24 @@ export default function SingleUseFeedbackPage() {
                         setPageState('invalid');
                     }
                     return;
+                }
+
+                // Anti-Spam Layer 1: Check 30-day device cooldown for this product
+                if (data.product_id) {
+                    try {
+                        const lastSubmittedStr = localStorage.getItem(`product_submitted_${data.product_id}`);
+                        if (lastSubmittedStr) {
+                            const lastSubmitted = parseInt(lastSubmittedStr, 10);
+                            const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+                            if (!isNaN(lastSubmitted) && Date.now() - lastSubmitted < THIRTY_DAYS_MS) {
+                                setMeta(data);
+                                setPageState('device_cooldown');
+                                return;
+                            }
+                        }
+                    } catch {
+                        // Ignore private browsing storage restrictions
+                    }
                 }
 
                 setMeta(data);
@@ -101,6 +119,7 @@ export default function SingleUseFeedbackPage() {
             setPageState('success');
             if (meta?.product_id) {
                 try {
+                    localStorage.setItem(`product_submitted_${meta.product_id}`, Date.now().toString());
                     localStorage.setItem(`counter_submitted_${meta.product_id}`, Date.now().toString());
                 } catch {}
             }
@@ -125,6 +144,28 @@ export default function SingleUseFeedbackPage() {
             <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mb-3" />
                 <p className="text-sm text-muted-foreground">Loading feedback form...</p>
+            </div>
+        );
+    }
+
+    if (pageState === 'device_cooldown') {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center p-4">
+                <Card className="w-full max-w-md text-center p-2 shadow-sm">
+                    <CardContent className="pt-8 space-y-4">
+                        <div className="mx-auto w-12 h-12 bg-amber-100 dark:bg-amber-950/60 rounded-full flex items-center justify-center">
+                            <CheckCircle2 className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                        </div>
+                        <h2 className="text-2xl font-bold">Feedback Already Recorded</h2>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                            You have already submitted feedback for <strong>{meta?.product_name || 'this product'}</strong>. Thank you for your support!
+                        </p>
+                        <div className="p-3 bg-muted/40 rounded-lg text-xs text-muted-foreground flex items-center justify-center gap-1.5">
+                            <Lock className="h-3.5 w-3.5 shrink-0" />
+                            <span>To maintain authentic customer insights, submissions are limited to once every 30 days per customer.</span>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
         );
     }

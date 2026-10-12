@@ -1,6 +1,5 @@
 import { Pool } from 'pg';
 import { logger } from '../logging/logger.js';
-import { createDestination, getActiveDestinationForProduct } from '../publicFeedback/destinations.js';
 
 interface DemoSeedFeedback {
   text: string;
@@ -94,13 +93,7 @@ export async function getOrCreateDemoAccount(pool: Pool): Promise<{
   );
   const demoProductId = productInsertRes.rows[0].id;
 
-  // 4. Generate public feedback destination
-  await createDestination(pool, {
-    productId: demoProductId,
-    createdBy: demoUser.id,
-  });
-
-  // 5. Seed realistic feedbacks
+  // 4. Seed realistic feedbacks
   for (const item of SAMPLE_FEEDBACKS) {
     const rawAi = {
       summary: item.text.length > 80 ? item.text.substring(0, 77) + '...' : item.text,

@@ -9,10 +9,6 @@ import { HttpError, toSafeClientError } from '../errors/httpError.js';
 import { logger } from '../logging/logger.js';
 import { recordAudit } from '../audit/audit.js';
 import {
-  createDestination,
-  getActiveDestinationForProduct,
-} from '../publicFeedback/destinations.js';
-import {
   createSingleUseInvitation,
 } from '../publicFeedback/invitations.js';
 
@@ -110,12 +106,6 @@ router.post('/', authenticateUser as any, async (req: AuthenticatedRequest, res:
     );
 
     const product = result.rows[0];
-    await createDestination(pool, {
-      productId: product.id,
-      createdBy: req.user.id,
-      ip: req.ip,
-      userAgent: req.headers['user-agent'],
-    });
 
     await recordAudit(pool, {
       actorUserId: req.user.id,
@@ -124,12 +114,7 @@ router.post('/', authenticateUser as any, async (req: AuthenticatedRequest, res:
       resourceId: product.id,
     });
 
-    const dest = await getActiveDestinationForProduct(pool, product.id);
-    return res.status(201).json({
-      ...product,
-      public_feedback_token: dest?.public_token,
-      public_feedback_path: dest ? `/f/${dest.public_token}` : null,
-    });
+    return res.status(201).json(product);
   } catch (err) {
     logger.error('Create product error', { error: err instanceof Error ? err.message : 'unknown' });
     const safe = toSafeClientError(err);
@@ -174,12 +159,7 @@ router.get('/:id', authenticateUser as any, async (req: AuthenticatedRequest, re
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Resource not found' });
     }
-    const dest = await getActiveDestinationForProduct(pool, paramId(req.params.id));
-    return res.json({
-      ...result.rows[0],
-      public_feedback_token: dest?.public_token,
-      public_feedback_path: dest ? `/f/${dest.public_token}` : null,
-    });
+    return res.json(result.rows[0]);
   } catch (err) {
     const safe = toSafeClientError(err);
     return res.status(safe.status).json(safe.body);
@@ -244,12 +224,6 @@ router.delete('/:id', authenticateUser as any, async (req: AuthenticatedRequest,
     await pool.query(
       `UPDATE feedbacks SET deleted_at = now() WHERE product_id = $1 AND deleted_at IS NULL`,
       [paramId(req.params.id)]
-    );
-    await pool.query(
-      `UPDATE public_feedback_destinations
-       SET status = 'revoked', revoked_at = now(), revoked_by = $2, updated_at = now()
-       WHERE product_id = $1 AND status = 'active'`,
-      [paramId(req.params.id), req.user.id]
     );
 
     await recordAudit(pool, {

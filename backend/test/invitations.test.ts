@@ -166,3 +166,60 @@ test('counter QR dispenser: dynamically dispenses single-use tokens from a stati
     }
   );
 });
+
+test('anti-spam: enforces 30-day email cooldown per product even across different invitation tokens', async (t) => {
+  const pool = getPool();
+
+  const userRes = await pool.query(
+    `INSERT INTO users (email, name, account_status)
+     VALUES ($1, 'Spam Guard Admin', 'active')
+     RETURNING id`,
+    [`test-spam-guard-admin-${Date.now()}@example.com`]
+  );
+  const userId = userRes.rows[0].id;
+
+  const prodRes = await pool.query(
+    `INSERT INTO products (user_id, name, industry, description)
+     VALUES ($1, 'Spam Guard Product', 'tech', 'Testing repeat email protection')
+     RETURNING id`,
+    [userId]
+  );
+  const productId = prodRes.rows[0].id;
+
+  t.after(async () => {
+    await pool.query(`DELETE FROM products WHERE id = $1`, [productId]);
+    await pool.query(`DELETE FROM users WHERE id = $1`, [userId]);
+  });
+
+  const customerEmail = `repeat-customer-${Date.now()}@example.com`;
+
+  // Token 1: generated and submitted by customer
+  const invite1 = await createSingleUseInvitation(pool, { productId, createdBy: userId });
+  const submit1 = await submitInvitationFeedback(pool, {
+    token: invite1.token,
+    feedback: 'First legitimate review',
+    rating: 5,
+    email: customerEmail,
+  });
+  assert.ok(submit1.feedbackId);
+
+  // Token 2: fresh, unburned token generated later for the same product
+  const invite2 = await createSingleUseInvitation(pool, { productId, createdBy: userId });
+
+  // Customer tries submitting with the same email on the second token -> Must be rejected with 409
+  await assert.rejects(
+    async () => {
+      await submitInvitationFeedback(pool, {
+        token: invite2.token,
+        feedback: 'Second review from same person',
+        rating: 1,
+        email: customerEmail,
+      });
+    },
+    (err: any) => {
+      assert.equal(err.status, 409);
+      assert.match(err.message, /already been recorded for this product in the last 30 days/);
+      return true;
+    }
+  );
+});
