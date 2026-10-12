@@ -126,13 +126,6 @@ export async function processAnalyzeFeedbackJob(job: {
        processing_status = 'analyzed',
        status = 'analyzed',
        analyzed_at = now(),
-       processed_at = now(),
-       processing_latency_ms = $9::integer,
-       analysis_version = $10::text,
-       schema_version = $11::text,
-       prompt_version = $12::text,
-       model_provider = $13::text,
-       model_name = $14::text,
        processing_error = NULL,
        analysis_failed_at = NULL
      WHERE id = $1::uuid`,
@@ -145,12 +138,6 @@ export async function processAnalyzeFeedbackJob(job: {
       String(analysis.category.confidence),
       JSON.stringify(analysis),
       sanitized,
-      latencyMs,
-      ANALYSIS_VERSION,
-      SCHEMA_VERSION,
-      PROMPT_VERSION,
-      analysis.model_provider,
-      analysis.model_name,
     ]
   );
 

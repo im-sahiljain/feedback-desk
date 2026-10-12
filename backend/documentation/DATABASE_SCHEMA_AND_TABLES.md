@@ -63,3 +63,18 @@ The following tables were evaluated, found to be obsolete, and **permanently dro
   * *Reason for Removal:* Replaced by the 5-layer anti-spam pipeline (Layer 1 browser-level 30-day cooldown + Layer 4 database-level email cooldown).
 * **`feedbacks.public_destination_id`** *(DROPPED in Migration `013`)*:
   * *Reason for Removal:* Foreign key reference to the dropped `public_feedback_destinations` table.
+
+---
+
+## 4. Streamlined `feedbacks` Table (Migrations `014` & `015`)
+
+In Migrations `014` and `015`, duplicate telemetry, unused retry keys, and legacy columns were permanently dropped from `feedbacks` to produce a lean, normalized schema:
+* **Dropped in Migration `014`:** `model_provider`, `model_name`, `prompt_version`, `schema_version`, `processing_latency_ms`, `provider_request_id`, `labels`, and `processed_at`.
+* **Dropped in Migration `015`:**
+  * `idempotency_key`: Redundant because single-use invitation tokens naturally enforce write-once idempotency (Layer 3 atomic token burn).
+  * `analysis_version`: Redundant on `feedbacks` because prompt versions and analysis pipelines are canonically tracked in **`ai_processing_metrics`** and in `raw_ai_metadata`.
+* **Where Telemetry Is Stored Now:**
+  * Engineering telemetry (model provider, model name, inference latency, prompt versions, tokens, and cost) is canonically tracked in **`ai_processing_metrics`**.
+  * Complete raw AI inference output (including summary, aspects, root causes, and action items) is stored in **`feedbacks.raw_ai_metadata`** (`jsonb`).
+
+

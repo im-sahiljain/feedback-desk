@@ -93,28 +93,17 @@ async function persistFeedbackAndEnqueue(
     return { id: dup.rows[0].id, duplicate: true as const };
   }
 
-  if (args.idempotencyKey) {
-    const existing = await pool.query(
-      `SELECT id FROM feedbacks WHERE product_id = $1 AND idempotency_key = $2 LIMIT 1`,
-      [args.productId, args.idempotencyKey]
-    );
-    if (existing.rows[0]) {
-      return { id: existing.rows[0].id, duplicate: true as const };
-    }
-  }
-
   const insert = await pool.query(
     `INSERT INTO feedbacks
      (product_id, feedback, email, rating,
-      status, processing_status, received_at, queued_at, idempotency_key, submission_fingerprint, sanitized_feedback)
-     VALUES ($1,$2,$3,$4,'received','queued', now(), now(), $5, $6, $7)
+      status, processing_status, received_at, queued_at, submission_fingerprint, sanitized_feedback)
+     VALUES ($1,$2,$3,$4,'received','queued', now(), now(), $5, $6)
      RETURNING id, created_at`,
     [
       args.productId,
       args.feedback,
       args.email || null,
       args.rating,
-      args.idempotencyKey || null,
       fingerprint,
       sanitized,
     ]
@@ -561,7 +550,7 @@ router.get('/', authenticateUser as any, async (req: AuthenticatedRequest, res: 
       SELECT
         id, product_id, feedback, email, rating, status, processing_status,
         categories, category_name, sentiment_label, priority_label, confidence,
-        raw_ai_metadata, analysis_version, created_at, received_at, analyzed_at, analysis_failed_at
+        raw_ai_metadata, created_at, received_at, analyzed_at, analysis_failed_at
       FROM feedbacks
       WHERE ${conditions.join(' AND ')}
       ORDER BY created_at DESC, id DESC

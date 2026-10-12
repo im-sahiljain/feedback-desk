@@ -113,19 +113,18 @@ export async function getOrCreateDemoAccount(pool: Pool): Promise<{
     await pool.query(
       `INSERT INTO feedbacks (
         product_id, feedback, email, rating, status, processing_status,
-        labels, categories, category_name, sentiment_label, priority_label,
-        confidence, raw_ai_metadata, created_at, analyzed_at, processed_at
+        categories, category_name, sentiment_label, priority_label,
+        confidence, raw_ai_metadata, created_at, analyzed_at
       ) VALUES (
         $1, $2, $3, $4, 'processed', 'analyzed',
-        $5::jsonb, $6::text[], $7, $8, $9,
-        'high', $10::jsonb, now() - ($11 || ' days')::interval, now() - ($11 || ' days')::interval, now() - ($11 || ' days')::interval
+        $5::text[], $6, $7, $8,
+        'high', $9::jsonb, now() - ($10 || ' days')::interval, now() - ($10 || ' days')::interval
       )`,
       [
         demoProductId,
         item.text,
         `customer_${Math.floor(Math.random() * 900 + 100)}@example.com`,
         item.rating,
-        JSON.stringify([item.category, item.sentiment]),
         [item.category],
         item.category,
         item.sentiment,
