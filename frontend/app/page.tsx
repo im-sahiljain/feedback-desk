@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,7 +24,14 @@ import type { DashboardPeriod, DashboardSummary } from "@/types";
 import { Clock, Copy, RefreshCw } from "lucide-react";
 
 export default function Dashboard() {
-  const { currentProduct, isBootstrapping } = useApp();
+  const { currentProduct, isBootstrapping, user } = useApp();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isBootstrapping && user?.role === 'admin') {
+      router.replace('/admin');
+    }
+  }, [user, isBootstrapping, router]);
   const [selectedPeriod, setSelectedPeriod] = useState<DashboardPeriod>("30d");
   const [data, setData] = useState<DashboardSummary | null>(null);
   const [isLoading, setIsLoading] = useState(false);

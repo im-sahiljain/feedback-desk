@@ -223,3 +223,56 @@ test('anti-spam: enforces 30-day email cooldown per product even across differen
     }
   );
 });
+
+test('anti-spam: blocks identical content payload across distinct tokens within 24 hours (anonymous spam lock)', async (t) => {
+  const pool = getPool();
+
+  const userRes = await pool.query(
+    `INSERT INTO users (email, name, account_status)
+     VALUES ($1, 'Fingerprint Guard Admin', 'active')
+     RETURNING id`,
+    [`test-fp-guard-admin-${Date.now()}@example.com`]
+  );
+  const userId = userRes.rows[0].id;
+
+  const prodRes = await pool.query(
+    `INSERT INTO products (user_id, name, industry, description)
+     VALUES ($1, 'Fingerprint Guard Product', 'tech', 'Testing duplicate content lock')
+     RETURNING id`,
+    [userId]
+  );
+  const productId = prodRes.rows[0].id;
+
+  t.after(async () => {
+    await pool.query(`DELETE FROM products WHERE id = $1`, [productId]);
+    await pool.query(`DELETE FROM users WHERE id = $1`, [userId]);
+  });
+
+  // Token 1: Anonymous customer submits review
+  const invite1 = await createSingleUseInvitation(pool, { productId, createdBy: userId });
+  const submit1 = await submitInvitationFeedback(pool, {
+    token: invite1.token,
+    feedback: 'Identical repeated spam text',
+    rating: 1,
+  });
+  assert.ok(submit1.feedbackId);
+
+  // Token 2: Another fresh token obtained (e.g. fresh counter scan or share)
+  const invite2 = await createSingleUseInvitation(pool, { productId, createdBy: userId });
+
+  // Anonymous customer tries submitting the exact same payload without email -> Must be blocked by fingerprint
+  await assert.rejects(
+    async () => {
+      await submitInvitationFeedback(pool, {
+        token: invite2.token,
+        feedback: 'Identical repeated spam text',
+        rating: 1,
+      });
+    },
+    (err: any) => {
+      assert.equal(err.status, 409);
+      assert.match(err.message, /Identical feedback has already been submitted/);
+      return true;
+    }
+  );
+});

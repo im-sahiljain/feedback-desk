@@ -203,6 +203,23 @@ export async function submitInvitationFeedback(
       `${invite.product_id}|${input.feedback.toLowerCase().trim()}|${(input.email || '').toLowerCase()}|${input.rating ?? ''}`
     );
 
+    // Anti-Spam Layer 5: Identical Content Fingerprint Check (24-hour duplicate lock)
+    const dupRes = await client.query(
+      `SELECT id FROM feedbacks
+       WHERE product_id = $1
+         AND submission_fingerprint = $2
+         AND received_at > NOW() - INTERVAL '24 hours'
+         AND deleted_at IS NULL
+       LIMIT 1`,
+      [invite.product_id, fingerprint]
+    );
+    if (dupRes.rows.length > 0) {
+      throw new HttpError(
+        409,
+        'Identical feedback has already been submitted for this product recently. Thank you!'
+      );
+    }
+
     // Insert into feedbacks
     const insertRes = await client.query(
       `INSERT INTO feedbacks

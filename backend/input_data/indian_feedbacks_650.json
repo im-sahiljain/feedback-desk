@@ -1,0 +1,2602 @@
+[
+  {
+    "text": "The mobile application crashes consistently whenever I attempt to upload more than three screenshot attachments.",
+    "rating": 1
+  },
+  {
+    "text": "We had an executive demonstration today and the main dashboard threw an internal 500 server error for 45 minutes.",
+    "rating": 1
+  },
+  {
+    "text": "CSV export is completely broken for date ranges extending beyond 30 days. The downloaded file is empty with 0 bytes.",
+    "rating": 1
+  },
+  {
+    "text": "Webhook signature verification fails intermittently on our production endpoints. The HMAC SHA256 header hash is invalid.",
+    "rating": 1
+  },
+  {
+    "text": "After changing team permissions in the settings panel, four of our project administrators were locked out with 403 Forbidden loops.",
+    "rating": 1
+  },
+  {
+    "text": "Single sign-on via Okta SAML assertion is throwing 502 Bad Gateway errors. None of our enterprise staff can sign in.",
+    "rating": 1
+  },
+  {
+    "text": "API response latencies surged to 12 seconds between 2 PM and 5 PM IST, causing request timeouts across our backend workers.",
+    "rating": 1
+  },
+  {
+    "text": "The billing system double charged our corporate credit card on yesterday's subscription renewal without generating a tax invoice.",
+    "rating": 1
+  },
+  {
+    "text": "Filtering by 'Last 90 days' resets immediately back to 'Today' whenever the browser tab is refreshed or reopened.",
+    "rating": 1
+  },
+  {
+    "text": "Push notifications on iOS are completely silent after the latest app release. We missed three critical customer escalations.",
+    "rating": 1
+  },
+  {
+    "text": "Database connection pool exhaustion errors appear in the logs whenever more than 40 team members view the dashboard at once.",
+    "rating": 1
+  },
+  {
+    "text": "Deleting a custom tag unexpectedly deleted 350 customer records permanently without displaying a confirmation dialog.",
+    "rating": 1
+  },
+  {
+    "text": "We lost two hours of feedback categorization work because the auto-save feature silently failed after a network blip.",
+    "rating": 1
+  },
+  {
+    "text": "Our scheduled Monday morning email report failed to generate, and our support ticket has received no reply for 48 hours.",
+    "rating": 1
+  },
+  {
+    "text": "Two-factor authentication SMS codes take 20 minutes to reach Indian mobile numbers on Jio and Airtel networks.",
+    "rating": 1
+  },
+  {
+    "text": "The web application threw an unhandled JavaScript exception 'TypeError: Cannot read properties of undefined' on the triage table.",
+    "rating": 1
+  },
+  {
+    "text": "Audit trail logs show a missing event gap between 02:00 and 05:00 UTC yesterday, which breaches our compliance audit.",
+    "rating": 1
+  },
+  {
+    "text": "Our subscription cost increased by 35% without any prior notice, email notification, or transition timeline.",
+    "rating": 1
+  },
+  {
+    "text": "The bulk archive action wiped records without providing an undo notification. We have no way to restore our archived items.",
+    "rating": 1
+  },
+  {
+    "text": "Session tokens expire after only five minutes of inactivity despite the 'Keep me logged in' option being selected.",
+    "rating": 1
+  },
+  {
+    "text": "The dashboard fails to load entirely on Safari 17, showing only a blank white screen with console errors.",
+    "rating": 1
+  },
+  {
+    "text": "Exporting feedbacks with special characters in Hindi and Tamil results in garbled text with question marks in Excel.",
+    "rating": 1
+  },
+  {
+    "text": "Customer feedback submitted through the public link disappeared from the inbox without any trace or notification.",
+    "rating": 1
+  },
+  {
+    "text": "The payment gateway integration failed during our annual license upgrade, leaving our account in a suspended state.",
+    "rating": 1
+  },
+  {
+    "text": "Role assignment changes made by the workspace owner do not propagate to sub-accounts without manual backend intervention.",
+    "rating": 1
+  },
+  {
+    "text": "The search index is completely desynchronized. Newly added customer issues do not appear in queries even after 24 hours.",
+    "rating": 1
+  },
+  {
+    "text": "Memory leak in the real-time event listener crashes the browser tab after running for more than three hours continuously.",
+    "rating": 1
+  },
+  {
+    "text": "Custom webhook payload delivery dropped 40% of events during yesterday's traffic peak with no retry attempts logged.",
+    "rating": 1
+  },
+  {
+    "text": "Password reset links sent to our corporate Microsoft Outlook inboxes expire before they are delivered to users.",
+    "rating": 1
+  },
+  {
+    "text": "The attention panel threw a 504 Gateway Timeout when calculating churn risks for an organization with 10k items.",
+    "rating": 1
+  },
+  {
+    "text": "The mobile application crashes consistently whenever I attempt to upload more than three screenshot attachments. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "We had an executive demonstration today and the main dashboard threw an internal 500 server error for 45 minutes. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "CSV export is completely broken for date ranges extending beyond 30 days. The downloaded file is empty with 0 bytes. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "Webhook signature verification fails intermittently on our production endpoints. The HMAC SHA256 header hash is invalid. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "After changing team permissions in the settings panel, four of our project administrators were locked out with 403 Forbidden loops. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "Single sign-on via Okta SAML assertion is throwing 502 Bad Gateway errors. None of our enterprise staff can sign in. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "API response latencies surged to 12 seconds between 2 PM and 5 PM IST, causing request timeouts across our backend workers. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "The billing system double charged our corporate credit card on yesterday's subscription renewal without generating a tax invoice. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "Filtering by 'Last 90 days' resets immediately back to 'Today' whenever the browser tab is refreshed or reopened. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "Push notifications on iOS are completely silent after the latest app release. We missed three critical customer escalations. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "Database connection pool exhaustion errors appear in the logs whenever more than 40 team members view the dashboard at once. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "Deleting a custom tag unexpectedly deleted 350 customer records permanently without displaying a confirmation dialog. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "We lost two hours of feedback categorization work because the auto-save feature silently failed after a network blip. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "Our scheduled Monday morning email report failed to generate, and our support ticket has received no reply for 48 hours. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "Two-factor authentication SMS codes take 20 minutes to reach Indian mobile numbers on Jio and Airtel networks. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "The web application threw an unhandled JavaScript exception 'TypeError: Cannot read properties of undefined' on the triage table. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "Audit trail logs show a missing event gap between 02:00 and 05:00 UTC yesterday, which breaches our compliance audit. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "Our subscription cost increased by 35% without any prior notice, email notification, or transition timeline. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "The bulk archive action wiped records without providing an undo notification. We have no way to restore our archived items. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "Session tokens expire after only five minutes of inactivity despite the 'Keep me logged in' option being selected. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "The dashboard fails to load entirely on Safari 17, showing only a blank white screen with console errors. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "Exporting feedbacks with special characters in Hindi and Tamil results in garbled text with question marks in Excel. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "Customer feedback submitted through the public link disappeared from the inbox without any trace or notification. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "The payment gateway integration failed during our annual license upgrade, leaving our account in a suspended state. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "Role assignment changes made by the workspace owner do not propagate to sub-accounts without manual backend intervention. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "The search index is completely desynchronized. Newly added customer issues do not appear in queries even after 24 hours. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "Memory leak in the real-time event listener crashes the browser tab after running for more than three hours continuously. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "Custom webhook payload delivery dropped 40% of events during yesterday's traffic peak with no retry attempts logged. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "Password reset links sent to our corporate Microsoft Outlook inboxes expire before they are delivered to users. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "The attention panel threw a 504 Gateway Timeout when calculating churn risks for an organization with 10k items. [impacted production during Friday peak traffic]",
+    "rating": 1
+  },
+  {
+    "text": "The mobile application crashes consistently whenever I attempt to upload more than three screenshot attachments. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "We had an executive demonstration today and the main dashboard threw an internal 500 server error for 45 minutes. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "CSV export is completely broken for date ranges extending beyond 30 days. The downloaded file is empty with 0 bytes. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "Webhook signature verification fails intermittently on our production endpoints. The HMAC SHA256 header hash is invalid. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "After changing team permissions in the settings panel, four of our project administrators were locked out with 403 Forbidden loops. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "Single sign-on via Okta SAML assertion is throwing 502 Bad Gateway errors. None of our enterprise staff can sign in. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "API response latencies surged to 12 seconds between 2 PM and 5 PM IST, causing request timeouts across our backend workers. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "The billing system double charged our corporate credit card on yesterday's subscription renewal without generating a tax invoice. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "Filtering by 'Last 90 days' resets immediately back to 'Today' whenever the browser tab is refreshed or reopened. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "Push notifications on iOS are completely silent after the latest app release. We missed three critical customer escalations. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "Database connection pool exhaustion errors appear in the logs whenever more than 40 team members view the dashboard at once. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "Deleting a custom tag unexpectedly deleted 350 customer records permanently without displaying a confirmation dialog. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "We lost two hours of feedback categorization work because the auto-save feature silently failed after a network blip. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "Our scheduled Monday morning email report failed to generate, and our support ticket has received no reply for 48 hours. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "Two-factor authentication SMS codes take 20 minutes to reach Indian mobile numbers on Jio and Airtel networks. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "The web application threw an unhandled JavaScript exception 'TypeError: Cannot read properties of undefined' on the triage table. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "Audit trail logs show a missing event gap between 02:00 and 05:00 UTC yesterday, which breaches our compliance audit. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "Our subscription cost increased by 35% without any prior notice, email notification, or transition timeline. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "The bulk archive action wiped records without providing an undo notification. We have no way to restore our archived items. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "Session tokens expire after only five minutes of inactivity despite the 'Keep me logged in' option being selected. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "The dashboard fails to load entirely on Safari 17, showing only a blank white screen with console errors. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "Exporting feedbacks with special characters in Hindi and Tamil results in garbled text with question marks in Excel. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "Customer feedback submitted through the public link disappeared from the inbox without any trace or notification. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "The payment gateway integration failed during our annual license upgrade, leaving our account in a suspended state. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "Role assignment changes made by the workspace owner do not propagate to sub-accounts without manual backend intervention. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "The search index is completely desynchronized. Newly added customer issues do not appear in queries even after 24 hours. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "Memory leak in the real-time event listener crashes the browser tab after running for more than three hours continuously. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "Custom webhook payload delivery dropped 40% of events during yesterday's traffic peak with no retry attempts logged. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "Password reset links sent to our corporate Microsoft Outlook inboxes expire before they are delivered to users. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "The attention panel threw a 504 Gateway Timeout when calculating churn risks for an organization with 10k items. [reproduced on Firefox and Chrome]",
+    "rating": 1
+  },
+  {
+    "text": "The mobile application crashes consistently whenever I attempt to upload more than three screenshot attachments. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "We had an executive demonstration today and the main dashboard threw an internal 500 server error for 45 minutes. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "CSV export is completely broken for date ranges extending beyond 30 days. The downloaded file is empty with 0 bytes. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "Webhook signature verification fails intermittently on our production endpoints. The HMAC SHA256 header hash is invalid. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "After changing team permissions in the settings panel, four of our project administrators were locked out with 403 Forbidden loops. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "Single sign-on via Okta SAML assertion is throwing 502 Bad Gateway errors. None of our enterprise staff can sign in. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "API response latencies surged to 12 seconds between 2 PM and 5 PM IST, causing request timeouts across our backend workers. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "The billing system double charged our corporate credit card on yesterday's subscription renewal without generating a tax invoice. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "Filtering by 'Last 90 days' resets immediately back to 'Today' whenever the browser tab is refreshed or reopened. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "Push notifications on iOS are completely silent after the latest app release. We missed three critical customer escalations. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "Database connection pool exhaustion errors appear in the logs whenever more than 40 team members view the dashboard at once. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "Deleting a custom tag unexpectedly deleted 350 customer records permanently without displaying a confirmation dialog. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "We lost two hours of feedback categorization work because the auto-save feature silently failed after a network blip. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "Our scheduled Monday morning email report failed to generate, and our support ticket has received no reply for 48 hours. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "Two-factor authentication SMS codes take 20 minutes to reach Indian mobile numbers on Jio and Airtel networks. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "The web application threw an unhandled JavaScript exception 'TypeError: Cannot read properties of undefined' on the triage table. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "Audit trail logs show a missing event gap between 02:00 and 05:00 UTC yesterday, which breaches our compliance audit. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "Our subscription cost increased by 35% without any prior notice, email notification, or transition timeline. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "The bulk archive action wiped records without providing an undo notification. We have no way to restore our archived items. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "Session tokens expire after only five minutes of inactivity despite the 'Keep me logged in' option being selected. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "The dashboard fails to load entirely on Safari 17, showing only a blank white screen with console errors. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "Exporting feedbacks with special characters in Hindi and Tamil results in garbled text with question marks in Excel. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "Customer feedback submitted through the public link disappeared from the inbox without any trace or notification. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "The payment gateway integration failed during our annual license upgrade, leaving our account in a suspended state. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "Role assignment changes made by the workspace owner do not propagate to sub-accounts without manual backend intervention. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "The search index is completely desynchronized. Newly added customer issues do not appear in queries even after 24 hours. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "Memory leak in the real-time event listener crashes the browser tab after running for more than three hours continuously. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "Custom webhook payload delivery dropped 40% of events during yesterday's traffic peak with no retry attempts logged. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "Password reset links sent to our corporate Microsoft Outlook inboxes expire before they are delivered to users. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "The attention panel threw a 504 Gateway Timeout when calculating churn risks for an organization with 10k items. [affecting our Bangalore office team]",
+    "rating": 1
+  },
+  {
+    "text": "The mobile application crashes consistently whenever I attempt to upload more than three screenshot attachments. [causing customer drop-off on checkout]",
+    "rating": 1
+  },
+  {
+    "text": "We had an executive demonstration today and the main dashboard threw an internal 500 server error for 45 minutes. [causing customer drop-off on checkout]",
+    "rating": 1
+  },
+  {
+    "text": "CSV export is completely broken for date ranges extending beyond 30 days. The downloaded file is empty with 0 bytes. [causing customer drop-off on checkout]",
+    "rating": 1
+  },
+  {
+    "text": "Webhook signature verification fails intermittently on our production endpoints. The HMAC SHA256 header hash is invalid. [causing customer drop-off on checkout]",
+    "rating": 1
+  },
+  {
+    "text": "After changing team permissions in the settings panel, four of our project administrators were locked out with 403 Forbidden loops. [causing customer drop-off on checkout]",
+    "rating": 1
+  },
+  {
+    "text": "Single sign-on via Okta SAML assertion is throwing 502 Bad Gateway errors. None of our enterprise staff can sign in. [causing customer drop-off on checkout]",
+    "rating": 1
+  },
+  {
+    "text": "API response latencies surged to 12 seconds between 2 PM and 5 PM IST, causing request timeouts across our backend workers. [causing customer drop-off on checkout]",
+    "rating": 1
+  },
+  {
+    "text": "The billing system double charged our corporate credit card on yesterday's subscription renewal without generating a tax invoice. [causing customer drop-off on checkout]",
+    "rating": 1
+  },
+  {
+    "text": "Filtering by 'Last 90 days' resets immediately back to 'Today' whenever the browser tab is refreshed or reopened. [causing customer drop-off on checkout]",
+    "rating": 1
+  },
+  {
+    "text": "Push notifications on iOS are completely silent after the latest app release. We missed three critical customer escalations. [causing customer drop-off on checkout]",
+    "rating": 1
+  },
+  {
+    "text": "Search queries take 7 to 9 seconds to complete once our workspace exceeded four thousand customer records.",
+    "rating": 2
+  },
+  {
+    "text": "The analytics charts stutter noticeably on Google Chrome when rendering 60-day historical sentiment graphs.",
+    "rating": 2
+  },
+  {
+    "text": "Bulk updating statuses from queued to analyzed causes the interface to freeze until the browser tab is hard refreshed.",
+    "rating": 2
+  },
+  {
+    "text": "Navigating between workspaces in the organization dropdown takes over 5 seconds per switch, requiring client caching.",
+    "rating": 2
+  },
+  {
+    "text": "The mobile responsive layout cuts off the action buttons on modern smartphones, forcing awkward horizontal scrolling.",
+    "rating": 2
+  },
+  {
+    "text": "Our high-priority support ticket #5192 waited 4 days for an initial human response. Escalations should be handled faster.",
+    "rating": 2
+  },
+  {
+    "text": "The session expires every 30 minutes during active work, interrupting long customer triage sessions unexpectedly.",
+    "rating": 2
+  },
+  {
+    "text": "Audit logs pagination is inconsistent. Clicking page 3 resets back to page 1 whenever any text filter is active.",
+    "rating": 2
+  },
+  {
+    "text": "The date picker control does not allow typing date strings directly, forcing users to click through months manually.",
+    "rating": 2
+  },
+  {
+    "text": "Notification settings toggles fail to persist unless you scroll to the bottom of the page and click an unstyled save button.",
+    "rating": 2
+  },
+  {
+    "text": "Table column widths are too narrow for detailed feedback sentences, truncating valuable customer context with ellipsis.",
+    "rating": 2
+  },
+  {
+    "text": "Dark mode contrast is inadequate in the sentiment distribution view, making dark grey text unreadable on black backgrounds.",
+    "rating": 2
+  },
+  {
+    "text": "PDF downloads generate blurry charts when opened on mobile PDF viewers due to low rasterization resolution.",
+    "rating": 2
+  },
+  {
+    "text": "Inviting team members occasionally displays a 'Failed to send invite' toast even though the invitation was emailed.",
+    "rating": 2
+  },
+  {
+    "text": "Chrome tab memory consumption grows beyond 1.5 GB after keeping the feedback stream open throughout the workday.",
+    "rating": 2
+  },
+  {
+    "text": "The sentiment classification marked two severe customer complaints about payment failures as 'Positive' feedback.",
+    "rating": 2
+  },
+  {
+    "text": "Archiving a single feedback entry requires three separate confirmation clicks, slowing down our daily triage workflow.",
+    "rating": 2
+  },
+  {
+    "text": "API rate limit responses do not supply a Retry-After header, complicating client-side exponential backoff handling.",
+    "rating": 2
+  },
+  {
+    "text": "Filtering by multiple tags simultaneously returns no results because the query uses an AND operator instead of OR.",
+    "rating": 2
+  },
+  {
+    "text": "The feedback timeline view jumps back to the top of the list every time an item is marked as resolved.",
+    "rating": 2
+  },
+  {
+    "text": "Sorting by customer rating in descending order is sluggish and takes several seconds on tables with over 2k records.",
+    "rating": 2
+  },
+  {
+    "text": "The user avatar upload fails silently without an error message when the image dimensions exceed 1000x1000 pixels.",
+    "rating": 2
+  },
+  {
+    "text": "Export to CSV does not include customer email addresses even though the column is clearly checked in export settings.",
+    "rating": 2
+  },
+  {
+    "text": "Feedback submission timestamps show UTC instead of local Indian Standard Time (IST), confusing our support team.",
+    "rating": 2
+  },
+  {
+    "text": "The navigation rail collapses unexpectedly when resizing the browser window on medium-sized laptop screens.",
+    "rating": 2
+  },
+  {
+    "text": "Real-time websocket disconnections occur frequently without an automatic reconnection banner or retry indicator.",
+    "rating": 2
+  },
+  {
+    "text": "The bulk selection checkbox does not select items across multiple pages, making large cleanup operations tedious.",
+    "rating": 2
+  },
+  {
+    "text": "Text formatting in feedback entries strips line breaks, merging distinct customer bullet points into a dense paragraph.",
+    "rating": 2
+  },
+  {
+    "text": "The attention panel highlights the same three resolved issues repeatedly because the status filter does not apply.",
+    "rating": 2
+  },
+  {
+    "text": "Loading times on the insights tab increase drastically whenever a 90-day time range filter is selected.",
+    "rating": 2
+  },
+  {
+    "text": "Search queries take 7 to 9 seconds to complete once our workspace exceeded four thousand customer records. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "The analytics charts stutter noticeably on Google Chrome when rendering 60-day historical sentiment graphs. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "Bulk updating statuses from queued to analyzed causes the interface to freeze until the browser tab is hard refreshed. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "Navigating between workspaces in the organization dropdown takes over 5 seconds per switch, requiring client caching. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "The mobile responsive layout cuts off the action buttons on modern smartphones, forcing awkward horizontal scrolling. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "Our high-priority support ticket #5192 waited 4 days for an initial human response. Escalations should be handled faster. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "The session expires every 30 minutes during active work, interrupting long customer triage sessions unexpectedly. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "Audit logs pagination is inconsistent. Clicking page 3 resets back to page 1 whenever any text filter is active. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "The date picker control does not allow typing date strings directly, forcing users to click through months manually. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "Notification settings toggles fail to persist unless you scroll to the bottom of the page and click an unstyled save button. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "Table column widths are too narrow for detailed feedback sentences, truncating valuable customer context with ellipsis. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "Dark mode contrast is inadequate in the sentiment distribution view, making dark grey text unreadable on black backgrounds. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "PDF downloads generate blurry charts when opened on mobile PDF viewers due to low rasterization resolution. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "Inviting team members occasionally displays a 'Failed to send invite' toast even though the invitation was emailed. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "Chrome tab memory consumption grows beyond 1.5 GB after keeping the feedback stream open throughout the workday. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "The sentiment classification marked two severe customer complaints about payment failures as 'Positive' feedback. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "Archiving a single feedback entry requires three separate confirmation clicks, slowing down our daily triage workflow. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "API rate limit responses do not supply a Retry-After header, complicating client-side exponential backoff handling. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "Filtering by multiple tags simultaneously returns no results because the query uses an AND operator instead of OR. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "The feedback timeline view jumps back to the top of the list every time an item is marked as resolved. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "Sorting by customer rating in descending order is sluggish and takes several seconds on tables with over 2k records. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "The user avatar upload fails silently without an error message when the image dimensions exceed 1000x1000 pixels. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "Export to CSV does not include customer email addresses even though the column is clearly checked in export settings. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "Feedback submission timestamps show UTC instead of local Indian Standard Time (IST), confusing our support team. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "The navigation rail collapses unexpectedly when resizing the browser window on medium-sized laptop screens. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "Real-time websocket disconnections occur frequently without an automatic reconnection banner or retry indicator. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "The bulk selection checkbox does not select items across multiple pages, making large cleanup operations tedious. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "Text formatting in feedback entries strips line breaks, merging distinct customer bullet points into a dense paragraph. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "The attention panel highlights the same three resolved issues repeatedly because the status filter does not apply. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "Loading times on the insights tab increase drastically whenever a 90-day time range filter is selected. [noted during high-concurrency testing]",
+    "rating": 2
+  },
+  {
+    "text": "Search queries take 7 to 9 seconds to complete once our workspace exceeded four thousand customer records. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "The analytics charts stutter noticeably on Google Chrome when rendering 60-day historical sentiment graphs. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "Bulk updating statuses from queued to analyzed causes the interface to freeze until the browser tab is hard refreshed. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "Navigating between workspaces in the organization dropdown takes over 5 seconds per switch, requiring client caching. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "The mobile responsive layout cuts off the action buttons on modern smartphones, forcing awkward horizontal scrolling. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "Our high-priority support ticket #5192 waited 4 days for an initial human response. Escalations should be handled faster. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "The session expires every 30 minutes during active work, interrupting long customer triage sessions unexpectedly. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "Audit logs pagination is inconsistent. Clicking page 3 resets back to page 1 whenever any text filter is active. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "The date picker control does not allow typing date strings directly, forcing users to click through months manually. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "Notification settings toggles fail to persist unless you scroll to the bottom of the page and click an unstyled save button. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "Table column widths are too narrow for detailed feedback sentences, truncating valuable customer context with ellipsis. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "Dark mode contrast is inadequate in the sentiment distribution view, making dark grey text unreadable on black backgrounds. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "PDF downloads generate blurry charts when opened on mobile PDF viewers due to low rasterization resolution. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "Inviting team members occasionally displays a 'Failed to send invite' toast even though the invitation was emailed. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "Chrome tab memory consumption grows beyond 1.5 GB after keeping the feedback stream open throughout the workday. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "The sentiment classification marked two severe customer complaints about payment failures as 'Positive' feedback. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "Archiving a single feedback entry requires three separate confirmation clicks, slowing down our daily triage workflow. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "API rate limit responses do not supply a Retry-After header, complicating client-side exponential backoff handling. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "Filtering by multiple tags simultaneously returns no results because the query uses an AND operator instead of OR. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "The feedback timeline view jumps back to the top of the list every time an item is marked as resolved. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "Sorting by customer rating in descending order is sluggish and takes several seconds on tables with over 2k records. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "The user avatar upload fails silently without an error message when the image dimensions exceed 1000x1000 pixels. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "Export to CSV does not include customer email addresses even though the column is clearly checked in export settings. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "Feedback submission timestamps show UTC instead of local Indian Standard Time (IST), confusing our support team. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "The navigation rail collapses unexpectedly when resizing the browser window on medium-sized laptop screens. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "Real-time websocket disconnections occur frequently without an automatic reconnection banner or retry indicator. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "The bulk selection checkbox does not select items across multiple pages, making large cleanup operations tedious. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "Text formatting in feedback entries strips line breaks, merging distinct customer bullet points into a dense paragraph. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "The attention panel highlights the same three resolved issues repeatedly because the status filter does not apply. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "Loading times on the insights tab increase drastically whenever a 90-day time range filter is selected. [seen across our Mumbai operations unit]",
+    "rating": 2
+  },
+  {
+    "text": "Search queries take 7 to 9 seconds to complete once our workspace exceeded four thousand customer records. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "The analytics charts stutter noticeably on Google Chrome when rendering 60-day historical sentiment graphs. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "Bulk updating statuses from queued to analyzed causes the interface to freeze until the browser tab is hard refreshed. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "Navigating between workspaces in the organization dropdown takes over 5 seconds per switch, requiring client caching. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "The mobile responsive layout cuts off the action buttons on modern smartphones, forcing awkward horizontal scrolling. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "Our high-priority support ticket #5192 waited 4 days for an initial human response. Escalations should be handled faster. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "The session expires every 30 minutes during active work, interrupting long customer triage sessions unexpectedly. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "Audit logs pagination is inconsistent. Clicking page 3 resets back to page 1 whenever any text filter is active. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "The date picker control does not allow typing date strings directly, forcing users to click through months manually. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "Notification settings toggles fail to persist unless you scroll to the bottom of the page and click an unstyled save button. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "Table column widths are too narrow for detailed feedback sentences, truncating valuable customer context with ellipsis. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "Dark mode contrast is inadequate in the sentiment distribution view, making dark grey text unreadable on black backgrounds. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "PDF downloads generate blurry charts when opened on mobile PDF viewers due to low rasterization resolution. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "Inviting team members occasionally displays a 'Failed to send invite' toast even though the invitation was emailed. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "Chrome tab memory consumption grows beyond 1.5 GB after keeping the feedback stream open throughout the workday. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "The sentiment classification marked two severe customer complaints about payment failures as 'Positive' feedback. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "Archiving a single feedback entry requires three separate confirmation clicks, slowing down our daily triage workflow. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "API rate limit responses do not supply a Retry-After header, complicating client-side exponential backoff handling. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "Filtering by multiple tags simultaneously returns no results because the query uses an AND operator instead of OR. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "The feedback timeline view jumps back to the top of the list every time an item is marked as resolved. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "Sorting by customer rating in descending order is sluggish and takes several seconds on tables with over 2k records. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "The user avatar upload fails silently without an error message when the image dimensions exceed 1000x1000 pixels. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "Export to CSV does not include customer email addresses even though the column is clearly checked in export settings. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "Feedback submission timestamps show UTC instead of local Indian Standard Time (IST), confusing our support team. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "The navigation rail collapses unexpectedly when resizing the browser window on medium-sized laptop screens. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "Real-time websocket disconnections occur frequently without an automatic reconnection banner or retry indicator. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "The bulk selection checkbox does not select items across multiple pages, making large cleanup operations tedious. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "Text formatting in feedback entries strips line breaks, merging distinct customer bullet points into a dense paragraph. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "The attention panel highlights the same three resolved issues repeatedly because the status filter does not apply. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "Loading times on the insights tab increase drastically whenever a 90-day time range filter is selected. [requires manual page reload to recover]",
+    "rating": 2
+  },
+  {
+    "text": "Search queries take 7 to 9 seconds to complete once our workspace exceeded four thousand customer records. [noticed after the v2.8 frontend update]",
+    "rating": 2
+  },
+  {
+    "text": "The analytics charts stutter noticeably on Google Chrome when rendering 60-day historical sentiment graphs. [noticed after the v2.8 frontend update]",
+    "rating": 2
+  },
+  {
+    "text": "Bulk updating statuses from queued to analyzed causes the interface to freeze until the browser tab is hard refreshed. [noticed after the v2.8 frontend update]",
+    "rating": 2
+  },
+  {
+    "text": "Navigating between workspaces in the organization dropdown takes over 5 seconds per switch, requiring client caching. [noticed after the v2.8 frontend update]",
+    "rating": 2
+  },
+  {
+    "text": "The mobile responsive layout cuts off the action buttons on modern smartphones, forcing awkward horizontal scrolling. [noticed after the v2.8 frontend update]",
+    "rating": 2
+  },
+  {
+    "text": "Our high-priority support ticket #5192 waited 4 days for an initial human response. Escalations should be handled faster. [noticed after the v2.8 frontend update]",
+    "rating": 2
+  },
+  {
+    "text": "The session expires every 30 minutes during active work, interrupting long customer triage sessions unexpectedly. [noticed after the v2.8 frontend update]",
+    "rating": 2
+  },
+  {
+    "text": "Audit logs pagination is inconsistent. Clicking page 3 resets back to page 1 whenever any text filter is active. [noticed after the v2.8 frontend update]",
+    "rating": 2
+  },
+  {
+    "text": "The date picker control does not allow typing date strings directly, forcing users to click through months manually. [noticed after the v2.8 frontend update]",
+    "rating": 2
+  },
+  {
+    "text": "Notification settings toggles fail to persist unless you scroll to the bottom of the page and click an unstyled save button. [noticed after the v2.8 frontend update]",
+    "rating": 2
+  },
+  {
+    "text": "Please add an option to export summary reports directly to PDF with our corporate branding for stakeholder presentations.",
+    "rating": 3
+  },
+  {
+    "text": "A direct Slack and Discord webhook alert system for P0 and P1 customer feedback would greatly improve our response time.",
+    "rating": 3
+  },
+  {
+    "text": "Could you support multiple workspaces under a single company billing account so we can manage different product lines?",
+    "rating": 3
+  },
+  {
+    "text": "We need custom role-based access control (RBAC) so junior support reps have read-only access to feedback intelligence.",
+    "rating": 3
+  },
+  {
+    "text": "Please provide an undo toast notification with a 10-second grace window after deleting or archiving feedback items.",
+    "rating": 3
+  },
+  {
+    "text": "It would be beneficial if the AI executive summary automatically highlighted revenue churn risks and enterprise accounts.",
+    "rating": 3
+  },
+  {
+    "text": "Can we configure automated tag rules based on keyword patterns such as 'billing', 'refund', or 'downtime'?",
+    "rating": 3
+  },
+  {
+    "text": "Would appreciate true dark mode support with OLED blacks to reduce eye strain during evening on-call shifts.",
+    "rating": 3
+  },
+  {
+    "text": "Please add two-factor authentication via Authenticator apps like Google Authenticator or Authy instead of email OTPs.",
+    "rating": 3
+  },
+  {
+    "text": "Could you integrate Zapier and Make.com triggers whenever high-severity customer complaints are classified?",
+    "rating": 3
+  },
+  {
+    "text": "The layout of date filters changed in the recent update, taking our triage team considerable time to readjust.",
+    "rating": 3
+  },
+  {
+    "text": "It would be very helpful if we could schedule automated weekly summary emails delivered every Monday morning at 9 AM IST.",
+    "rating": 3
+  },
+  {
+    "text": "Can we get configurable webhook retry policies with exponential backoff for endpoints that experience temporary downtime?",
+    "rating": 3
+  },
+  {
+    "text": "Is there a mechanism to merge duplicate feedback submissions from the same user into a unified thread?",
+    "rating": 3
+  },
+  {
+    "text": "We would like to customize the public feedback invitation email template with our company logo and primary color.",
+    "rating": 3
+  },
+  {
+    "text": "Do you have plans to support GST invoices with HSN/SAC codes and Indian Rupee billing for Indian enterprise customers?",
+    "rating": 3
+  },
+  {
+    "text": "Can the REST API support field filtering and sparse fieldsets to reduce payload sizes for mobile consumers?",
+    "rating": 3
+  },
+  {
+    "text": "Please add keyboard navigation shortcuts like J and K to move between customer feedback rows rapidly.",
+    "rating": 3
+  },
+  {
+    "text": "A bulk tag assignment feature would save our operations team hours of manual categorization work every Friday.",
+    "rating": 3
+  },
+  {
+    "text": "Would love an integration with Jira and Linear so our engineering team can convert customer issues into tickets in one click.",
+    "rating": 3
+  },
+  {
+    "text": "Could you provide an option to group feedbacks by customer domain rather than individual email addresses?",
+    "rating": 3
+  },
+  {
+    "text": "We need the ability to set custom threshold alerts when negative sentiment exceeds 20% in a 24-hour window.",
+    "rating": 3
+  },
+  {
+    "text": "An option to export filtered analytics data directly into Google Sheets on a daily schedule would be fantastic.",
+    "rating": 3
+  },
+  {
+    "text": "Can we configure distinct feedback forms with different custom questions for different customer segments?",
+    "rating": 3
+  },
+  {
+    "text": "Please allow saving custom filter presets so our team doesn't have to reconfigure multi-criteria filters every session.",
+    "rating": 3
+  },
+  {
+    "text": "Would appreciate an API endpoint to programmatically query the executive brief metrics for our internal metrics dashboard.",
+    "rating": 3
+  },
+  {
+    "text": "Can we have a customer journey timeline view showing all feedback submitted by an individual user over their lifetime?",
+    "rating": 3
+  },
+  {
+    "text": "It would be helpful to have a quick preview drawer that slides out when clicking a feedback item instead of a modal.",
+    "rating": 3
+  },
+  {
+    "text": "Please add support for webhook event filtering so we only receive events for critical priority items.",
+    "rating": 3
+  },
+  {
+    "text": "Could you include average resolution time metrics on the executive insights tab alongside sentiment trends?",
+    "rating": 3
+  },
+  {
+    "text": "Please add an option to export summary reports directly to PDF with our corporate branding for stakeholder presentations. [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "A direct Slack and Discord webhook alert system for P0 and P1 customer feedback would greatly improve our response time. [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "Could you support multiple workspaces under a single company billing account so we can manage different product lines? [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "We need custom role-based access control (RBAC) so junior support reps have read-only access to feedback intelligence. [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "Please provide an undo toast notification with a 10-second grace window after deleting or archiving feedback items. [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "It would be beneficial if the AI executive summary automatically highlighted revenue churn risks and enterprise accounts. [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "Can we configure automated tag rules based on keyword patterns such as 'billing', 'refund', or 'downtime'? [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "Would appreciate true dark mode support with OLED blacks to reduce eye strain during evening on-call shifts. [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "Please add two-factor authentication via Authenticator apps like Google Authenticator or Authy instead of email OTPs. [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "Could you integrate Zapier and Make.com triggers whenever high-severity customer complaints are classified? [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "The layout of date filters changed in the recent update, taking our triage team considerable time to readjust. [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "It would be very helpful if we could schedule automated weekly summary emails delivered every Monday morning at 9 AM IST. [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "Can we get configurable webhook retry policies with exponential backoff for endpoints that experience temporary downtime? [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "Is there a mechanism to merge duplicate feedback submissions from the same user into a unified thread? [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "We would like to customize the public feedback invitation email template with our company logo and primary color. [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "Do you have plans to support GST invoices with HSN/SAC codes and Indian Rupee billing for Indian enterprise customers? [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "Can the REST API support field filtering and sparse fieldsets to reduce payload sizes for mobile consumers? [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "Please add keyboard navigation shortcuts like J and K to move between customer feedback rows rapidly. [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "A bulk tag assignment feature would save our operations team hours of manual categorization work every Friday. [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "Would love an integration with Jira and Linear so our engineering team can convert customer issues into tickets in one click. [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "Could you provide an option to group feedbacks by customer domain rather than individual email addresses? [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "We need the ability to set custom threshold alerts when negative sentiment exceeds 20% in a 24-hour window. [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "An option to export filtered analytics data directly into Google Sheets on a daily schedule would be fantastic. [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "Can we configure distinct feedback forms with different custom questions for different customer segments? [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "Please allow saving custom filter presets so our team doesn't have to reconfigure multi-criteria filters every session. [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "Would appreciate an API endpoint to programmatically query the executive brief metrics for our internal metrics dashboard. [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "Can we have a customer journey timeline view showing all feedback submitted by an individual user over their lifetime? [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "It would be helpful to have a quick preview drawer that slides out when clicking a feedback item instead of a modal. [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "Please add support for webhook event filtering so we only receive events for critical priority items. [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "Could you include average resolution time metrics on the executive insights tab alongside sentiment trends? [requested by our product operations lead]",
+    "rating": 3
+  },
+  {
+    "text": "Please add an option to export summary reports directly to PDF with our corporate branding for stakeholder presentations. [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "A direct Slack and Discord webhook alert system for P0 and P1 customer feedback would greatly improve our response time. [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "Could you support multiple workspaces under a single company billing account so we can manage different product lines? [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "We need custom role-based access control (RBAC) so junior support reps have read-only access to feedback intelligence. [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "Please provide an undo toast notification with a 10-second grace window after deleting or archiving feedback items. [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "It would be beneficial if the AI executive summary automatically highlighted revenue churn risks and enterprise accounts. [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "Can we configure automated tag rules based on keyword patterns such as 'billing', 'refund', or 'downtime'? [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "Would appreciate true dark mode support with OLED blacks to reduce eye strain during evening on-call shifts. [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "Please add two-factor authentication via Authenticator apps like Google Authenticator or Authy instead of email OTPs. [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "Could you integrate Zapier and Make.com triggers whenever high-severity customer complaints are classified? [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "The layout of date filters changed in the recent update, taking our triage team considerable time to readjust. [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "It would be very helpful if we could schedule automated weekly summary emails delivered every Monday morning at 9 AM IST. [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "Can we get configurable webhook retry policies with exponential backoff for endpoints that experience temporary downtime? [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "Is there a mechanism to merge duplicate feedback submissions from the same user into a unified thread? [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "We would like to customize the public feedback invitation email template with our company logo and primary color. [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "Do you have plans to support GST invoices with HSN/SAC codes and Indian Rupee billing for Indian enterprise customers? [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "Can the REST API support field filtering and sparse fieldsets to reduce payload sizes for mobile consumers? [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "Please add keyboard navigation shortcuts like J and K to move between customer feedback rows rapidly. [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "A bulk tag assignment feature would save our operations team hours of manual categorization work every Friday. [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "Would love an integration with Jira and Linear so our engineering team can convert customer issues into tickets in one click. [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "Could you provide an option to group feedbacks by customer domain rather than individual email addresses? [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "We need the ability to set custom threshold alerts when negative sentiment exceeds 20% in a 24-hour window. [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "An option to export filtered analytics data directly into Google Sheets on a daily schedule would be fantastic. [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "Can we configure distinct feedback forms with different custom questions for different customer segments? [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "Please allow saving custom filter presets so our team doesn't have to reconfigure multi-criteria filters every session. [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "Would appreciate an API endpoint to programmatically query the executive brief metrics for our internal metrics dashboard. [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "Can we have a customer journey timeline view showing all feedback submitted by an individual user over their lifetime? [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "It would be helpful to have a quick preview drawer that slides out when clicking a feedback item instead of a modal. [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "Please add support for webhook event filtering so we only receive events for critical priority items. [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "Could you include average resolution time metrics on the executive insights tab alongside sentiment trends? [would streamline our weekly customer reviews]",
+    "rating": 3
+  },
+  {
+    "text": "Please add an option to export summary reports directly to PDF with our corporate branding for stakeholder presentations. [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "A direct Slack and Discord webhook alert system for P0 and P1 customer feedback would greatly improve our response time. [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "Could you support multiple workspaces under a single company billing account so we can manage different product lines? [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "We need custom role-based access control (RBAC) so junior support reps have read-only access to feedback intelligence. [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "Please provide an undo toast notification with a 10-second grace window after deleting or archiving feedback items. [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "It would be beneficial if the AI executive summary automatically highlighted revenue churn risks and enterprise accounts. [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "Can we configure automated tag rules based on keyword patterns such as 'billing', 'refund', or 'downtime'? [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "Would appreciate true dark mode support with OLED blacks to reduce eye strain during evening on-call shifts. [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "Please add two-factor authentication via Authenticator apps like Google Authenticator or Authy instead of email OTPs. [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "Could you integrate Zapier and Make.com triggers whenever high-severity customer complaints are classified? [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "The layout of date filters changed in the recent update, taking our triage team considerable time to readjust. [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "It would be very helpful if we could schedule automated weekly summary emails delivered every Monday morning at 9 AM IST. [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "Can we get configurable webhook retry policies with exponential backoff for endpoints that experience temporary downtime? [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "Is there a mechanism to merge duplicate feedback submissions from the same user into a unified thread? [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "We would like to customize the public feedback invitation email template with our company logo and primary color. [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "Do you have plans to support GST invoices with HSN/SAC codes and Indian Rupee billing for Indian enterprise customers? [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "Can the REST API support field filtering and sparse fieldsets to reduce payload sizes for mobile consumers? [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "Please add keyboard navigation shortcuts like J and K to move between customer feedback rows rapidly. [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "A bulk tag assignment feature would save our operations team hours of manual categorization work every Friday. [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "Would love an integration with Jira and Linear so our engineering team can convert customer issues into tickets in one click. [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "Could you provide an option to group feedbacks by customer domain rather than individual email addresses? [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "We need the ability to set custom threshold alerts when negative sentiment exceeds 20% in a 24-hour window. [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "An option to export filtered analytics data directly into Google Sheets on a daily schedule would be fantastic. [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "Can we configure distinct feedback forms with different custom questions for different customer segments? [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "Please allow saving custom filter presets so our team doesn't have to reconfigure multi-criteria filters every session. [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "Would appreciate an API endpoint to programmatically query the executive brief metrics for our internal metrics dashboard. [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "Can we have a customer journey timeline view showing all feedback submitted by an individual user over their lifetime? [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "It would be helpful to have a quick preview drawer that slides out when clicking a feedback item instead of a modal. [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "Please add support for webhook event filtering so we only receive events for critical priority items. [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "Could you include average resolution time metrics on the executive insights tab alongside sentiment trends? [essential for our upcoming ISO certification]",
+    "rating": 3
+  },
+  {
+    "text": "Please add an option to export summary reports directly to PDF with our corporate branding for stakeholder presentations. [highly requested across our customer base]",
+    "rating": 3
+  },
+  {
+    "text": "A direct Slack and Discord webhook alert system for P0 and P1 customer feedback would greatly improve our response time. [highly requested across our customer base]",
+    "rating": 3
+  },
+  {
+    "text": "Could you support multiple workspaces under a single company billing account so we can manage different product lines? [highly requested across our customer base]",
+    "rating": 3
+  },
+  {
+    "text": "We need custom role-based access control (RBAC) so junior support reps have read-only access to feedback intelligence. [highly requested across our customer base]",
+    "rating": 3
+  },
+  {
+    "text": "Please provide an undo toast notification with a 10-second grace window after deleting or archiving feedback items. [highly requested across our customer base]",
+    "rating": 3
+  },
+  {
+    "text": "It would be beneficial if the AI executive summary automatically highlighted revenue churn risks and enterprise accounts. [highly requested across our customer base]",
+    "rating": 3
+  },
+  {
+    "text": "Can we configure automated tag rules based on keyword patterns such as 'billing', 'refund', or 'downtime'? [highly requested across our customer base]",
+    "rating": 3
+  },
+  {
+    "text": "Would appreciate true dark mode support with OLED blacks to reduce eye strain during evening on-call shifts. [highly requested across our customer base]",
+    "rating": 3
+  },
+  {
+    "text": "Please add two-factor authentication via Authenticator apps like Google Authenticator or Authy instead of email OTPs. [highly requested across our customer base]",
+    "rating": 3
+  },
+  {
+    "text": "Could you integrate Zapier and Make.com triggers whenever high-severity customer complaints are classified? [highly requested across our customer base]",
+    "rating": 3
+  },
+  {
+    "text": "Cleanest feedback aggregation tool our team has tried so far. Very responsive interface, just needs keyboard shortcuts.",
+    "rating": 4
+  },
+  {
+    "text": "The new dashboard loads noticeably faster than before. Really pleased with the direction the product is heading.",
+    "rating": 4
+  },
+  {
+    "text": "AI summaries save our product managers at least four hours of triage every week with accurate executive bullet points.",
+    "rating": 4
+  },
+  {
+    "text": "Great platform from initial onboarding to day-to-day operations. Adding scheduled CSV exports will make it a 5-star tool.",
+    "rating": 4
+  },
+  {
+    "text": "Your customer support representative Sarah resolved our billing question in under 15 minutes. Very professional service.",
+    "rating": 4
+  },
+  {
+    "text": "The attention panel flagged customer sentiment drops right before our sprint review, giving us valuable actionable context.",
+    "rating": 4
+  },
+  {
+    "text": "Onboarding our 20-person engineering team took less than 15 minutes. The team invitation flow was seamless.",
+    "rating": 4
+  },
+  {
+    "text": "The REST API is clean and the Swagger documentation was straightforward for our backend engineering team to follow.",
+    "rating": 4
+  },
+  {
+    "text": "Impressive classification accuracy on mixed customer feedback. Minor point: some Hindi transliterations were slightly off.",
+    "rating": 4
+  },
+  {
+    "text": "Very intuitive interface. Our team adopted the platform with zero training required. Looking forward to webhook updates.",
+    "rating": 4
+  },
+  {
+    "text": "Full-text search is fast and accurate across large datasets. Would be even better if regex search was supported.",
+    "rating": 4
+  },
+  {
+    "text": "Analytics charts look sharp on high-resolution widescreen monitors. The clean typography and layout are appreciated.",
+    "rating": 4
+  },
+  {
+    "text": "Reliable email delivery and quick verification codes. The login experience has been very smooth for our staff.",
+    "rating": 4
+  },
+  {
+    "text": "The priority scoring algorithm accurately flags P0 and P1 escalations. It has already caught two critical regressions.",
+    "rating": 4
+  },
+  {
+    "text": "Solid product that saves our team leads substantial time organizing voice-of-customer feedback into sprint priorities.",
+    "rating": 4
+  },
+  {
+    "text": "The single-use token feedback links prevented duplicate survey responses effectively during our product launch.",
+    "rating": 4
+  },
+  {
+    "text": "Much faster than our previous feedback tooling. Page load times consistently stay under 400ms across all tabs.",
+    "rating": 4
+  },
+  {
+    "text": "Insightful weekly aggregate digests that keep our engineering and design teams aligned on real customer issues.",
+    "rating": 4
+  },
+  {
+    "text": "The timeline view makes tracking long-term sentiment trends transparent and simple for our executive reviews.",
+    "rating": 4
+  },
+  {
+    "text": "Exceptional stability over the past two months. No unplanned downtime has occurred during our core Indian business hours.",
+    "rating": 4
+  },
+  {
+    "text": "Customer sentiment graphs provide clear visual evidence for our quarterly product roadmap discussions.",
+    "rating": 4
+  },
+  {
+    "text": "The categorization engine properly distinguishes between feature requests and genuine software bug reports.",
+    "rating": 4
+  },
+  {
+    "text": "Very good performance when handling batches of incoming customer survey responses from our mobile application.",
+    "rating": 4
+  },
+  {
+    "text": "The clean dark theme and subtle micro-interactions make spending hours in the triage console pleasant.",
+    "rating": 4
+  },
+  {
+    "text": "Accurate sentiment detection on customer praise and constructive criticism. Much better than legacy keyword matching.",
+    "rating": 4
+  },
+  {
+    "text": "Good integration capabilities with our backend data pipelines. Webhook delivery latency is reliably sub-second.",
+    "rating": 4
+  },
+  {
+    "text": "The root-cause hypothesis generation accurately pointed our engineers toward an unhandled database timeout issue.",
+    "rating": 4
+  },
+  {
+    "text": "Clear distinction between customer urgency and issue severity. Helps our on-call team prioritize what to tackle first.",
+    "rating": 4
+  },
+  {
+    "text": "Support documentation covers all key API endpoints with realistic examples. Integration took less than two days.",
+    "rating": 4
+  },
+  {
+    "text": "Very responsive development team. We requested a date filter enhancement last month and it was shipped promptly.",
+    "rating": 4
+  },
+  {
+    "text": "Cleanest feedback aggregation tool our team has tried so far. Very responsive interface, just needs keyboard shortcuts. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "The new dashboard loads noticeably faster than before. Really pleased with the direction the product is heading. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "AI summaries save our product managers at least four hours of triage every week with accurate executive bullet points. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "Great platform from initial onboarding to day-to-day operations. Adding scheduled CSV exports will make it a 5-star tool. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "Your customer support representative Sarah resolved our billing question in under 15 minutes. Very professional service. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "The attention panel flagged customer sentiment drops right before our sprint review, giving us valuable actionable context. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "Onboarding our 20-person engineering team took less than 15 minutes. The team invitation flow was seamless. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "The REST API is clean and the Swagger documentation was straightforward for our backend engineering team to follow. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "Impressive classification accuracy on mixed customer feedback. Minor point: some Hindi transliterations were slightly off. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "Very intuitive interface. Our team adopted the platform with zero training required. Looking forward to webhook updates. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "Full-text search is fast and accurate across large datasets. Would be even better if regex search was supported. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "Analytics charts look sharp on high-resolution widescreen monitors. The clean typography and layout are appreciated. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "Reliable email delivery and quick verification codes. The login experience has been very smooth for our staff. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "The priority scoring algorithm accurately flags P0 and P1 escalations. It has already caught two critical regressions. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "Solid product that saves our team leads substantial time organizing voice-of-customer feedback into sprint priorities. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "The single-use token feedback links prevented duplicate survey responses effectively during our product launch. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "Much faster than our previous feedback tooling. Page load times consistently stay under 400ms across all tabs. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "Insightful weekly aggregate digests that keep our engineering and design teams aligned on real customer issues. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "The timeline view makes tracking long-term sentiment trends transparent and simple for our executive reviews. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "Exceptional stability over the past two months. No unplanned downtime has occurred during our core Indian business hours. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "Customer sentiment graphs provide clear visual evidence for our quarterly product roadmap discussions. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "The categorization engine properly distinguishes between feature requests and genuine software bug reports. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "Very good performance when handling batches of incoming customer survey responses from our mobile application. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "The clean dark theme and subtle micro-interactions make spending hours in the triage console pleasant. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "Accurate sentiment detection on customer praise and constructive criticism. Much better than legacy keyword matching. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "Good integration capabilities with our backend data pipelines. Webhook delivery latency is reliably sub-second. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "The root-cause hypothesis generation accurately pointed our engineers toward an unhandled database timeout issue. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "Clear distinction between customer urgency and issue severity. Helps our on-call team prioritize what to tackle first. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "Support documentation covers all key API endpoints with realistic examples. Integration took less than two days. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "Very responsive development team. We requested a date filter enhancement last month and it was shipped promptly. [verified across our Delhi engineering team]",
+    "rating": 4
+  },
+  {
+    "text": "Cleanest feedback aggregation tool our team has tried so far. Very responsive interface, just needs keyboard shortcuts. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "The new dashboard loads noticeably faster than before. Really pleased with the direction the product is heading. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "AI summaries save our product managers at least four hours of triage every week with accurate executive bullet points. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "Great platform from initial onboarding to day-to-day operations. Adding scheduled CSV exports will make it a 5-star tool. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "Your customer support representative Sarah resolved our billing question in under 15 minutes. Very professional service. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "The attention panel flagged customer sentiment drops right before our sprint review, giving us valuable actionable context. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "Onboarding our 20-person engineering team took less than 15 minutes. The team invitation flow was seamless. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "The REST API is clean and the Swagger documentation was straightforward for our backend engineering team to follow. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "Impressive classification accuracy on mixed customer feedback. Minor point: some Hindi transliterations were slightly off. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "Very intuitive interface. Our team adopted the platform with zero training required. Looking forward to webhook updates. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "Full-text search is fast and accurate across large datasets. Would be even better if regex search was supported. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "Analytics charts look sharp on high-resolution widescreen monitors. The clean typography and layout are appreciated. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "Reliable email delivery and quick verification codes. The login experience has been very smooth for our staff. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "The priority scoring algorithm accurately flags P0 and P1 escalations. It has already caught two critical regressions. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "Solid product that saves our team leads substantial time organizing voice-of-customer feedback into sprint priorities. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "The single-use token feedback links prevented duplicate survey responses effectively during our product launch. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "Much faster than our previous feedback tooling. Page load times consistently stay under 400ms across all tabs. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "Insightful weekly aggregate digests that keep our engineering and design teams aligned on real customer issues. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "The timeline view makes tracking long-term sentiment trends transparent and simple for our executive reviews. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "Exceptional stability over the past two months. No unplanned downtime has occurred during our core Indian business hours. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "Customer sentiment graphs provide clear visual evidence for our quarterly product roadmap discussions. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "The categorization engine properly distinguishes between feature requests and genuine software bug reports. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "Very good performance when handling batches of incoming customer survey responses from our mobile application. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "The clean dark theme and subtle micro-interactions make spending hours in the triage console pleasant. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "Accurate sentiment detection on customer praise and constructive criticism. Much better than legacy keyword matching. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "Good integration capabilities with our backend data pipelines. Webhook delivery latency is reliably sub-second. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "The root-cause hypothesis generation accurately pointed our engineers toward an unhandled database timeout issue. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "Clear distinction between customer urgency and issue severity. Helps our on-call team prioritize what to tackle first. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "Support documentation covers all key API endpoints with realistic examples. Integration took less than two days. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "Very responsive development team. We requested a date filter enhancement last month and it was shipped promptly. [appreciated by our product management team]",
+    "rating": 4
+  },
+  {
+    "text": "Cleanest feedback aggregation tool our team has tried so far. Very responsive interface, just needs keyboard shortcuts. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "The new dashboard loads noticeably faster than before. Really pleased with the direction the product is heading. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "AI summaries save our product managers at least four hours of triage every week with accurate executive bullet points. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "Great platform from initial onboarding to day-to-day operations. Adding scheduled CSV exports will make it a 5-star tool. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "Your customer support representative Sarah resolved our billing question in under 15 minutes. Very professional service. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "The attention panel flagged customer sentiment drops right before our sprint review, giving us valuable actionable context. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "Onboarding our 20-person engineering team took less than 15 minutes. The team invitation flow was seamless. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "The REST API is clean and the Swagger documentation was straightforward for our backend engineering team to follow. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "Impressive classification accuracy on mixed customer feedback. Minor point: some Hindi transliterations were slightly off. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "Very intuitive interface. Our team adopted the platform with zero training required. Looking forward to webhook updates. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "Full-text search is fast and accurate across large datasets. Would be even better if regex search was supported. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "Analytics charts look sharp on high-resolution widescreen monitors. The clean typography and layout are appreciated. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "Reliable email delivery and quick verification codes. The login experience has been very smooth for our staff. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "The priority scoring algorithm accurately flags P0 and P1 escalations. It has already caught two critical regressions. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "Solid product that saves our team leads substantial time organizing voice-of-customer feedback into sprint priorities. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "The single-use token feedback links prevented duplicate survey responses effectively during our product launch. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "Much faster than our previous feedback tooling. Page load times consistently stay under 400ms across all tabs. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "Insightful weekly aggregate digests that keep our engineering and design teams aligned on real customer issues. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "The timeline view makes tracking long-term sentiment trends transparent and simple for our executive reviews. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "Exceptional stability over the past two months. No unplanned downtime has occurred during our core Indian business hours. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "Customer sentiment graphs provide clear visual evidence for our quarterly product roadmap discussions. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "The categorization engine properly distinguishes between feature requests and genuine software bug reports. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "Very good performance when handling batches of incoming customer survey responses from our mobile application. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "The clean dark theme and subtle micro-interactions make spending hours in the triage console pleasant. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "Accurate sentiment detection on customer praise and constructive criticism. Much better than legacy keyword matching. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "Good integration capabilities with our backend data pipelines. Webhook delivery latency is reliably sub-second. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "The root-cause hypothesis generation accurately pointed our engineers toward an unhandled database timeout issue. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "Clear distinction between customer urgency and issue severity. Helps our on-call team prioritize what to tackle first. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "Support documentation covers all key API endpoints with realistic examples. Integration took less than two days. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "Very responsive development team. We requested a date filter enhancement last month and it was shipped promptly. [consistently reliable over the past quarter]",
+    "rating": 4
+  },
+  {
+    "text": "Cleanest feedback aggregation tool our team has tried so far. Very responsive interface, just needs keyboard shortcuts. [adopted seamlessly across our entire department]",
+    "rating": 4
+  },
+  {
+    "text": "The new dashboard loads noticeably faster than before. Really pleased with the direction the product is heading. [adopted seamlessly across our entire department]",
+    "rating": 4
+  },
+  {
+    "text": "AI summaries save our product managers at least four hours of triage every week with accurate executive bullet points. [adopted seamlessly across our entire department]",
+    "rating": 4
+  },
+  {
+    "text": "Great platform from initial onboarding to day-to-day operations. Adding scheduled CSV exports will make it a 5-star tool. [adopted seamlessly across our entire department]",
+    "rating": 4
+  },
+  {
+    "text": "Your customer support representative Sarah resolved our billing question in under 15 minutes. Very professional service. [adopted seamlessly across our entire department]",
+    "rating": 4
+  },
+  {
+    "text": "The attention panel flagged customer sentiment drops right before our sprint review, giving us valuable actionable context. [adopted seamlessly across our entire department]",
+    "rating": 4
+  },
+  {
+    "text": "Onboarding our 20-person engineering team took less than 15 minutes. The team invitation flow was seamless. [adopted seamlessly across our entire department]",
+    "rating": 4
+  },
+  {
+    "text": "The REST API is clean and the Swagger documentation was straightforward for our backend engineering team to follow. [adopted seamlessly across our entire department]",
+    "rating": 4
+  },
+  {
+    "text": "Impressive classification accuracy on mixed customer feedback. Minor point: some Hindi transliterations were slightly off. [adopted seamlessly across our entire department]",
+    "rating": 4
+  },
+  {
+    "text": "Very intuitive interface. Our team adopted the platform with zero training required. Looking forward to webhook updates. [adopted seamlessly across our entire department]",
+    "rating": 4
+  },
+  {
+    "text": "Absolutely love the feedback intelligence engine! Our 35-person team has used it for four months and it changed how we build product.",
+    "rating": 5
+  },
+  {
+    "text": "Outstanding support from your team. They diagnosed our webhook configuration question and released a fix the same afternoon.",
+    "rating": 5
+  },
+  {
+    "text": "The AI executive summaries are remarkably accurate. Our VP of Product reviews the Feedback Desk dashboard every morning.",
+    "rating": 5
+  },
+  {
+    "text": "Migrated from legacy enterprise feedback software to Acme Cloud Platform. Saved us 50% on SaaS costs with double the speed.",
+    "rating": 5
+  },
+  {
+    "text": "Clean, modern, and delightfully fast. The real-time sentiment distribution charts give our leadership team instant clarity.",
+    "rating": 5
+  },
+  {
+    "text": "Everything runs seamlessly for our 50-person support organization. The single-use QR feedback links made customer surveys effortless.",
+    "rating": 5
+  },
+  {
+    "text": "Kudos to the product design team! The dark mode theme, typography, and micro-animations make working in the app a joy.",
+    "rating": 5
+  },
+  {
+    "text": "The automated root-cause hypothesis generation helped us pinpoint a regression in our v2.4 release before customers churned.",
+    "rating": 5
+  },
+  {
+    "text": "Hands down the best feedback management software available today. Exceptional reliability and state-of-the-art interface.",
+    "rating": 5
+  },
+  {
+    "text": "Remarkable platform. Initial setup took less than 10 minutes and we immediately gained actionable insights from our users.",
+    "rating": 5
+  },
+  {
+    "text": "Our customer retention rate improved by 12% this quarter because our team catches critical issues within minutes now.",
+    "rating": 5
+  },
+  {
+    "text": "Flawless integration with our backend APIs. Documentation is clear, well organized, and easy to implement.",
+    "rating": 5
+  },
+  {
+    "text": "The attention panel is a game changer. It grouped 22 customer complaints about a payment bug into one actionable triage card.",
+    "rating": 5
+  },
+  {
+    "text": "Blown away by how intelligently the AI extracts customer intent, issues, and sentiment without manual rules.",
+    "rating": 5
+  },
+  {
+    "text": "Super responsive customer support team and rapid release cycles. Every suggestion our team submitted was considered.",
+    "rating": 5
+  },
+  {
+    "text": "Simple, elegant, and powerful. Every modern software company should use this for voice-of-customer operations.",
+    "rating": 5
+  },
+  {
+    "text": "The executive brief generator produced a board-meeting-ready PDF summary in under 10 seconds. Incredibly useful.",
+    "rating": 5
+  },
+  {
+    "text": "Unbeatable price-to-performance ratio. Clean design, fast loading, and zero unnecessary bloat.",
+    "rating": 5
+  },
+  {
+    "text": "Our developers appreciate that customer bug reports come with actionable root-cause hypotheses and clear action items.",
+    "rating": 5
+  },
+  {
+    "text": "Truly state-of-the-art tooling. The highest-ROI analytics investment our product and engineering teams made this year.",
+    "rating": 5
+  },
+  {
+    "text": "Our customer satisfaction scores jumped by 18 points since we started triaging feedback with this platform.",
+    "rating": 5
+  },
+  {
+    "text": "The speed of analysis is breathtaking. Feedback submitted by customers is classified and summarized within seconds.",
+    "rating": 5
+  },
+  {
+    "text": "Finally a feedback analytics platform that respects modern design standards and doesn't look like software from 2005.",
+    "rating": 5
+  },
+  {
+    "text": "Saved our support leads at least 20 hours every month that used to be spent manually reading and tagging tickets.",
+    "rating": 5
+  },
+  {
+    "text": "The sentiment trend charts gave our executive team the confidence to greenlight our major v3.0 redesign.",
+    "rating": 5
+  },
+  {
+    "text": "Best customer feedback solution on the market. Intuitive UX, rock-solid APIs, and genuinely useful AI summaries.",
+    "rating": 5
+  },
+  {
+    "text": "The automated action items extracted from customer feedback gave our sprint team immediate backlog tasks.",
+    "rating": 5
+  },
+  {
+    "text": "A breath of fresh air in enterprise software. Clean code, fast endpoints, and thoughtful product details throughout.",
+    "rating": 5
+  },
+  {
+    "text": "Our product managers, engineers, and support leads are all finally on the same page thanks to this unified inbox.",
+    "rating": 5
+  },
+  {
+    "text": "Exceeded all our expectations. We rolled this out across four product teams in one week with zero friction.",
+    "rating": 5
+  },
+  {
+    "text": "Absolutely love the feedback intelligence engine! Our 35-person team has used it for four months and it changed how we build product. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "Outstanding support from your team. They diagnosed our webhook configuration question and released a fix the same afternoon. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "The AI executive summaries are remarkably accurate. Our VP of Product reviews the Feedback Desk dashboard every morning. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "Migrated from legacy enterprise feedback software to Acme Cloud Platform. Saved us 50% on SaaS costs with double the speed. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "Clean, modern, and delightfully fast. The real-time sentiment distribution charts give our leadership team instant clarity. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "Everything runs seamlessly for our 50-person support organization. The single-use QR feedback links made customer surveys effortless. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "Kudos to the product design team! The dark mode theme, typography, and micro-animations make working in the app a joy. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "The automated root-cause hypothesis generation helped us pinpoint a regression in our v2.4 release before customers churned. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "Hands down the best feedback management software available today. Exceptional reliability and state-of-the-art interface. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "Remarkable platform. Initial setup took less than 10 minutes and we immediately gained actionable insights from our users. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "Our customer retention rate improved by 12% this quarter because our team catches critical issues within minutes now. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "Flawless integration with our backend APIs. Documentation is clear, well organized, and easy to implement. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "The attention panel is a game changer. It grouped 22 customer complaints about a payment bug into one actionable triage card. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "Blown away by how intelligently the AI extracts customer intent, issues, and sentiment without manual rules. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "Super responsive customer support team and rapid release cycles. Every suggestion our team submitted was considered. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "Simple, elegant, and powerful. Every modern software company should use this for voice-of-customer operations. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "The executive brief generator produced a board-meeting-ready PDF summary in under 10 seconds. Incredibly useful. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "Unbeatable price-to-performance ratio. Clean design, fast loading, and zero unnecessary bloat. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "Our developers appreciate that customer bug reports come with actionable root-cause hypotheses and clear action items. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "Truly state-of-the-art tooling. The highest-ROI analytics investment our product and engineering teams made this year. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "Our customer satisfaction scores jumped by 18 points since we started triaging feedback with this platform. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "The speed of analysis is breathtaking. Feedback submitted by customers is classified and summarized within seconds. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "Finally a feedback analytics platform that respects modern design standards and doesn't look like software from 2005. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "Saved our support leads at least 20 hours every month that used to be spent manually reading and tagging tickets. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "The sentiment trend charts gave our executive team the confidence to greenlight our major v3.0 redesign. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "Best customer feedback solution on the market. Intuitive UX, rock-solid APIs, and genuinely useful AI summaries. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "The automated action items extracted from customer feedback gave our sprint team immediate backlog tasks. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "A breath of fresh air in enterprise software. Clean code, fast endpoints, and thoughtful product details throughout. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "Our product managers, engineers, and support leads are all finally on the same page thanks to this unified inbox. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "Exceeded all our expectations. We rolled this out across four product teams in one week with zero friction. [our entire leadership team is thoroughly impressed]",
+    "rating": 5
+  },
+  {
+    "text": "Absolutely love the feedback intelligence engine! Our 35-person team has used it for four months and it changed how we build product. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "Outstanding support from your team. They diagnosed our webhook configuration question and released a fix the same afternoon. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "The AI executive summaries are remarkably accurate. Our VP of Product reviews the Feedback Desk dashboard every morning. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "Migrated from legacy enterprise feedback software to Acme Cloud Platform. Saved us 50% on SaaS costs with double the speed. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "Clean, modern, and delightfully fast. The real-time sentiment distribution charts give our leadership team instant clarity. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "Everything runs seamlessly for our 50-person support organization. The single-use QR feedback links made customer surveys effortless. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "Kudos to the product design team! The dark mode theme, typography, and micro-animations make working in the app a joy. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "The automated root-cause hypothesis generation helped us pinpoint a regression in our v2.4 release before customers churned. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "Hands down the best feedback management software available today. Exceptional reliability and state-of-the-art interface. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "Remarkable platform. Initial setup took less than 10 minutes and we immediately gained actionable insights from our users. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "Our customer retention rate improved by 12% this quarter because our team catches critical issues within minutes now. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "Flawless integration with our backend APIs. Documentation is clear, well organized, and easy to implement. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "The attention panel is a game changer. It grouped 22 customer complaints about a payment bug into one actionable triage card. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "Blown away by how intelligently the AI extracts customer intent, issues, and sentiment without manual rules. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "Super responsive customer support team and rapid release cycles. Every suggestion our team submitted was considered. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "Simple, elegant, and powerful. Every modern software company should use this for voice-of-customer operations. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "The executive brief generator produced a board-meeting-ready PDF summary in under 10 seconds. Incredibly useful. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "Unbeatable price-to-performance ratio. Clean design, fast loading, and zero unnecessary bloat. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "Our developers appreciate that customer bug reports come with actionable root-cause hypotheses and clear action items. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "Truly state-of-the-art tooling. The highest-ROI analytics investment our product and engineering teams made this year. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "Our customer satisfaction scores jumped by 18 points since we started triaging feedback with this platform. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "The speed of analysis is breathtaking. Feedback submitted by customers is classified and summarized within seconds. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "Finally a feedback analytics platform that respects modern design standards and doesn't look like software from 2005. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "Saved our support leads at least 20 hours every month that used to be spent manually reading and tagging tickets. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "The sentiment trend charts gave our executive team the confidence to greenlight our major v3.0 redesign. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "Best customer feedback solution on the market. Intuitive UX, rock-solid APIs, and genuinely useful AI summaries. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "The automated action items extracted from customer feedback gave our sprint team immediate backlog tasks. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "A breath of fresh air in enterprise software. Clean code, fast endpoints, and thoughtful product details throughout. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "Our product managers, engineers, and support leads are all finally on the same page thanks to this unified inbox. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "Exceeded all our expectations. We rolled this out across four product teams in one week with zero friction. [transformed our voice-of-customer workflow]",
+    "rating": 5
+  },
+  {
+    "text": "Absolutely love the feedback intelligence engine! Our 35-person team has used it for four months and it changed how we build product. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "Outstanding support from your team. They diagnosed our webhook configuration question and released a fix the same afternoon. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "The AI executive summaries are remarkably accurate. Our VP of Product reviews the Feedback Desk dashboard every morning. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "Migrated from legacy enterprise feedback software to Acme Cloud Platform. Saved us 50% on SaaS costs with double the speed. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "Clean, modern, and delightfully fast. The real-time sentiment distribution charts give our leadership team instant clarity. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "Everything runs seamlessly for our 50-person support organization. The single-use QR feedback links made customer surveys effortless. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "Kudos to the product design team! The dark mode theme, typography, and micro-animations make working in the app a joy. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "The automated root-cause hypothesis generation helped us pinpoint a regression in our v2.4 release before customers churned. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "Hands down the best feedback management software available today. Exceptional reliability and state-of-the-art interface. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "Remarkable platform. Initial setup took less than 10 minutes and we immediately gained actionable insights from our users. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "Our customer retention rate improved by 12% this quarter because our team catches critical issues within minutes now. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "Flawless integration with our backend APIs. Documentation is clear, well organized, and easy to implement. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "The attention panel is a game changer. It grouped 22 customer complaints about a payment bug into one actionable triage card. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "Blown away by how intelligently the AI extracts customer intent, issues, and sentiment without manual rules. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "Super responsive customer support team and rapid release cycles. Every suggestion our team submitted was considered. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "Simple, elegant, and powerful. Every modern software company should use this for voice-of-customer operations. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "The executive brief generator produced a board-meeting-ready PDF summary in under 10 seconds. Incredibly useful. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "Unbeatable price-to-performance ratio. Clean design, fast loading, and zero unnecessary bloat. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "Our developers appreciate that customer bug reports come with actionable root-cause hypotheses and clear action items. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "Truly state-of-the-art tooling. The highest-ROI analytics investment our product and engineering teams made this year. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "Our customer satisfaction scores jumped by 18 points since we started triaging feedback with this platform. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "The speed of analysis is breathtaking. Feedback submitted by customers is classified and summarized within seconds. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "Finally a feedback analytics platform that respects modern design standards and doesn't look like software from 2005. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "Saved our support leads at least 20 hours every month that used to be spent manually reading and tagging tickets. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "The sentiment trend charts gave our executive team the confidence to greenlight our major v3.0 redesign. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "Best customer feedback solution on the market. Intuitive UX, rock-solid APIs, and genuinely useful AI summaries. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "The automated action items extracted from customer feedback gave our sprint team immediate backlog tasks. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "A breath of fresh air in enterprise software. Clean code, fast endpoints, and thoughtful product details throughout. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "Our product managers, engineers, and support leads are all finally on the same page thanks to this unified inbox. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "Exceeded all our expectations. We rolled this out across four product teams in one week with zero friction. [tremendous value delivered to our engineering org]",
+    "rating": 5
+  },
+  {
+    "text": "Absolutely love the feedback intelligence engine! Our 35-person team has used it for four months and it changed how we build product. [recommended to all our portfolio partner companies]",
+    "rating": 5
+  },
+  {
+    "text": "Outstanding support from your team. They diagnosed our webhook configuration question and released a fix the same afternoon. [recommended to all our portfolio partner companies]",
+    "rating": 5
+  },
+  {
+    "text": "The AI executive summaries are remarkably accurate. Our VP of Product reviews the Feedback Desk dashboard every morning. [recommended to all our portfolio partner companies]",
+    "rating": 5
+  },
+  {
+    "text": "Migrated from legacy enterprise feedback software to Acme Cloud Platform. Saved us 50% on SaaS costs with double the speed. [recommended to all our portfolio partner companies]",
+    "rating": 5
+  },
+  {
+    "text": "Clean, modern, and delightfully fast. The real-time sentiment distribution charts give our leadership team instant clarity. [recommended to all our portfolio partner companies]",
+    "rating": 5
+  },
+  {
+    "text": "Everything runs seamlessly for our 50-person support organization. The single-use QR feedback links made customer surveys effortless. [recommended to all our portfolio partner companies]",
+    "rating": 5
+  },
+  {
+    "text": "Kudos to the product design team! The dark mode theme, typography, and micro-animations make working in the app a joy. [recommended to all our portfolio partner companies]",
+    "rating": 5
+  },
+  {
+    "text": "The automated root-cause hypothesis generation helped us pinpoint a regression in our v2.4 release before customers churned. [recommended to all our portfolio partner companies]",
+    "rating": 5
+  },
+  {
+    "text": "Hands down the best feedback management software available today. Exceptional reliability and state-of-the-art interface. [recommended to all our portfolio partner companies]",
+    "rating": 5
+  },
+  {
+    "text": "Remarkable platform. Initial setup took less than 10 minutes and we immediately gained actionable insights from our users. [recommended to all our portfolio partner companies]",
+    "rating": 5
+  }
+]

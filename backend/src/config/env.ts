@@ -93,7 +93,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     geminiApiKey: optionalEnv(env.GEMINI_API_KEY),
     resendApiKey: optionalEnv(env.RESEND_API_KEY),
     resendFromEmail: env.RESEND_FROM_EMAIL?.trim() || 'Feedback Desk <noreply@localhost>',
-    workerConcurrency: Math.max(1, Number(env.WORKER_CONCURRENCY || 2)),
+    workerConcurrency: Math.max(1, Number(env.WORKER_CONCURRENCY || 1)),
     // Default 30 minutes — matches incident recovery guidance; override via JOB_LOCK_TIMEOUT_SECONDS
     jobLockTimeoutSeconds: Math.max(
       60,

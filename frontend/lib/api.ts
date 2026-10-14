@@ -273,5 +273,85 @@ export const api = {
             }
             return response.json();
         }
+    },
+    admin: {
+        getOverview: async () => {
+            const response = await authFetch('/api/admin/overview');
+            if (!response.ok) throw await parseErrorResponse(response, 'Failed to fetch platform overview');
+            return response.json();
+        },
+        getAiMetrics: async () => {
+            const response = await authFetch('/api/admin/ai-metrics');
+            if (!response.ok) throw await parseErrorResponse(response, 'Failed to fetch AI metrics');
+            return response.json();
+        },
+        getQueue: async () => {
+            const response = await authFetch('/api/admin/queue');
+            if (!response.ok) throw await parseErrorResponse(response, 'Failed to fetch queue health');
+            return response.json();
+        },
+        replayDeadJobs: async () => {
+            const response = await authFetch('/api/admin/queue', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({}),
+            });
+            if (!response.ok) throw await parseErrorResponse(response, 'Failed to replay dead letter jobs');
+            return response.json();
+        },
+        retryJob: async (jobId: string) => {
+            const response = await authFetch('/api/admin/queue', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ jobId }),
+            });
+            if (!response.ok) throw await parseErrorResponse(response, 'Failed to retry job');
+            return response.json();
+        },
+        getDistribution: async () => {
+            const response = await authFetch('/api/admin/distribution');
+            if (!response.ok) throw await parseErrorResponse(response, 'Failed to fetch distribution metrics');
+            return response.json();
+        },
+        getFeedbacks: async (params?: { search?: string; sentiment?: string; status?: string; priority?: string; page?: number; limit?: number }) => {
+            const q = new URLSearchParams();
+            if (params?.search) q.set('search', params.search);
+            if (params?.sentiment) q.set('sentiment', params.sentiment);
+            if (params?.status) q.set('status', params.status);
+            if (params?.priority) q.set('priority', params.priority);
+            if (params?.page) q.set('page', String(params.page));
+            if (params?.limit) q.set('limit', String(params.limit));
+            const response = await authFetch(`/api/admin/feedbacks?${q.toString()}`);
+            if (!response.ok) throw await parseErrorResponse(response, 'Failed to fetch platform feedbacks');
+            return response.json();
+        },
+        updateFeedback: async (id: string, payload: { status?: string; adminNotes?: string }) => {
+            const response = await authFetch(`/api/admin/feedbacks/${encodeURIComponent(id)}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) throw await parseErrorResponse(response, 'Failed to update feedback item');
+            return response.json();
+        },
+        getUsers: async () => {
+            const response = await authFetch('/api/admin/users');
+            if (!response.ok) throw await parseErrorResponse(response, 'Failed to fetch platform users');
+            return response.json();
+        },
+        updateUserRole: async (id: string, role: string) => {
+            const response = await authFetch(`/api/admin/users/${encodeURIComponent(id)}/role`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ role })
+            });
+            if (!response.ok) throw await parseErrorResponse(response, 'Failed to update user role');
+            return response.json();
+        },
+        getAuditLogs: async () => {
+            const response = await authFetch('/api/admin/audit-logs');
+            if (!response.ok) throw await parseErrorResponse(response, 'Failed to fetch audit logs');
+            return response.json();
+        }
     }
 };

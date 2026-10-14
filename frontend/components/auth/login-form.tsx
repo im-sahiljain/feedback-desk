@@ -115,13 +115,17 @@ export function LoginForm() {
 
         setIsLoading(true)
         try {
-            await api.auth.verifyOtp({ email: userEmail, otp: otpCode, challengeId })
+            const res = await api.auth.verifyOtp({ email: userEmail, otp: otpCode, challengeId })
             refetchUser()
             toast({
                 title: "Welcome back!",
                 description: "You have signed in successfully.",
             })
-            router.push("/")
+            if (res?.user?.role === 'admin') {
+                router.push("/admin")
+            } else {
+                router.push("/")
+            }
         } catch (error: any) {
             toast({
                 variant: "destructive",

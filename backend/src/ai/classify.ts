@@ -31,6 +31,60 @@ export { ANALYSIS_VERSION, SCHEMA_VERSION, PROMPT_VERSION } from "./types.js";
 
 const MODEL_NAME = "gemini-3.5-flash-lite";
 
+let geminiThrottleChain: Promise<void> = Promise.resolve();
+let lastGeminiCallFinished = 0;
+const MIN_GEMINI_INTERVAL_MS = 4500; // ~13.3 calls/min, safely under Gemini Free Tier 15 RPM limit
+
+/**
+ * Parses Gemini error messages to extract exact requested backoff seconds (with safety buffer).
+ */
+export function extractRetryDelayMs(errorMsg: string): number {
+  // Check for JSON or text retryDelay e.g. "retryDelay": "22s" or "retryDelay": "22.5s"
+  const jsonMatch = errorMsg.match(/["']?retryDelay["']?\s*:\s*["']?(\d+(?:\.\d+)?)s?["']?/i);
+  if (jsonMatch && jsonMatch[1]) {
+    const sec = parseFloat(jsonMatch[1]);
+    if (!isNaN(sec) && sec > 0) {
+      return Math.ceil(sec * 1000) + 2000; // Add 2s safety buffer
+    }
+  }
+
+  // Check for text e.g. "Please retry in 22.25s" or "retry after 20s"
+  const textMatch = errorMsg.match(/retry (?:in|after) (\d+(?:\.\d+)?)s/i);
+  if (textMatch && textMatch[1]) {
+    const sec = parseFloat(textMatch[1]);
+    if (!isNaN(sec) && sec > 0) {
+      return Math.ceil(sec * 1000) + 2000;
+    }
+  }
+
+  // Default conservative fallback (25s) for Gemini Free Tier replenishment window
+  return 25000;
+}
+
+export function notifyRateLimitCooldown(delayMs: number): void {
+  lastGeminiCallFinished = Math.max(lastGeminiCallFinished, Date.now() + delayMs);
+}
+
+async function throttleGeminiRequest(): Promise<void> {
+  const previous = geminiThrottleChain;
+  let release: () => void = () => {};
+  geminiThrottleChain = new Promise((resolve) => {
+    release = resolve;
+  });
+
+  await previous;
+  try {
+    const now = Date.now();
+    const waitTime = Math.max(0, MIN_GEMINI_INTERVAL_MS - (now - lastGeminiCallFinished));
+    if (waitTime > 0) {
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
+    }
+  } finally {
+    lastGeminiCallFinished = Date.now();
+    release();
+  }
+}
+
 /**
  * Estimate cost in USD for model token usage.
  * Default pricing is based on Gemini 3.5 Flash-Lite rates:
@@ -911,7 +965,12 @@ Before returning JSON verify:
 
     const started = Date.now();
 
-    const response = await ai.models.generateContent({
+    let response: any;
+    const MAX_RATE_LIMIT_RETRIES = 3;
+    for (let attempt = 1; attempt <= MAX_RATE_LIMIT_RETRIES; attempt++) {
+      try {
+        await throttleGeminiRequest();
+        response = await ai.models.generateContent({
       model: MODEL_NAME,
       contents: prompt,
       config: {
@@ -1114,8 +1173,29 @@ Before returning JSON verify:
           ],
         },
       },
-    });
+        });
+        break;
+      } catch (err) {
+        const errMsg = err instanceof Error ? err.message : "unknown";
+        const isRateLimit = errMsg.includes("429") || errMsg.includes("RESOURCE_EXHAUSTED") || errMsg.includes("quota");
+        if (isRateLimit && attempt < MAX_RATE_LIMIT_RETRIES) {
+          const delayMs = extractRetryDelayMs(errMsg);
+          logger.warn(`Gemini Free Tier rate limit encountered (attempt ${attempt}/${MAX_RATE_LIMIT_RETRIES}). Backing off for ${Math.round(delayMs / 1000)}s before retry...`, {
+            attempt,
+            delayMs,
+            error: errMsg.slice(0, 300),
+          });
+          notifyRateLimitCooldown(delayMs);
+          await new Promise((r) => setTimeout(r, delayMs));
+          continue;
+        }
+        throw err;
+      }
+    }
 
+    if (!response) {
+      throw new Error("No response received from Gemini model.");
+    }
     const latency = Date.now() - started;
     const promptTokens = response.usageMetadata?.promptTokenCount;
     const candidateTokens = response.usageMetadata?.candidatesTokenCount;

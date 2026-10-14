@@ -174,6 +174,15 @@ export default function CounterScanPage() {
                     </Button>
                 </CardContent>
             </Card>
+
+            <footer className="mt-6 text-center text-xs text-muted-foreground space-y-1">
+                <div className="flex items-center justify-center gap-3">
+                    <a href="/terms" target="_blank" rel="noopener noreferrer" className="hover:underline">Terms of Service</a>
+                    <span>•</span>
+                    <a href="/privacy" target="_blank" rel="noopener noreferrer" className="hover:underline">Privacy Policy</a>
+                </div>
+                <p className="text-[11px] text-muted-foreground/75">Secured by FeedbackDesk AI</p>
+            </footer>
         </div>
     );
 }

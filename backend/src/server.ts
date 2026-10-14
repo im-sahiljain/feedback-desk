@@ -12,6 +12,7 @@ import productRoutes from './routes/products.js';
 import feedbackRoutes from './routes/feedbacks.js';
 import analyticsRoutes from './routes/analytics.js';
 import opsRoutes from './routes/ops.js';
+import adminRoutes from './routes/admin.js';
 import { startWorkers } from './jobs/worker.js';
 import { getQueueDepth } from './jobs/queue.js';
 import { logger } from './logging/logger.js';
@@ -72,6 +73,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/feedbacks', feedbackRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/ops', opsRoutes);
+app.use('/api/admin', adminRoutes);
 
 if (config.env !== 'production') {
   app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));

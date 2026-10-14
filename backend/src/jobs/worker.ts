@@ -62,9 +62,8 @@ export async function processAnalyzeFeedbackJob(job: {
     feedback: string;
     product_id: string;
     processing_status: string;
-    analysis_version: string | null;
   }>(
-    `SELECT id, feedback, product_id, processing_status, analysis_version
+    `SELECT id, feedback, product_id, processing_status
      FROM feedbacks WHERE id = $1 AND deleted_at IS NULL`,
     [feedbackId]
   );
@@ -77,8 +76,8 @@ export async function processAnalyzeFeedbackJob(job: {
 
   const feedback = fbRes.rows[0];
 
-  // Idempotent: already analyzed at current version
-  if (feedback.processing_status === 'analyzed' && feedback.analysis_version === ANALYSIS_VERSION) {
+  // Idempotent: already analyzed
+  if (feedback.processing_status === 'analyzed') {
     await completeJob(pool, job.id);
     return;
   }
@@ -237,6 +236,10 @@ async function workerLoop(workerId: string): Promise<void> {
       } finally {
         activeWorkers--;
       }
+
+      // Safe pacing sleep for Gemini Free Tier limit (15 RPM maximum)
+      // 4500ms interval ensures worker runs at ~10-12 RPM, comfortably within quota
+      await sleep(4500);
     } catch (err) {
       logger.error('Worker loop error', {
         error: err instanceof Error ? err.message : 'unknown',

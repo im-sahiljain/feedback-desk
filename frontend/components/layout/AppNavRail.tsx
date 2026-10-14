@@ -19,6 +19,7 @@ import {
   Moon,
   Check,
   Laptop,
+  ShieldCheck,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useApp } from "@/context/AppContext";
@@ -617,6 +618,18 @@ export function AppNavRail({
                   <p className="text-xs text-muted-foreground">{user.email}</p>
                 </div>
                 <DropdownMenuSeparator />
+                {user.role === "admin" && (
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href="/admin"
+                      className="cursor-pointer font-semibold text-orange-500 hover:text-orange-600 dark:text-orange-400"
+                      onClick={() => onNavigate?.()}
+                    >
+                      <ShieldCheck className="mr-2 h-4 w-4 text-orange-500" />
+                      Platform Admin Console
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem asChild>
                   <Link
                     href="/settings"

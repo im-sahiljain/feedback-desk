@@ -117,14 +117,26 @@ export default function LoginPage() {
                         </div>
 
                         <p className="text-center text-xs text-muted-foreground dark:text-zinc-500">
-                            By continuing, you agree to our Terms of Service and Privacy Policy.
+                            By continuing, you agree to our{" "}
+                            <Link href="/terms" className="underline underline-offset-4 hover:text-foreground">
+                                Terms of Service
+                            </Link>{" "}
+                            and{" "}
+                            <Link href="/privacy" className="underline underline-offset-4 hover:text-foreground">
+                                Privacy Policy
+                            </Link>.
                         </p>
                     </div>
                 </div>
 
-                {/* Footer copyright */}
-                <div className="w-full text-center text-xs text-muted-foreground dark:text-zinc-500 pt-4">
-                    &copy; {new Date().getFullYear()} Feedback Desk AI. All rights reserved.
+                {/* Footer copyright & links */}
+                <div className="w-full text-center text-xs text-muted-foreground dark:text-zinc-500 pt-4 space-y-1">
+                    <div>&copy; {new Date().getFullYear()} Feedback Desk AI. All rights reserved.</div>
+                    <div className="flex items-center justify-center gap-3 text-[11px]">
+                        <Link href="/terms" className="hover:underline">Terms of Service</Link>
+                        <span>•</span>
+                        <Link href="/privacy" className="hover:underline">Privacy Policy</Link>
+                    </div>
                 </div>
             </div>
         </div>

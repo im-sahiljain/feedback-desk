@@ -9,11 +9,14 @@ export function middleware(request: NextRequest) {
     const hasAuth = !!(accessToken || refreshToken);
     const { pathname } = request.nextUrl;
 
-    // Public paths that identify authentication routes
-    const publicPaths = ['/login', '/signup'];
+    // Auth routes that logged-in users should not see (redirect to /)
+    const authRoutes = ['/login', '/signup'];
 
-    // Check if the current path is a public path
-    const isPublicPath = publicPaths.includes(pathname);
+    // Public informational pages accessible by anyone at any time
+    const publicPages = ['/terms', '/privacy'];
+
+    const isAuthRoute = authRoutes.includes(pathname);
+    const isPublicPage = publicPages.some(page => pathname === page || pathname.startsWith(page + '/'));
 
     const isDemo =
         request.cookies.get('isDemo')?.value === 'true' ||
@@ -43,15 +46,20 @@ export function middleware(request: NextRequest) {
         return response;
     }
 
-    // If the user has auth cookies and tries to access a public path (like login),
+    // If the user has auth cookies and tries to access an auth route (like login),
     // redirect them to the dashboard
-    if (isPublicPath && hasAuth) {
+    if (isAuthRoute && hasAuth) {
         return NextResponse.redirect(new URL('/', request.url));
+    }
+
+    // Allow public informational pages regardless of auth state
+    if (isPublicPage) {
+        return NextResponse.next();
     }
 
     // If the user has NO auth and tries to access a PROTECTED path,
     // redirect them to login
-    if (!isPublicPath && !hasAuth) {
+    if (!isAuthRoute && !hasAuth) {
         // Filter out nextjs internals and static files
         if (
             !pathname.startsWith('/_next') &&
