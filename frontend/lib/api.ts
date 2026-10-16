@@ -285,6 +285,17 @@ export const api = {
             if (!response.ok) throw await parseErrorResponse(response, 'Failed to fetch AI metrics');
             return response.json();
         },
+        getAiLogs: async (params?: { page?: number; limit?: number; operation?: string; status?: string; search?: string }) => {
+            const q = new URLSearchParams();
+            if (params?.page) q.set('page', String(params.page));
+            if (params?.limit) q.set('limit', String(params.limit));
+            if (params?.operation) q.set('operation', params.operation);
+            if (params?.status) q.set('status', params.status);
+            if (params?.search) q.set('search', params.search);
+            const response = await authFetch(`/api/admin/ai-metrics/logs?${q.toString()}`);
+            if (!response.ok) throw await parseErrorResponse(response, 'Failed to fetch AI telemetry logs');
+            return response.json();
+        },
         getQueue: async () => {
             const response = await authFetch('/api/admin/queue');
             if (!response.ok) throw await parseErrorResponse(response, 'Failed to fetch queue health');

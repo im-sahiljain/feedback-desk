@@ -103,7 +103,10 @@ export function downloadExecutiveBriefPdf(
     y += 14;
   };
 
-  const bodyText = (text: string, opts?: { muted?: boolean; size?: number }) => {
+  const bodyText = (
+    text: string,
+    opts?: { muted?: boolean; size?: number },
+  ) => {
     const size = opts?.size ?? 10;
     const lines = wrapText(doc, text, CONTENT_WIDTH, size);
     const lineHeight = size + 3;
@@ -122,7 +125,9 @@ export function downloadExecutiveBriefPdf(
       ? wrapText(doc, meta, CONTENT_WIDTH - bulletIndent, 8)
       : [];
     const blockHeight =
-      lines.length * 13 + (metaLines.length ? metaLines.length * 11 + 2 : 0) + 8;
+      lines.length * 13 +
+      (metaLines.length ? metaLines.length * 11 + 2 : 0) +
+      8;
     ensureSpace(blockHeight);
     doc.setFillColor(...COLORS.accent);
     doc.circle(MARGIN_X + 3, y - 2.5, 2, "F");
@@ -153,7 +158,7 @@ export function downloadExecutiveBriefPdf(
   doc.text("FEEDBACK DESK AI", MARGIN_X, 36);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(20);
-  doc.text("AI Executive Brief", MARGIN_X, 62);
+  doc.text("AI Summary", MARGIN_X, 62);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(11);
   doc.text(options.productName || "Product", MARGIN_X, 84);
@@ -202,7 +207,12 @@ export function downloadExecutiveBriefPdf(
   y += 22;
 
   // Headline + summary
-  const headlineLines = wrapText(doc, brief.headline || "Executive Brief", CONTENT_WIDTH, 14);
+  const headlineLines = wrapText(
+    doc,
+    brief.headline || "Executive Brief",
+    CONTENT_WIDTH,
+    14,
+  );
   ensureSpace(headlineLines.length * 18 + 8);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
@@ -224,7 +234,8 @@ export function downloadExecutiveBriefPdf(
       `Evidence strength: ${ctx.evidence_strength}`,
     ];
     for (const line of snapshot) bodyText(line, { muted: true, size: 9 });
-    if (ctx.evidence_note) bodyText(ctx.evidence_note, { muted: true, size: 9 });
+    if (ctx.evidence_note)
+      bodyText(ctx.evidence_note, { muted: true, size: 9 });
   }
 
   if (brief.key_findings?.length) {
@@ -271,11 +282,7 @@ export function downloadExecutiveBriefPdf(
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
       doc.setTextColor(...COLORS.ink);
-      doc.text(
-        `${action.rank || ""}. ${action.title}`.trim(),
-        MARGIN_X,
-        y,
-      );
+      doc.text(`${action.rank || ""}. ${action.title}`.trim(), MARGIN_X, y);
       y += 13;
       bodyText(action.action, { size: 10 });
       bodyText(

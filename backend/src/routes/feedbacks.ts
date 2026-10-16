@@ -1,27 +1,30 @@
-import express, { Request, Response } from 'express';
-import { getPool } from '../db.js';
-import { authenticateUser, AuthenticatedRequest } from './auth.js';
-import { parsePeriodBounds } from '../executive_brief.js';
-import { verifyParams } from '../crypto.js';
-import { feedbackSubmitLimiter, publicDestinationLimiter } from '../middleware/rateLimiters.js';
-import { requireProductAccess } from '../authz/access.js';
+import express, { Request, Response } from "express";
+import { getPool } from "../db.js";
+import { authenticateUser, AuthenticatedRequest } from "./auth.js";
+import { parsePeriodBounds } from "../executive_brief.js";
+import { verifyParams } from "../crypto.js";
+import {
+  feedbackSubmitLimiter,
+  publicDestinationLimiter,
+} from "../middleware/rateLimiters.js";
+import { requireProductAccess } from "../authz/access.js";
 import {
   verifyInvitation,
   submitInvitationFeedback,
   dispenseCounterInvitation,
-} from '../publicFeedback/invitations.js';
-import { enqueueJob } from '../jobs/queue.js';
-import { JOB_ANALYZE_FEEDBACK } from '../jobs/worker.js';
-import { hashPayload } from '../security/crypto.js';
+} from "../publicFeedback/invitations.js";
+import { enqueueJob } from "../jobs/queue.js";
+import { JOB_ANALYZE_FEEDBACK } from "../jobs/worker.js";
+import { hashPayload } from "../security/crypto.js";
 import {
   DEFAULT_FEEDBACK_PAGE_SIZE,
   MAX_FEEDBACK_PAGE_SIZE,
   PUBLIC_SUBMIT_MAX_CHARS,
-} from '../config/limits.js';
-import { logger } from '../logging/logger.js';
-import { HttpError, toSafeClientError } from '../errors/httpError.js';
-import { recordAudit } from '../audit/audit.js';
-import { sanitizeForAi } from '../ai/sanitize.js';
+} from "../config/limits.js";
+import { logger } from "../logging/logger.js";
+import { HttpError, toSafeClientError } from "../errors/httpError.js";
+import { recordAudit } from "../audit/audit.js";
+import { sanitizeForAi } from "../ai/sanitize.js";
 
 const router = express.Router();
 
@@ -31,9 +34,9 @@ function parseCategoryFilter(raw: unknown): string[] {
   const parts = Array.isArray(raw) ? raw : [raw];
   const out: string[] = [];
   for (const part of parts) {
-    for (const piece of String(part).split(',')) {
+    for (const piece of String(part).split(",")) {
       const trimmed = piece.trim();
-      if (trimmed && trimmed.toLowerCase() !== 'all') out.push(trimmed);
+      if (trimmed && trimmed.toLowerCase() !== "all") out.push(trimmed);
     }
   }
   return [...new Set(out)];
@@ -49,7 +52,7 @@ function parseIdsFilter(raw: unknown): string[] {
   const parts = Array.isArray(raw) ? raw : [raw];
   const out: string[] = [];
   for (const part of parts) {
-    for (const piece of String(part).split(',')) {
+    for (const piece of String(part).split(",")) {
       const trimmed = piece.trim();
       if (UUID_RE.test(trimmed)) out.push(trimmed.toLowerCase());
       if (out.length >= MAX_IDS_FILTER) return [...new Set(out)];
@@ -72,11 +75,11 @@ async function persistFeedbackAndEnqueue(
     rating: number | null;
     idempotencyKey?: string | null;
     clientIp?: string;
-  }
+  },
 ) {
   const { sanitized } = sanitizeForAi(args.feedback);
   const fingerprint = hashPayload(
-    `${args.productId}|${args.feedback.toLowerCase().trim()}|${(args.email || '').toLowerCase()}|${args.rating ?? ''}`
+    `${args.productId}|${args.feedback.toLowerCase().trim()}|${(args.email || "").toLowerCase()}|${args.rating ?? ""}`,
   );
 
   // Duplicate protection within 10 minutes
@@ -87,7 +90,7 @@ async function persistFeedbackAndEnqueue(
        AND created_at > now() - interval '10 minutes'
        AND deleted_at IS NULL
      LIMIT 1`,
-    [args.productId, fingerprint]
+    [args.productId, fingerprint],
   );
   if (dup.rows[0]) {
     return { id: dup.rows[0].id, duplicate: true as const };
@@ -106,7 +109,7 @@ async function persistFeedbackAndEnqueue(
       args.rating,
       fingerprint,
       sanitized,
-    ]
+    ],
   );
 
   const feedbackId = insert.rows[0].id;
@@ -114,301 +117,382 @@ async function persistFeedbackAndEnqueue(
   await enqueueJob(pool, {
     jobType: JOB_ANALYZE_FEEDBACK,
     payload: { feedbackId },
-    resourceType: 'feedback',
+    resourceType: "feedback",
     resourceId: feedbackId,
     idempotencyKey: `analyze:${feedbackId}`,
   });
 
-  return { id: feedbackId, created_at: insert.rows[0].created_at, duplicate: false as const };
+  return {
+    id: feedbackId,
+    created_at: insert.rows[0].created_at,
+    duplicate: false as const,
+  };
 }
 
 function validateFeedbackBody(body: Record<string, unknown>, maxChars: number) {
-  const feedback = typeof body.feedback === 'string' ? body.feedback.trim() : '';
-  const email = typeof body.email === 'string' ? body.email.trim() : '';
+  const feedback =
+    typeof body.feedback === "string" ? body.feedback.trim() : "";
+  const email = typeof body.email === "string" ? body.email.trim() : "";
   const rating =
-    body.rating !== undefined && body.rating !== null ? Number(body.rating) : null;
+    body.rating !== undefined && body.rating !== null
+      ? Number(body.rating)
+      : null;
   const idempotencyKey =
-    typeof body.idempotency_key === 'string'
+    typeof body.idempotency_key === "string"
       ? body.idempotency_key.trim().slice(0, 128)
-      : typeof body.idempotencyKey === 'string'
+      : typeof body.idempotencyKey === "string"
         ? body.idempotencyKey.trim().slice(0, 128)
         : null;
 
-  if (!feedback) throw new HttpError(400, 'feedback text is required');
+  if (!feedback) throw new HttpError(400, "feedback text is required");
   if (feedback.length > maxChars) {
-    throw new HttpError(400, `feedback text exceeds maximum allowed length of ${maxChars} characters`);
+    throw new HttpError(
+      400,
+      `feedback text exceeds maximum allowed length of ${maxChars} characters`,
+    );
   }
-  if (email && email.length > 255) throw new HttpError(400, 'email exceeds maximum allowed length');
-  if (email && !email.includes('@')) throw new HttpError(400, 'email is invalid');
-  if (rating !== null && (isNaN(rating) || rating < 1 || rating > 5 || !Number.isInteger(rating))) {
-    throw new HttpError(400, 'rating must be an integer between 1 and 5');
+  if (email && email.length > 255)
+    throw new HttpError(400, "email exceeds maximum allowed length");
+  if (email && !email.includes("@"))
+    throw new HttpError(400, "email is invalid");
+  if (
+    rating !== null &&
+    (isNaN(rating) || rating < 1 || rating > 5 || !Number.isInteger(rating))
+  ) {
+    throw new HttpError(400, "rating must be an integer between 1 and 5");
   }
 
   return { feedback, email, rating, idempotencyKey };
 }
 
-router.post('/public/:token', feedbackSubmitLimiter, async (_req: Request, res: Response) => {
-  return res.status(410).json({
-    error: 'Generic public feedback links have been retired. Please use single-use customer links or scan the counter QR code.',
-  });
-});
+router.post(
+  "/public/:token",
+  feedbackSubmitLimiter,
+  async (_req: Request, res: Response) => {
+    return res.status(410).json({
+      error:
+        "Generic public feedback links have been retired. Please use single-use customer links or scan the counter QR code.",
+    });
+  },
+);
 
 /**
  * Legacy signed submit — kept for backwards compatibility with existing printed/shared URLs.
  * Still persists immediately and queues AI asynchronously.
  */
-router.post('/submit', feedbackSubmitLimiter, async (req: Request, res: Response) => {
-  const productId = req.body.product_id ?? req.body.productId;
-  const userId = req.body.user_id ?? req.body.userId;
-  const industry = req.body.industry;
-  const signature = req.body.signature ?? req.body.sig;
-  const expiresAt = req.body.expires_at ?? req.body.expiresAt ?? req.body.exp;
-  const maxChars = PUBLIC_SUBMIT_MAX_CHARS;
+router.post(
+  "/submit",
+  feedbackSubmitLimiter,
+  async (req: Request, res: Response) => {
+    const productId = req.body.product_id ?? req.body.productId;
+    const userId = req.body.user_id ?? req.body.userId;
+    const industry = req.body.industry;
+    const signature = req.body.signature ?? req.body.sig;
+    const expiresAt = req.body.expires_at ?? req.body.expiresAt ?? req.body.exp;
+    const maxChars = PUBLIC_SUBMIT_MAX_CHARS;
 
-  try {
-    if (!productId || !userId || !industry || !signature) {
-      return res.status(400).json({ error: 'product_id, user_id, industry, and signature are required' });
-    }
+    try {
+      if (!productId || !userId || !industry || !signature) {
+        return res.status(400).json({
+          error: "product_id, user_id, industry, and signature are required",
+        });
+      }
 
-    const { feedback, email, rating, idempotencyKey } = validateFeedbackBody(req.body, maxChars);
+      const { feedback, email, rating, idempotencyKey } = validateFeedbackBody(
+        req.body,
+        maxChars,
+      );
 
-    const isValidSignature = verifyParams(
-      {
-        productId: String(productId),
-        userId: String(userId),
-        industry: String(industry),
-        ...(expiresAt ? { expiresAt } : {}),
-      },
-      String(signature)
-    );
+      const isValidSignature = verifyParams(
+        {
+          productId: String(productId),
+          userId: String(userId),
+          industry: String(industry),
+          ...(expiresAt ? { expiresAt } : {}),
+        },
+        String(signature),
+      );
 
-    if (!isValidSignature) {
-      return res.status(403).json({ error: 'Invalid or expired signature' });
-    }
+      if (!isValidSignature) {
+        return res.status(403).json({ error: "Invalid or expired signature" });
+      }
 
-    const pool = getPool();
-    const prodRes = await pool.query(
-      `SELECT id, user_id, industry, deleted_at
+      const pool = getPool();
+      const prodRes = await pool.query(
+        `SELECT id, user_id, industry, deleted_at
        FROM products WHERE id = $1`,
-      [productId]
-    );
+        [productId],
+      );
 
-    if (prodRes.rows.length === 0 || prodRes.rows[0].deleted_at) {
-      return res.status(404).json({ error: 'Product not found' });
+      if (prodRes.rows.length === 0 || prodRes.rows[0].deleted_at) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+      if (String(prodRes.rows[0].user_id) !== String(userId)) {
+        return res.status(403).json({ error: "Invalid feedback link" });
+      }
+      if (
+        prodRes.rows[0].industry &&
+        String(prodRes.rows[0].industry).toLowerCase() !==
+          String(industry).toLowerCase()
+      ) {
+        return res.status(403).json({ error: "Invalid feedback link" });
+      }
+
+      const result = await persistFeedbackAndEnqueue(pool, {
+        productId: String(productId),
+        feedback,
+        email,
+        rating,
+        idempotencyKey,
+        clientIp: req.ip,
+      });
+
+      return res.status(result.duplicate ? 200 : 201).json({
+        message: result.duplicate
+          ? "Feedback already received"
+          : "Feedback received and queued for analysis",
+        id: result.id,
+        processing_status: "queued",
+      });
+    } catch (err) {
+      logger.error("Legacy feedback submit error", {
+        error: err instanceof Error ? err.message : "unknown",
+      });
+      const safe = toSafeClientError(err);
+      return res.status(safe.status).json(safe.body);
     }
-    if (String(prodRes.rows[0].user_id) !== String(userId)) {
-      return res.status(403).json({ error: 'Invalid feedback link' });
-    }
-    if (
-      prodRes.rows[0].industry &&
-      String(prodRes.rows[0].industry).toLowerCase() !== String(industry).toLowerCase()
-    ) {
-      return res.status(403).json({ error: 'Invalid feedback link' });
-    }
+  },
+);
 
-    const result = await persistFeedbackAndEnqueue(pool, {
-      productId: String(productId),
-      feedback,
-      email,
-      rating,
-      idempotencyKey,
-      clientIp: req.ip,
+router.get(
+  "/public/:token/meta",
+  feedbackSubmitLimiter,
+  async (_req: Request, res: Response) => {
+    return res.status(410).json({
+      error:
+        "Generic public feedback links have been retired. Please use single-use customer links or scan the counter QR code.",
     });
-
-    return res.status(result.duplicate ? 200 : 201).json({
-      message: result.duplicate
-        ? 'Feedback already received'
-        : 'Feedback received and queued for analysis',
-      id: result.id,
-      processing_status: 'queued',
-    });
-  } catch (err) {
-    logger.error('Legacy feedback submit error', {
-      error: err instanceof Error ? err.message : 'unknown',
-    });
-    const safe = toSafeClientError(err);
-    return res.status(safe.status).json(safe.body);
-  }
-});
-
-router.get('/public/:token/meta', feedbackSubmitLimiter, async (_req: Request, res: Response) => {
-  return res.status(410).json({
-    error: 'Generic public feedback links have been retired. Please use single-use customer links or scan the counter QR code.',
-  });
-});
+  },
+);
 
 /**
  * Counter QR Dispenser.
  * When a customer scans a printed counter QR code, this endpoint dynamically
  * dispenses a fresh, private single-use invitation token for this visit.
  */
-router.post('/scan/:identifier/dispense', feedbackSubmitLimiter, async (req: Request, res: Response) => {
-  const pool = getPool();
-  const identifier = String(Array.isArray(req.params.identifier) ? req.params.identifier[0] : req.params.identifier);
+router.post(
+  "/scan/:identifier/dispense",
+  feedbackSubmitLimiter,
+  async (req: Request, res: Response) => {
+    const pool = getPool();
+    const identifier = String(
+      Array.isArray(req.params.identifier)
+        ? req.params.identifier[0]
+        : req.params.identifier,
+    );
 
-  try {
-    const result = await dispenseCounterInvitation(pool, identifier);
-    return res.status(201).json(result);
-  } catch (err) {
-    const safe = toSafeClientError(err);
-    return res.status(safe.status).json(safe.body);
-  }
-});
+    try {
+      const result = await dispenseCounterInvitation(pool, identifier);
+      return res.status(201).json(result);
+    } catch (err) {
+      const safe = toSafeClientError(err);
+      return res.status(safe.status).json(safe.body);
+    }
+  },
+);
 
-router.get('/scan/:identifier/dispense', feedbackSubmitLimiter, async (req: Request, res: Response) => {
-  const pool = getPool();
-  const identifier = String(Array.isArray(req.params.identifier) ? req.params.identifier[0] : req.params.identifier);
+router.get(
+  "/scan/:identifier/dispense",
+  feedbackSubmitLimiter,
+  async (req: Request, res: Response) => {
+    const pool = getPool();
+    const identifier = String(
+      Array.isArray(req.params.identifier)
+        ? req.params.identifier[0]
+        : req.params.identifier,
+    );
 
-  try {
-    const result = await dispenseCounterInvitation(pool, identifier);
-    return res.status(200).json(result);
-  } catch (err) {
-    const safe = toSafeClientError(err);
-    return res.status(safe.status).json(safe.body);
-  }
-});
+    try {
+      const result = await dispenseCounterInvitation(pool, identifier);
+      return res.status(200).json(result);
+    } catch (err) {
+      const safe = toSafeClientError(err);
+      return res.status(safe.status).json(safe.body);
+    }
+  },
+);
 
 /**
  * Single-use customer invitation verification.
  * Checks that the token is active and has not been submitted yet.
  */
-router.get('/invite/:token/meta', feedbackSubmitLimiter, async (req: Request, res: Response) => {
-  const pool = getPool();
-  const token = String(Array.isArray(req.params.token) ? req.params.token[0] : req.params.token);
+router.get(
+  "/invite/:token/meta",
+  feedbackSubmitLimiter,
+  async (req: Request, res: Response) => {
+    const pool = getPool();
+    const token = String(
+      Array.isArray(req.params.token) ? req.params.token[0] : req.params.token,
+    );
 
-  try {
-    const result = await verifyInvitation(pool, token);
+    try {
+      const result = await verifyInvitation(pool, token);
 
-    return res.json({
-      product_id: result.product.id,
-      product_name: result.product.name,
-      industry: result.product.industry,
-      token: result.token,
-    });
-  } catch (err) {
-    const safe = toSafeClientError(err);
-    return res.status(safe.status).json(safe.body);
-  }
-});
+      return res.json({
+        product_id: result.product.id,
+        product_name: result.product.name,
+        industry: result.product.industry,
+        token: result.token,
+      });
+    } catch (err) {
+      const safe = toSafeClientError(err);
+      return res.status(safe.status).json(safe.body);
+    }
+  },
+);
 
 /**
  * Single-use customer feedback submission.
  * Atomically consumes and burns the invitation token.
  */
-router.post('/invite/:token/submit', feedbackSubmitLimiter, async (req: Request, res: Response) => {
-  const pool = getPool();
-  const maxChars = PUBLIC_SUBMIT_MAX_CHARS;
-  const token = String(Array.isArray(req.params.token) ? req.params.token[0] : req.params.token);
+router.post(
+  "/invite/:token/submit",
+  feedbackSubmitLimiter,
+  async (req: Request, res: Response) => {
+    const pool = getPool();
+    const maxChars = PUBLIC_SUBMIT_MAX_CHARS;
+    const token = String(
+      Array.isArray(req.params.token) ? req.params.token[0] : req.params.token,
+    );
 
-  try {
-    const { feedback, email, rating } = validateFeedbackBody(req.body, maxChars);
+    try {
+      const { feedback, email, rating } = validateFeedbackBody(
+        req.body,
+        maxChars,
+      );
 
-    const result = await submitInvitationFeedback(pool, {
-      token,
-      feedback,
-      email,
-      rating,
-      clientIp: req.ip,
-    });
+      const result = await submitInvitationFeedback(pool, {
+        token,
+        feedback,
+        email,
+        rating,
+        clientIp: req.ip,
+      });
 
-    return res.status(201).json({
-      message: 'Feedback received and securely recorded. Thank you!',
-      id: result.feedbackId,
-      status: 'completed',
-    });
-  } catch (err) {
-    const safe = toSafeClientError(err);
-    return res.status(safe.status).json(safe.body);
-  }
-});
-
-router.get('/date-groups', authenticateUser as any, async (req: AuthenticatedRequest, res: Response) => {
-  const productId = req.query.product_id as string;
-  const categoryFilters = parseCategoryFilter(req.query.category);
-  const sentimentFilter = req.query.sentiment as string;
-  const priorityFilter = req.query.priority as string;
-  const statusFilter = req.query.status as string;
-  const idsFilter = parseIdsFilter(req.query.ids);
-
-  if (!productId) return res.status(400).json({ error: 'product_id is required' });
-
-  const pool = getPool();
-  try {
-    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-    await requireProductAccess(pool, req.user.id, productId, 'feedback:read');
-
-    const conditions: string[] = ['product_id = $1', 'deleted_at IS NULL'];
-    const values: unknown[] = [productId];
-    let paramIndex = 2;
-
-    if (idsFilter.length > 0) {
-      conditions.push(`id = ANY($${paramIndex}::uuid[])`);
-      values.push(idsFilter);
-      paramIndex++;
+      return res.status(201).json({
+        message: "Feedback received and securely recorded. Thank you!",
+        id: result.feedbackId,
+        status: "completed",
+      });
+    } catch (err) {
+      const safe = toSafeClientError(err);
+      return res.status(safe.status).json(safe.body);
     }
-    if (categoryFilters.length === 1) {
-      conditions.push(`category_name = $${paramIndex}`);
-      values.push(categoryFilters[0]);
-      paramIndex++;
-    } else if (categoryFilters.length > 1) {
-      conditions.push(`category_name = ANY($${paramIndex}::text[])`);
-      values.push(categoryFilters);
-      paramIndex++;
-    }
-    if (sentimentFilter && sentimentFilter !== 'all') {
-      conditions.push(`LOWER(sentiment_label) = LOWER($${paramIndex})`);
-      values.push(sentimentFilter);
-      paramIndex++;
-    }
-    if (priorityFilter && priorityFilter !== 'all') {
-      conditions.push(`LOWER(priority_label) LIKE LOWER($${paramIndex})`);
-      values.push(`%${priorityFilter}%`);
-      paramIndex++;
-    }
-    if (statusFilter && statusFilter !== 'all') {
-      if (statusFilter === 'processing' || statusFilter === 'pending') {
-        conditions.push(`processing_status IN ('queued', 'analyzing', 'received')`);
-      } else if (statusFilter === 'analyzed' || statusFilter === 'completed') {
-        conditions.push(`processing_status = 'analyzed'`);
-      } else {
-        conditions.push(`processing_status = $${paramIndex}`);
-        values.push(statusFilter);
+  },
+);
+
+router.get(
+  "/date-groups",
+  authenticateUser as any,
+  async (req: AuthenticatedRequest, res: Response) => {
+    const productId = req.query.product_id as string;
+    const categoryFilters = parseCategoryFilter(req.query.category);
+    const sentimentFilter = req.query.sentiment as string;
+    const priorityFilter = req.query.priority as string;
+    const statusFilter = req.query.status as string;
+    const idsFilter = parseIdsFilter(req.query.ids);
+
+    if (!productId)
+      return res.status(400).json({ error: "product_id is required" });
+
+    const pool = getPool();
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      await requireProductAccess(pool, req.user.id, productId, "feedback:read");
+
+      const conditions: string[] = ["product_id = $1", "deleted_at IS NULL"];
+      const values: unknown[] = [productId];
+      let paramIndex = 2;
+
+      if (idsFilter.length > 0) {
+        conditions.push(`id = ANY($${paramIndex}::uuid[])`);
+        values.push(idsFilter);
         paramIndex++;
       }
-    }
-
-    const ratingFilter = req.query.rating as string;
-    if (ratingFilter && ratingFilter !== 'all') {
-      conditions.push(`rating = $${paramIndex}::int`);
-      values.push(ratingFilter);
-      paramIndex++;
-    }
-
-    const searchFilter = (req.query.search as string)?.trim();
-    if (searchFilter) {
-      conditions.push(`(feedback ILIKE $${paramIndex} OR email ILIKE $${paramIndex})`);
-      values.push(`%${searchFilter}%`);
-      paramIndex++;
-    }
-
-    const period = req.query.period as string;
-    const customStart = req.query.start_date as string;
-    const customEnd = req.query.end_date as string;
-    if (period && period !== 'all') {
-      const { startDate, endDate } = parsePeriodBounds(period, customStart, customEnd);
-      if (startDate) {
-        conditions.push(`created_at >= $${paramIndex}`);
-        values.push(startDate);
+      if (categoryFilters.length === 1) {
+        conditions.push(`category_name = $${paramIndex}`);
+        values.push(categoryFilters[0]);
+        paramIndex++;
+      } else if (categoryFilters.length > 1) {
+        conditions.push(`category_name = ANY($${paramIndex}::text[])`);
+        values.push(categoryFilters);
         paramIndex++;
       }
-      if (endDate) {
-        conditions.push(`created_at <= $${paramIndex}`);
-        values.push(endDate);
+      if (sentimentFilter && sentimentFilter !== "all") {
+        conditions.push(`LOWER(sentiment_label) = LOWER($${paramIndex})`);
+        values.push(sentimentFilter);
         paramIndex++;
       }
-    }
+      if (priorityFilter && priorityFilter !== "all") {
+        conditions.push(`LOWER(priority_label) LIKE LOWER($${paramIndex})`);
+        values.push(`%${priorityFilter}%`);
+        paramIndex++;
+      }
+      if (statusFilter && statusFilter !== "all") {
+        if (statusFilter === "processing" || statusFilter === "pending") {
+          conditions.push(
+            `processing_status IN ('queued', 'analyzing', 'received')`,
+          );
+        } else if (
+          statusFilter === "analyzed" ||
+          statusFilter === "completed"
+        ) {
+          conditions.push(`processing_status = 'analyzed'`);
+        } else {
+          conditions.push(`processing_status = $${paramIndex}`);
+          values.push(statusFilter);
+          paramIndex++;
+        }
+      }
 
-    const query = `
+      const ratingFilter = req.query.rating as string;
+      if (ratingFilter && ratingFilter !== "all") {
+        conditions.push(`rating = $${paramIndex}::int`);
+        values.push(ratingFilter);
+        paramIndex++;
+      }
+
+      const searchFilter = (req.query.search as string)?.trim();
+      if (searchFilter) {
+        conditions.push(
+          `(feedback ILIKE $${paramIndex} OR email ILIKE $${paramIndex})`,
+        );
+        values.push(`%${searchFilter}%`);
+        paramIndex++;
+      }
+
+      const period = req.query.period as string;
+      const customStart = req.query.start_date as string;
+      const customEnd = req.query.end_date as string;
+      if (period && period !== "all") {
+        const { startDate, endDate } = parsePeriodBounds(
+          period,
+          customStart,
+          customEnd,
+        );
+        if (startDate) {
+          conditions.push(`created_at >= $${paramIndex}`);
+          values.push(startDate);
+          paramIndex++;
+        }
+        if (endDate) {
+          conditions.push(`created_at <= $${paramIndex}`);
+          values.push(endDate);
+          paramIndex++;
+        }
+      }
+
+      const query = `
       SELECT
         TO_CHAR(COALESCE(created_at, NOW()), 'YYYY-MM-DD') AS date_key,
         TO_CHAR(COALESCE(created_at, NOW()), 'FMDDth FMMonth YYYY') AS formatted_date,
@@ -420,200 +504,274 @@ router.get('/date-groups', authenticateUser as any, async (req: AuthenticatedReq
         MAX(TO_CHAR(COALESCE(created_at, NOW()), 'HH12:MI AM')) AS latest_time,
         MIN(TO_CHAR(COALESCE(created_at, NOW()), 'HH12:MI AM')) AS earliest_time
       FROM feedbacks
-      WHERE ${conditions.join(' AND ')}
+      WHERE ${conditions.join(" AND ")}
       GROUP BY TO_CHAR(COALESCE(created_at, NOW()), 'YYYY-MM-DD'),
                TO_CHAR(COALESCE(created_at, NOW()), 'FMDDth FMMonth YYYY')
       ORDER BY date_key DESC
     `;
 
-    const result = await pool.query(query, values);
-    return res.json(result.rows);
-  } catch (err) {
-    const safe = toSafeClientError(err);
-    return res.status(safe.status).json(safe.body);
-  }
-});
-
-router.get('/', authenticateUser as any, async (req: AuthenticatedRequest, res: Response) => {
-  const productId = req.query.product_id as string;
-  const categoryFilters = parseCategoryFilter(req.query.category);
-  const sentimentFilter = req.query.sentiment as string;
-  const priorityFilter = req.query.priority as string;
-  const statusFilter = req.query.status as string;
-  const dateParam = req.query.date as string;
-  const idsFilter = parseIdsFilter(req.query.ids);
-  const cursor = req.query.cursor as string | undefined;
-  const limitRaw = Number(req.query.limit || DEFAULT_FEEDBACK_PAGE_SIZE);
-  const limit = Math.min(
-    MAX_FEEDBACK_PAGE_SIZE,
-    Math.max(1, isNaN(limitRaw) ? DEFAULT_FEEDBACK_PAGE_SIZE : limitRaw)
-  );
-
-  if (!productId) return res.status(400).json({ error: 'product_id is required' });
-
-  const pool = getPool();
-  try {
-    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-    await requireProductAccess(pool, req.user.id, productId, 'feedback:read');
-
-    const conditions: string[] = ['product_id = $1', 'deleted_at IS NULL'];
-    const values: unknown[] = [productId];
-    let paramIndex = 2;
-
-    if (idsFilter.length > 0) {
-      conditions.push(`id = ANY($${paramIndex}::uuid[])`);
-      values.push(idsFilter);
-      paramIndex++;
+      const result = await pool.query(query, values);
+      return res.json(result.rows);
+    } catch (err) {
+      const safe = toSafeClientError(err);
+      return res.status(safe.status).json(safe.body);
     }
-    if (dateParam && dateParam !== 'all') {
-      conditions.push(`TO_CHAR(COALESCE(created_at, NOW()), 'YYYY-MM-DD') = $${paramIndex}`);
-      values.push(dateParam);
-      paramIndex++;
-    }
-    if (categoryFilters.length === 1) {
-      conditions.push(`category_name = $${paramIndex}`);
-      values.push(categoryFilters[0]);
-      paramIndex++;
-    } else if (categoryFilters.length > 1) {
-      conditions.push(`category_name = ANY($${paramIndex}::text[])`);
-      values.push(categoryFilters);
-      paramIndex++;
-    }
-    if (sentimentFilter && sentimentFilter !== 'all') {
-      conditions.push(`LOWER(sentiment_label) = LOWER($${paramIndex})`);
-      values.push(sentimentFilter);
-      paramIndex++;
-    }
-    if (priorityFilter && priorityFilter !== 'all') {
-      conditions.push(`LOWER(priority_label) LIKE LOWER($${paramIndex})`);
-      values.push(`%${priorityFilter}%`);
-      paramIndex++;
-    }
-    if (statusFilter && statusFilter !== 'all') {
-      if (statusFilter === 'processing' || statusFilter === 'pending') {
-        conditions.push(`processing_status IN ('queued', 'analyzing', 'received')`);
-      } else if (statusFilter === 'analyzed' || statusFilter === 'completed') {
-        conditions.push(`processing_status = 'analyzed'`);
-      } else {
-        conditions.push(`processing_status = $${paramIndex}`);
-        values.push(statusFilter);
+  },
+);
+
+router.get(
+  "/",
+  authenticateUser as any,
+  async (req: AuthenticatedRequest, res: Response) => {
+    const productId = req.query.product_id as string;
+    const categoryFilters = parseCategoryFilter(req.query.category);
+    const sentimentFilter = req.query.sentiment as string;
+    const priorityFilter = req.query.priority as string;
+    const statusFilter = req.query.status as string;
+    const dateParam = req.query.date as string;
+    const idsFilter = parseIdsFilter(req.query.ids);
+    const cursor = req.query.cursor as string | undefined;
+    const limitRaw = Number(req.query.limit || DEFAULT_FEEDBACK_PAGE_SIZE);
+    const limit = Math.min(
+      MAX_FEEDBACK_PAGE_SIZE,
+      Math.max(1, isNaN(limitRaw) ? DEFAULT_FEEDBACK_PAGE_SIZE : limitRaw),
+    );
+
+    if (!productId)
+      return res.status(400).json({ error: "product_id is required" });
+
+    const pool = getPool();
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+      await requireProductAccess(pool, req.user.id, productId, "feedback:read");
+
+      const conditions: string[] = ["product_id = $1", "deleted_at IS NULL"];
+      const values: unknown[] = [productId];
+      let paramIndex = 2;
+
+      if (idsFilter.length > 0) {
+        conditions.push(`id = ANY($${paramIndex}::uuid[])`);
+        values.push(idsFilter);
         paramIndex++;
       }
-    }
-
-    const ratingFilter = req.query.rating as string;
-    if (ratingFilter && ratingFilter !== 'all') {
-      conditions.push(`rating = $${paramIndex}::int`);
-      values.push(ratingFilter);
-      paramIndex++;
-    }
-
-    const searchFilter = (req.query.search as string)?.trim();
-    if (searchFilter) {
-      conditions.push(`(feedback ILIKE $${paramIndex} OR email ILIKE $${paramIndex})`);
-      values.push(`%${searchFilter}%`);
-      paramIndex++;
-    }
-
-    const period = req.query.period as string;
-    const customStart = req.query.start_date as string;
-    const customEnd = req.query.end_date as string;
-    if (period && period !== 'all') {
-      const { startDate, endDate } = parsePeriodBounds(period, customStart, customEnd);
-      if (startDate) {
-        conditions.push(`created_at >= $${paramIndex}`);
-        values.push(startDate);
+      if (dateParam && dateParam !== "all") {
+        conditions.push(
+          `TO_CHAR(COALESCE(created_at, NOW()), 'YYYY-MM-DD') = $${paramIndex}`,
+        );
+        values.push(dateParam);
         paramIndex++;
       }
-      if (endDate) {
-        conditions.push(`created_at <= $${paramIndex}`);
-        values.push(endDate);
+      if (categoryFilters.length === 1) {
+        conditions.push(`category_name = $${paramIndex}`);
+        values.push(categoryFilters[0]);
+        paramIndex++;
+      } else if (categoryFilters.length > 1) {
+        conditions.push(`category_name = ANY($${paramIndex}::text[])`);
+        values.push(categoryFilters);
         paramIndex++;
       }
-    }
-
-    // Cursor: base64url of created_at|id
-    if (cursor) {
-      try {
-        const decoded = Buffer.from(cursor, 'base64url').toString('utf8');
-        const [cursorTs, cursorId] = decoded.split('|');
-        conditions.push(`(created_at, id) < ($${paramIndex}::timestamptz, $${paramIndex + 1}::uuid)`);
-        values.push(cursorTs, cursorId);
-        paramIndex += 2;
-      } catch {
-        return res.status(400).json({ error: 'Invalid cursor' });
+      if (sentimentFilter && sentimentFilter !== "all") {
+        conditions.push(`LOWER(sentiment_label) = LOWER($${paramIndex})`);
+        values.push(sentimentFilter);
+        paramIndex++;
       }
-    }
+      if (priorityFilter && priorityFilter !== "all") {
+        conditions.push(`LOWER(priority_label) LIKE LOWER($${paramIndex})`);
+        values.push(`%${priorityFilter}%`);
+        paramIndex++;
+      }
+      if (statusFilter && statusFilter !== "all") {
+        if (statusFilter === "processing" || statusFilter === "pending") {
+          conditions.push(
+            `processing_status IN ('queued', 'analyzing', 'received')`,
+          );
+        } else if (
+          statusFilter === "analyzed" ||
+          statusFilter === "completed"
+        ) {
+          conditions.push(`processing_status = 'analyzed'`);
+        } else {
+          conditions.push(`processing_status = $${paramIndex}`);
+          values.push(statusFilter);
+          paramIndex++;
+        }
+      }
 
-    values.push(limit + 1);
-    const query = `
+      const ratingFilter = req.query.rating as string;
+      if (ratingFilter && ratingFilter !== "all") {
+        conditions.push(`rating = $${paramIndex}::int`);
+        values.push(ratingFilter);
+        paramIndex++;
+      }
+
+      const searchFilter = (req.query.search as string)?.trim();
+      if (searchFilter) {
+        conditions.push(
+          `(feedback ILIKE $${paramIndex} OR email ILIKE $${paramIndex})`,
+        );
+        values.push(`%${searchFilter}%`);
+        paramIndex++;
+      }
+
+      const period = req.query.period as string;
+      const customStart = req.query.start_date as string;
+      const customEnd = req.query.end_date as string;
+      if (period && period !== "all") {
+        const { startDate, endDate } = parsePeriodBounds(
+          period,
+          customStart,
+          customEnd,
+        );
+        if (startDate) {
+          conditions.push(`created_at >= $${paramIndex}`);
+          values.push(startDate);
+          paramIndex++;
+        }
+        if (endDate) {
+          conditions.push(`created_at <= $${paramIndex}`);
+          values.push(endDate);
+          paramIndex++;
+        }
+      }
+
+      // Cursor: base64url of created_at|id
+      if (cursor) {
+        try {
+          const decoded = Buffer.from(cursor, "base64url").toString("utf8");
+          const [cursorTs, cursorId] = decoded.split("|");
+          conditions.push(
+            `(created_at, id) < ($${paramIndex}::timestamptz, $${paramIndex + 1}::uuid)`,
+          );
+          values.push(cursorTs, cursorId);
+          paramIndex += 2;
+        } catch {
+          return res.status(400).json({ error: "Invalid cursor" });
+        }
+      }
+
+      values.push(limit + 1);
+      const query = `
       SELECT
         id, product_id, feedback, email, rating, status, processing_status,
         categories, category_name, sentiment_label, priority_label, confidence,
         raw_ai_metadata, created_at, received_at, analyzed_at, analysis_failed_at
       FROM feedbacks
-      WHERE ${conditions.join(' AND ')}
+      WHERE ${conditions.join(" AND ")}
       ORDER BY created_at DESC, id DESC
       LIMIT $${paramIndex}
     `;
 
-    const result = await pool.query(query, values);
-    const hasMore = result.rows.length > limit;
-    const items = hasMore ? result.rows.slice(0, limit) : result.rows;
-    const last = items[items.length - 1];
-    const nextCursor = hasMore && last
-      ? Buffer.from(`${new Date(last.created_at).toISOString()}|${last.id}`).toString('base64url')
-      : null;
+      const result = await pool.query(query, values);
+      const hasMore = result.rows.length > limit;
+      const items = hasMore ? result.rows.slice(0, limit) : result.rows;
+      const last = items[items.length - 1];
+      const nextCursor =
+        hasMore && last
+          ? Buffer.from(
+              `${new Date(last.created_at).toISOString()}|${last.id}`,
+            ).toString("base64url")
+          : null;
 
-    return res.json({
-      items,
-      pagination: {
-        limit,
-        has_more: hasMore,
-        next_cursor: nextCursor,
-      },
-      // Backward-compat: some clients expect a bare array — prefer items going forward
-      data: items,
-    });
-  } catch (err) {
-    const safe = toSafeClientError(err);
-    return res.status(safe.status).json(safe.body);
-  }
-});
+      return res.json({
+        items,
+        pagination: {
+          limit,
+          has_more: hasMore,
+          next_cursor: nextCursor,
+        },
+        // Backward-compat: some clients expect a bare array — prefer items going forward
+        data: items,
+      });
+    } catch (err) {
+      const safe = toSafeClientError(err);
+      return res.status(safe.status).json(safe.body);
+    }
+  },
+);
 
-router.delete('/:id', authenticateUser as any, async (req: AuthenticatedRequest, res: Response) => {
-  const { id } = req.params;
-  const pool = getPool();
-  try {
-    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+router.get(
+  "/:id",
+  authenticateUser as any,
+  async (req: AuthenticatedRequest, res: Response) => {
+    const { id } = req.params;
+    const pool = getPool();
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
 
-    const feedbackId = String(Array.isArray(id) ? id[0] : id);
-    const fb = await pool.query(
-      `SELECT f.id, f.product_id
+      const feedbackId = String(Array.isArray(id) ? id[0] : id);
+      const fb = await pool.query(
+        `SELECT
+        id, product_id, feedback, email, rating, status, processing_status,
+        categories, category_name, sentiment_label, priority_label, confidence,
+        raw_ai_metadata, created_at, received_at, analyzed_at, analysis_failed_at
+       FROM feedbacks
+       WHERE id = $1 AND deleted_at IS NULL`,
+        [feedbackId],
+      );
+      if (fb.rows.length === 0) {
+        return res.status(404).json({ error: "Resource not found" });
+      }
+
+      await requireProductAccess(
+        pool,
+        req.user.id,
+        fb.rows[0].product_id,
+        "feedback:read",
+      );
+
+      return res.json({ item: fb.rows[0] });
+    } catch (err) {
+      const safe = toSafeClientError(err);
+      return res.status(safe.status).json(safe.body);
+    }
+  },
+);
+
+router.delete(
+  "/:id",
+  authenticateUser as any,
+  async (req: AuthenticatedRequest, res: Response) => {
+    const { id } = req.params;
+    const pool = getPool();
+    try {
+      if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+
+      const feedbackId = String(Array.isArray(id) ? id[0] : id);
+      const fb = await pool.query(
+        `SELECT f.id, f.product_id
        FROM feedbacks f
        WHERE f.id = $1 AND f.deleted_at IS NULL`,
-      [feedbackId]
-    );
-    if (fb.rows.length === 0) {
-      return res.status(404).json({ error: 'Resource not found' });
+        [feedbackId],
+      );
+      if (fb.rows.length === 0) {
+        return res.status(404).json({ error: "Resource not found" });
+      }
+
+      await requireProductAccess(
+        pool,
+        req.user.id,
+        fb.rows[0].product_id,
+        "feedback:delete",
+      );
+
+      await pool.query(
+        `UPDATE feedbacks SET deleted_at = now() WHERE id = $1`,
+        [feedbackId],
+      );
+
+      await recordAudit(pool, {
+        actorUserId: req.user.id,
+        action: "feedback.deleted",
+        resourceType: "feedback",
+        resourceId: feedbackId,
+      });
+
+      return res.json({ message: "Feedback deleted" });
+    } catch (err) {
+      const safe = toSafeClientError(err);
+      return res.status(safe.status).json(safe.body);
     }
-
-    await requireProductAccess(pool, req.user.id, fb.rows[0].product_id, 'feedback:delete');
-
-    await pool.query(`UPDATE feedbacks SET deleted_at = now() WHERE id = $1`, [feedbackId]);
-
-    await recordAudit(pool, {
-      actorUserId: req.user.id,
-      action: 'feedback.deleted',
-      resourceType: 'feedback',
-      resourceId: feedbackId,
-    });
-
-    return res.json({ message: 'Feedback deleted' });
-  } catch (err) {
-    const safe = toSafeClientError(err);
-    return res.status(safe.status).json(safe.body);
-  }
-});
+  },
+);
 
 export default router;

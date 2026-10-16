@@ -11,6 +11,7 @@ import authRoutes from './routes/auth.js';
 import productRoutes from './routes/products.js';
 import feedbackRoutes from './routes/feedbacks.js';
 import analyticsRoutes from './routes/analytics.js';
+import intelligenceRoutes from './routes/intelligence.js';
 import opsRoutes from './routes/ops.js';
 import adminRoutes from './routes/admin.js';
 import { startWorkers } from './jobs/worker.js';
@@ -58,7 +59,7 @@ app.use(
       }
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Idempotency-Key', 'X-Request-Id'],
   })
 );
@@ -72,6 +73,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/feedbacks', feedbackRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/intelligence', intelligenceRoutes);
 app.use('/api/ops', opsRoutes);
 app.use('/api/admin', adminRoutes);
 

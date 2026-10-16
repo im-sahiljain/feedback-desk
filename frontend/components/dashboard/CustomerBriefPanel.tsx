@@ -37,10 +37,10 @@ export function CustomerBriefPanel({
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-primary" />
-          <CardTitle className="text-base">AI Customer Brief</CardTitle>
+          <CardTitle className="text-base">AI Summary</CardTitle>
         </div>
         <CardDescription>
-          Concise intelligence from your saved executive brief
+          Concise summary from analysed feedbacks
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -72,9 +72,6 @@ export function CustomerBriefPanel({
           <div className="space-y-3 rounded-lg border border-dashed bg-muted/20 px-4 py-6 text-center">
             <p className="text-sm font-medium">
               No customer brief for this period yet
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Generate a brief in Insights.
             </p>
             <Button asChild size="sm" className="gap-1.5">
               <Link href={insightsHref({ period })}>

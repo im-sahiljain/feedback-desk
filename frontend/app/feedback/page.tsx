@@ -911,12 +911,8 @@ function FeedbackInboxList({
 }
 
 function FeedbackPageContent() {
-  const {
-    currentProduct,
-    setCurrentProduct,
-    products,
-    isBootstrapping,
-  } = useApp();
+  const { currentProduct, setCurrentProduct, products, isBootstrapping } =
+    useApp();
   const searchParams = useSearchParams();
 
   const initialSentiment = searchParams.get("sentiment");
@@ -1575,10 +1571,7 @@ function FeedbackPageContent() {
               </SelectContent>
             </Select>
 
-            <Select
-              value={ratingFilter}
-              onValueChange={setRatingFilter}
-            >
+            <Select value={ratingFilter} onValueChange={setRatingFilter}>
               <SelectTrigger
                 className="h-8 w-[125px] text-xs"
                 aria-label="Rating filter"
@@ -1591,14 +1584,11 @@ function FeedbackPageContent() {
                 <SelectItem value="4">4 Stars ★★★★☆</SelectItem>
                 <SelectItem value="3">3 Stars ★★★☆☆</SelectItem>
                 <SelectItem value="2">2 Stars ★★☆☆☆</SelectItem>
-                <SelectItem value="1">1 Star  ★☆☆☆☆</SelectItem>
+                <SelectItem value="1">1 Star ★☆☆☆☆</SelectItem>
               </SelectContent>
             </Select>
 
-            <Select
-              value={periodFilter}
-              onValueChange={setPeriodFilter}
-            >
+            <Select value={periodFilter} onValueChange={setPeriodFilter}>
               <SelectTrigger
                 className="h-8 w-[120px] text-xs"
                 aria-label="Time period filter"
@@ -1613,10 +1603,7 @@ function FeedbackPageContent() {
               </SelectContent>
             </Select>
 
-            <Select
-              value={statusFilter}
-              onValueChange={setStatusFilter}
-            >
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger
                 className="h-8 w-[125px] text-xs"
                 aria-label="Status filter"
@@ -1679,7 +1666,7 @@ function FeedbackPageContent() {
 
         {loadError && <p className="text-xs text-destructive">{loadError}</p>}
 
-        <div className="grid min-h-0 flex-1 overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm md:grid-cols-[minmax(17rem,24rem)_minmax(0,1fr)]">
+        <div className="grid min-h-0 flex-1 overflow-hidden rounded-xl border border-border/70 bg-card shadow-lg md:grid-cols-[minmax(17rem,24rem)_minmax(0,1fr)]">
           <aside
             className={cn(
               "min-h-0 md:border-r md:border-border/60",

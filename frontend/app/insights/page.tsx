@@ -173,8 +173,7 @@ function InsightsContent() {
         briefBadgesRef.current.getBoundingClientRect();
     }
     if (starIconRef.current) {
-      flipFirstRects.current.star =
-        starIconRef.current.getBoundingClientRect();
+      flipFirstRects.current.star = starIconRef.current.getBoundingClientRect();
     }
     if (headerTitleRef.current) {
       flipFirstRects.current.title =
@@ -187,9 +186,9 @@ function InsightsContent() {
     const animateEl = (el: HTMLElement | null, first: DOMRect | null) => {
       if (!el || !first) return;
       const last = el.getBoundingClientRect();
-      const dx = first.left - last.left;
-      const dy = first.top - last.top;
-      if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
+      const dx = Math.round(first.left - last.left);
+      const dy = Math.round(first.top - last.top);
+      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
 
       if (typeof el.animate === "function") {
         el.getAnimations?.().forEach((a) => a.cancel());
@@ -463,10 +462,10 @@ function InsightsContent() {
           dateLabel: `Today at ${hourLabel}`,
           total: hourFeedback.length,
           positive: hourFeedback.filter(
-            (f) => f.analysis?.sentiment === "positive"
+            (f) => f.analysis?.sentiment === "positive",
           ).length,
           negative: hourFeedback.filter(
-            (f) => f.analysis?.sentiment === "negative"
+            (f) => f.analysis?.sentiment === "negative",
           ).length,
         };
       });
@@ -497,10 +496,10 @@ function InsightsContent() {
         dateLabel: fullDate,
         total: dayFeedback.length,
         positive: dayFeedback.filter(
-          (f) => f.analysis?.sentiment === "positive"
+          (f) => f.analysis?.sentiment === "positive",
         ).length,
         negative: dayFeedback.filter(
-          (f) => f.analysis?.sentiment === "negative"
+          (f) => f.analysis?.sentiment === "negative",
         ).length,
       };
     });
@@ -511,7 +510,7 @@ function InsightsContent() {
   const trendNegative = trendData.reduce((acc, d) => acc + d.negative, 0);
   const peakDay = trendData.reduce(
     (max, d) => (d.total > max.total ? d : max),
-    trendData[0] || { day: "-", total: 0 }
+    trendData[0] || { day: "-", total: 0 },
   );
   const dailyAverage = (trendTotal / Math.max(1, trendData.length)).toFixed(1);
 
@@ -561,26 +560,29 @@ function InsightsContent() {
         return (
           <Badge
             variant="destructive"
-            className="px-2.5 py-0.5 text-sm font-medium"
+            className="px-2.5 py-0.5 text-xs sm:text-sm font-medium"
           >
             Critical Alert
           </Badge>
         );
       case "Action Required":
         return (
-          <Badge className="bg-amber-600 hover:bg-amber-700 text-white px-2.5 py-0.5 text-sm font-medium">
+          <Badge className="bg-amber-600 hover:bg-amber-700 text-white border-transparent px-2.5 py-0.5 text-xs sm:text-sm font-medium">
             Action Required
           </Badge>
         );
       case "Needs Attention":
         return (
-          <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/25 px-2.5 py-0.5 text-sm font-medium">
+          <Badge
+            variant="outline"
+            className="bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 hover:bg-amber-500/20 px-2.5 py-0.5 text-xs sm:text-sm font-medium"
+          >
             Needs Attention
           </Badge>
         );
       case "Healthy":
         return (
-          <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-0.5 text-sm font-medium">
+          <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white border-transparent px-2.5 py-0.5 text-xs sm:text-sm font-medium">
             Healthy
           </Badge>
         );
@@ -588,7 +590,7 @@ function InsightsContent() {
         return (
           <Badge
             variant="secondary"
-            className="px-2.5 py-0.5 text-sm font-medium"
+            className="px-2.5 py-0.5 text-xs sm:text-sm font-medium"
           >
             Stable
           </Badge>
@@ -667,7 +669,7 @@ function InsightsContent() {
           </div>
         </Card>
 
-        {/* AI EXECUTIVE BRIEF */}
+        {/* AI Feeback Analysis */}
         <Card className="border-border shadow-sm">
           <CardHeader
             className={cn(
@@ -678,7 +680,7 @@ function InsightsContent() {
             <div className="flex items-center gap-2 sm:gap-3">
               <div
                 ref={starIconRef}
-                className="p-2 rounded-lg bg-primary/10 text-primary shrink-0 will-change-transform"
+                className="p-2 rounded-lg bg-primary/10 text-primary shrink-0"
               >
                 <Sparkles className="h-5 w-5" />
               </div>
@@ -693,13 +695,13 @@ function InsightsContent() {
               >
                 <CardTitle
                   ref={headerTitleRef}
-                  className="truncate text-lg font-semibold tracking-tight leading-tight will-change-transform sm:text-2xl sm:leading-snug"
+                  className="truncate text-lg font-semibold tracking-tight leading-tight sm:text-2xl sm:leading-snug"
                 >
-                  AI Executive Brief
+                  AI Feeback Analysis
                 </CardTitle>
                 <div
                   ref={briefBadgesRef}
-                  className="flex flex-row flex-wrap items-center gap-1.5 will-change-transform sm:gap-2"
+                  className="flex flex-row flex-wrap items-center gap-1.5 sm:gap-2"
                 >
                   {executiveBrief &&
                     getStatusBadge(
@@ -708,14 +710,14 @@ function InsightsContent() {
                     )}
                   <Badge
                     variant="outline"
-                    className="text-xs font-normal text-muted-foreground sm:text-sm"
+                    className="text-xs sm:text-sm font-medium text-muted-foreground"
                   >
                     {periodLabel}
                   </Badge>
                   {executiveBrief?.is_stale && (
                     <Badge
                       variant="destructive"
-                      className="text-xs font-normal sm:text-sm"
+                      className="text-xs sm:text-sm font-medium"
                     >
                       Outdated — regenerate
                     </Badge>
@@ -747,9 +749,7 @@ function InsightsContent() {
                       <Download className="h-4 w-4" />
                     </Button>
                     <Button
-                      variant={
-                        executiveBrief.is_stale ? "default" : "outline"
-                      }
+                      variant={executiveBrief.is_stale ? "default" : "outline"}
                       size="icon"
                       onClick={handleRegenerateBrief}
                       disabled={isRefreshingBrief || isBriefLoading}
@@ -766,9 +766,7 @@ function InsightsContent() {
                       />
                     </Button>
                     <Button
-                      variant={
-                        executiveBrief.is_stale ? "default" : "outline"
-                      }
+                      variant={executiveBrief.is_stale ? "default" : "outline"}
                       size="sm"
                       onClick={handleRegenerateBrief}
                       disabled={isRefreshingBrief || isBriefLoading}
@@ -793,8 +791,8 @@ function InsightsContent() {
                   aria-expanded={briefOpen}
                   aria-label={
                     briefOpen
-                      ? "Collapse AI executive brief"
-                      : "Expand AI executive brief"
+                      ? "Collapse AI Feeback Analysis"
+                      : "Expand AI Feeback Analysis"
                   }
                 >
                   <ChevronDown
@@ -859,304 +857,323 @@ function InsightsContent() {
           >
             <div className="min-h-0 overflow-hidden">
               <CardContent className="pt-4">
-            {isLoading || isBriefLoading ? (
-              <div className="space-y-4 py-10">
-                <div className="flex items-center justify-center gap-3 text-muted-foreground">
-                  <RefreshCw className="h-5 w-5 animate-spin text-primary" />
-                  <p className="text-base">
-                    {isBriefLoading
-                      ? `Synthesizing brief for ${periodLabel}...`
-                      : `Loading brief for ${periodLabel}...`}
-                  </p>
-                </div>
-                <div className="h-4 w-2/3 bg-muted animate-pulse rounded mx-auto" />
-                <div className="h-24 w-full bg-muted animate-pulse rounded" />
-              </div>
-            ) : executiveBrief ? (
-              <div className="space-y-8">
-                <section className="space-y-3">
-                  <h3 className="text-xl font-semibold leading-snug text-foreground">
-                    {executiveBrief.headline}
-                  </h3>
-                  <p className="text-base leading-7 text-muted-foreground">
-                    {executiveBrief.executive_summary}
-                  </p>
-                  {executiveBrief.data_context && (
-                    <div className="rounded-lg border border-border/70 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-                      <div className="flex flex-wrap gap-x-4 gap-y-1">
-                        <span>
-                          {executiveBrief.data_context.total_feedback} feedback
-                          items analyzed
-                        </span>
-                        <span>
-                          {executiveBrief.data_context.negative} negative
-                        </span>
-                        <span>
-                          {executiveBrief.data_context.high_priority} high
-                          priority
-                        </span>
-                        <span className="capitalize">
-                          Evidence:{" "}
-                          {executiveBrief.data_context.evidence_strength}
-                        </span>
-                      </div>
-                      <p className="mt-2 leading-6">
-                        {executiveBrief.data_context.evidence_note}
+                {isLoading || isBriefLoading ? (
+                  <div className="space-y-4 py-10">
+                    <div className="flex items-center justify-center gap-3 text-muted-foreground">
+                      <RefreshCw className="h-5 w-5 animate-spin text-primary" />
+                      <p className="text-base">
+                        {isBriefLoading
+                          ? `Synthesizing brief for ${periodLabel}...`
+                          : `Loading brief for ${periodLabel}...`}
                       </p>
                     </div>
-                  )}
-                </section>
-
-                {executiveBrief.key_findings?.length > 0 && (
-                  <section className="rounded-xl border border-amber-500/25 bg-amber-500/5 px-5 py-4 space-y-4">
-                    <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
-                      <Zap className="h-4 w-4 fill-current shrink-0" />
-                      <h3 className="text-base font-semibold">Key findings</h3>
-                    </div>
-                    <div className="space-y-3">
-                      {executiveBrief.key_findings.map((finding, index) => (
-                        <article
-                          key={`${finding.finding}-${index}`}
-                          className="space-y-1"
-                        >
-                          <p className="text-sm leading-6 text-foreground">
-                            {finding.finding}
+                    <div className="h-4 w-2/3 bg-muted animate-pulse rounded mx-auto" />
+                    <div className="h-24 w-full bg-muted animate-pulse rounded" />
+                  </div>
+                ) : executiveBrief ? (
+                  <div className="space-y-8">
+                    <section className="space-y-3">
+                      <h3 className="text-xl font-semibold leading-snug text-foreground">
+                        {executiveBrief.headline}
+                      </h3>
+                      <p className="text-base leading-7 text-muted-foreground">
+                        {executiveBrief.executive_summary}
+                      </p>
+                      {executiveBrief.data_context && (
+                        <div className="rounded-lg border border-border/70 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+                          <div className="flex flex-wrap gap-x-4 gap-y-1">
+                            <span>
+                              {executiveBrief.data_context.total_feedback}{" "}
+                              feedback items analyzed
+                            </span>
+                            <span>
+                              {executiveBrief.data_context.negative} negative
+                            </span>
+                            <span>
+                              {executiveBrief.data_context.high_priority} high
+                              priority
+                            </span>
+                            <span className="capitalize">
+                              Evidence:{" "}
+                              {executiveBrief.data_context.evidence_strength}
+                            </span>
+                          </div>
+                          <p className="mt-2 leading-6">
+                            {executiveBrief.data_context.evidence_note}
                           </p>
-                          <EvidenceCountLink
-                            ids={finding.evidence_feedback_ids}
-                            productId={currentProduct?.id}
-                            className="text-xs text-muted-foreground"
-                          >
-                            {finding.full_period_count
-                              ? `${finding.evidence_count} matching feedback items in the period`
-                              : `${finding.evidence_count} supporting feedback item${finding.evidence_count === 1 ? "" : "s"}`}
-                          </EvidenceCountLink>
-                        </article>
-                      ))}
-                    </div>
-                  </section>
-                )}
+                        </div>
+                      )}
+                    </section>
 
-                {executiveBrief.reported_issues &&
-                  executiveBrief.reported_issues.length > 0 && (
+                    {executiveBrief.key_findings?.length > 0 && (
+                      <section className="rounded-xl border border-amber-500/25 bg-amber-500/5 px-5 py-4 space-y-4">
+                        <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
+                          <Zap className="h-4 w-4 fill-current shrink-0" />
+                          <h3 className="text-base font-semibold">
+                            Key findings
+                          </h3>
+                        </div>
+                        <div className="space-y-3">
+                          {executiveBrief.key_findings.map((finding, index) => (
+                            <article
+                              key={`${finding.finding}-${index}`}
+                              className="space-y-1"
+                            >
+                              <p className="text-sm leading-6 text-foreground">
+                                {finding.finding}
+                              </p>
+                              <EvidenceCountLink
+                                ids={finding.evidence_feedback_ids}
+                                productId={currentProduct?.id}
+                                className="text-xs text-muted-foreground"
+                              >
+                                {finding.full_period_count
+                                  ? `${finding.evidence_count} matching feedback items in the period`
+                                  : `${finding.evidence_count} supporting feedback item${finding.evidence_count === 1 ? "" : "s"}`}
+                              </EvidenceCountLink>
+                            </article>
+                          ))}
+                        </div>
+                      </section>
+                    )}
+
+                    {executiveBrief.reported_issues &&
+                      executiveBrief.reported_issues.length > 0 && (
+                        <section className="space-y-4">
+                          <div className="flex items-center gap-2">
+                            <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
+                            <h3 className="text-base font-semibold text-foreground">
+                              Reported customer issues
+                            </h3>
+                          </div>
+
+                          <div className="grid gap-3 md:grid-cols-2">
+                            {executiveBrief.reported_issues.map(
+                              (issue, index) => (
+                                <article
+                                  key={`${issue.issue}-${index}`}
+                                  className="rounded-xl border border-border bg-card p-4 space-y-2"
+                                >
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    {issue.topic && (
+                                      <Badge
+                                        variant="outline"
+                                        className="text-xs"
+                                      >
+                                        {issue.topic}
+                                      </Badge>
+                                    )}
+
+                                    {issue.severity && (
+                                      <Badge
+                                        variant="secondary"
+                                        className="text-xs capitalize"
+                                      >
+                                        {issue.severity} severity
+                                      </Badge>
+                                    )}
+                                  </div>
+
+                                  <p className="font-medium text-sm leading-6">
+                                    {issue.issue}
+                                  </p>
+
+                                  <EvidenceCountLink
+                                    ids={issue.evidence_feedback_ids}
+                                    productId={currentProduct?.id}
+                                    className="text-xs text-muted-foreground"
+                                  >
+                                    Evidence: {issue.evidence_count} supporting
+                                    feedback{" "}
+                                    {issue.evidence_count === 1
+                                      ? "item"
+                                      : "items"}
+                                  </EvidenceCountLink>
+                                </article>
+                              ),
+                            )}
+                          </div>
+                        </section>
+                      )}
+
                     <section className="space-y-4">
                       <div className="flex items-center gap-2">
-                        <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
+                        <Activity className="h-4 w-4 text-primary shrink-0" />
                         <h3 className="text-base font-semibold text-foreground">
-                          Reported customer issues
+                          Root-cause hypotheses
                         </h3>
                       </div>
-
-                      <div className="grid gap-3 md:grid-cols-2">
-                        {executiveBrief.reported_issues.map((issue, index) => (
-                          <article
-                            key={`${issue.issue}-${index}`}
-                            className="rounded-xl border border-border bg-card p-4 space-y-2"
-                          >
-                            <div className="flex flex-wrap items-center gap-2">
-                              {issue.topic && (
-                                <Badge variant="outline" className="text-xs">
-                                  {issue.topic}
-                                </Badge>
-                              )}
-
-                              {issue.severity && (
-                                <Badge
-                                  variant="secondary"
-                                  className="text-xs capitalize"
-                                >
-                                  {issue.severity} severity
-                                </Badge>
-                              )}
-                            </div>
-
-                            <p className="font-medium text-sm leading-6">
-                              {issue.issue}
-                            </p>
-
-                            <EvidenceCountLink
-                              ids={issue.evidence_feedback_ids}
-                              productId={currentProduct?.id}
-                              className="text-xs text-muted-foreground"
-                            >
-                              Evidence: {issue.evidence_count} supporting
-                              feedback{" "}
-                              {issue.evidence_count === 1 ? "item" : "items"}
-                            </EvidenceCountLink>
-                          </article>
-                        ))}
-                      </div>
-                    </section>
-                  )}
-
-                <section className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Activity className="h-4 w-4 text-primary shrink-0" />
-                    <h3 className="text-base font-semibold text-foreground">
-                      Root-cause hypotheses
-                    </h3>
-                  </div>
-                  {executiveBrief.root_cause_hypotheses?.length > 0 ? (
-                    <div className="grid gap-3 md:grid-cols-2">
-                      {executiveBrief.root_cause_hypotheses.map(
-                        (hypothesis, index) => (
-                          <article
-                            key={`${hypothesis.hypothesis}-${index}`}
-                            className="rounded-xl border border-border bg-muted/20 p-4 space-y-2"
-                          >
-                            <div className="flex items-center justify-between gap-2">
-                              <Badge variant="outline" className="capitalize">
-                                {hypothesis.confidence} confidence
-                              </Badge>
-                              <EvidenceCountLink
-                                ids={hypothesis.evidence_feedback_ids}
-                                productId={currentProduct?.id}
-                                className="text-xs text-muted-foreground"
+                      {executiveBrief.root_cause_hypotheses?.length > 0 ? (
+                        <div className="grid gap-3 md:grid-cols-2">
+                          {executiveBrief.root_cause_hypotheses.map(
+                            (hypothesis, index) => (
+                              <article
+                                key={`${hypothesis.hypothesis}-${index}`}
+                                className="rounded-xl border border-border bg-muted/20 p-4 space-y-2"
                               >
-                                {hypothesis.evidence_feedback_ids.length}{" "}
-                                supporting item
-                                {hypothesis.evidence_feedback_ids.length === 1
-                                  ? ""
-                                  : "s"}
-                              </EvidenceCountLink>
-                            </div>
-                            <p className="text-sm leading-6 text-foreground">
-                              {hypothesis.hypothesis}
-                            </p>
-                          </article>
-                        ),
-                      )}
-                    </div>
-                  ) : (
-                    <p className="text-sm leading-6 text-muted-foreground rounded-lg border border-border/70 bg-muted/20 px-4 py-3">
-                      No sufficiently supported root-cause hypothesis was
-                      identified from the available feedback.
-                    </p>
-                  )}
-                </section>
-
-                {executiveBrief.recommended_actions?.length > 0 && (
-                  <section className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <Target className="h-4 w-4 text-primary shrink-0" />
-                      <h3 className="text-base font-semibold text-foreground">
-                        Recommended actions
-                      </h3>
-                    </div>
-                    <div className="grid gap-4 lg:grid-cols-2">
-                      {executiveBrief.recommended_actions.map(
-                        (recommendation, index) => (
-                          <article
-                            key={`${recommendation.title}-${index}`}
-                            className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5"
-                          >
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-                                {recommendation.rank || index + 1}
-                              </span>
-                              {getUrgencyBadge(recommendation.urgency)}
-                              <Badge variant="outline">
-                                {recommendation.area}
-                              </Badge>
-                            </div>
-                            <div className="space-y-2">
-                              <h4 className="text-base font-semibold leading-snug text-foreground">
-                                {recommendation.title}
-                              </h4>
-                              <p className="text-sm leading-6 text-muted-foreground">
-                                {recommendation.action}
-                              </p>
-                            </div>
-                            <div className="border-t border-border pt-3 space-y-2 text-sm leading-6">
-                              <p>
-                                <span className="font-semibold text-foreground">
-                                  Why:
-                                </span>{" "}
-                                <span className="text-muted-foreground">
-                                  {recommendation.reason}
-                                </span>
-                              </p>
-                              {recommendation.expected_effect && (
-                                <p>
-                                  <span className="font-semibold text-foreground">
-                                    Expected effect:
-                                  </span>{" "}
-                                  <span className="text-muted-foreground">
-                                    {recommendation.expected_effect}
-                                  </span>
+                                <div className="flex items-center justify-between gap-2">
+                                  <Badge
+                                    variant="outline"
+                                    className="capitalize"
+                                  >
+                                    {hypothesis.confidence} confidence
+                                  </Badge>
+                                  <EvidenceCountLink
+                                    ids={hypothesis.evidence_feedback_ids}
+                                    productId={currentProduct?.id}
+                                    className="text-xs text-muted-foreground"
+                                  >
+                                    {hypothesis.evidence_feedback_ids.length}{" "}
+                                    supporting item
+                                    {hypothesis.evidence_feedback_ids.length ===
+                                    1
+                                      ? ""
+                                      : "s"}
+                                  </EvidenceCountLink>
+                                </div>
+                                <p className="text-sm leading-6 text-foreground">
+                                  {hypothesis.hypothesis}
                                 </p>
-                              )}
-                              <EvidenceCountLink
-                                ids={recommendation.evidence_feedback_ids}
-                                productId={currentProduct?.id}
-                                className="text-xs text-muted-foreground"
-                              >
-                                Evidence:{" "}
-                                {recommendation.evidence_feedback_ids.length}{" "}
-                                feedback item
-                                {recommendation.evidence_feedback_ids.length ===
-                                1
-                                  ? ""
-                                  : "s"}
-                              </EvidenceCountLink>
-                            </div>
-                          </article>
-                        ),
+                              </article>
+                            ),
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-sm leading-6 text-muted-foreground rounded-lg border border-border/70 bg-muted/20 px-4 py-3">
+                          No sufficiently supported root-cause hypothesis was
+                          identified from the available feedback.
+                        </p>
                       )}
-                    </div>
-                  </section>
-                )}
+                    </section>
 
-                {executiveBrief.strengths?.length > 0 && (
-                  <section className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 px-5 py-4 space-y-3">
-                    <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
-                      <CheckCircle2 className="h-4 w-4 shrink-0" />
-                      <h3 className="text-base font-semibold">
-                        Strengths to keep
-                      </h3>
-                    </div>
-                    <ul className="space-y-3">
-                      {executiveBrief.strengths.map((strength, index) => (
-                        <li
-                          key={`${strength.strength}-${index}`}
-                          className="text-sm leading-6 text-foreground"
-                        >
-                          <span>{strength.strength}</span>
-                          <EvidenceCountLink
-                            ids={strength.evidence_feedback_ids}
-                            productId={currentProduct?.id}
-                            className="ml-2 text-xs text-muted-foreground"
-                          >
-                            {strength.evidence_count} supporting feedback item
-                            {strength.evidence_count === 1 ? "" : "s"}
-                          </EvidenceCountLink>
-                        </li>
-                      ))}
-                    </ul>
-                  </section>
+                    {executiveBrief.recommended_actions?.length > 0 && (
+                      <section className="space-y-4">
+                        <div className="flex items-center gap-2">
+                          <Target className="h-4 w-4 text-primary shrink-0" />
+                          <h3 className="text-base font-semibold text-foreground">
+                            Recommended actions
+                          </h3>
+                        </div>
+                        <div className="grid gap-4 lg:grid-cols-2">
+                          {executiveBrief.recommended_actions.map(
+                            (recommendation, index) => (
+                              <article
+                                key={`${recommendation.title}-${index}`}
+                                className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5"
+                              >
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                                    {recommendation.rank || index + 1}
+                                  </span>
+                                  {getUrgencyBadge(recommendation.urgency)}
+                                  <Badge variant="outline">
+                                    {recommendation.area}
+                                  </Badge>
+                                </div>
+                                <div className="space-y-2">
+                                  <h4 className="text-base font-semibold leading-snug text-foreground">
+                                    {recommendation.title}
+                                  </h4>
+                                  <p className="text-sm leading-6 text-muted-foreground">
+                                    {recommendation.action}
+                                  </p>
+                                </div>
+                                <div className="border-t border-border pt-3 space-y-2 text-sm leading-6">
+                                  <p>
+                                    <span className="font-semibold text-foreground">
+                                      Why:
+                                    </span>{" "}
+                                    <span className="text-muted-foreground">
+                                      {recommendation.reason}
+                                    </span>
+                                  </p>
+                                  {recommendation.expected_effect && (
+                                    <p>
+                                      <span className="font-semibold text-foreground">
+                                        Expected effect:
+                                      </span>{" "}
+                                      <span className="text-muted-foreground">
+                                        {recommendation.expected_effect}
+                                      </span>
+                                    </p>
+                                  )}
+                                  <EvidenceCountLink
+                                    ids={recommendation.evidence_feedback_ids}
+                                    productId={currentProduct?.id}
+                                    className="text-xs text-muted-foreground"
+                                  >
+                                    Evidence:{" "}
+                                    {
+                                      recommendation.evidence_feedback_ids
+                                        .length
+                                    }{" "}
+                                    feedback item
+                                    {recommendation.evidence_feedback_ids
+                                      .length === 1
+                                      ? ""
+                                      : "s"}
+                                  </EvidenceCountLink>
+                                </div>
+                              </article>
+                            ),
+                          )}
+                        </div>
+                      </section>
+                    )}
+
+                    {executiveBrief.strengths?.length > 0 && (
+                      <section className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 px-5 py-4 space-y-3">
+                        <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
+                          <CheckCircle2 className="h-4 w-4 shrink-0" />
+                          <h3 className="text-base font-semibold">
+                            Strengths to keep
+                          </h3>
+                        </div>
+                        <ul className="space-y-3">
+                          {executiveBrief.strengths.map((strength, index) => (
+                            <li
+                              key={`${strength.strength}-${index}`}
+                              className="text-sm leading-6 text-foreground"
+                            >
+                              <span>{strength.strength}</span>
+                              <EvidenceCountLink
+                                ids={strength.evidence_feedback_ids}
+                                productId={currentProduct?.id}
+                                className="ml-2 text-xs text-muted-foreground"
+                              >
+                                {strength.evidence_count} supporting feedback
+                                item
+                                {strength.evidence_count === 1 ? "" : "s"}
+                              </EvidenceCountLink>
+                            </li>
+                          ))}
+                        </ul>
+                      </section>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-10 space-y-4">
+                    <p className="text-base text-foreground font-medium">
+                      No AI brief for {periodLabel.toLowerCase()}
+                    </p>
+                    <p className="text-sm leading-6 text-muted-foreground max-w-md mx-auto">
+                      Generate AI Feeback Analysis for this period.
+                    </p>
+                    {generateError && (
+                      <p className="text-sm text-destructive">
+                        {generateError}
+                      </p>
+                    )}
+                    <Button
+                      onClick={() => handleGenerateBrief(false)}
+                      disabled={isBriefLoading}
+                      className="gap-2"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      Generate Brief
+                    </Button>
+                  </div>
                 )}
-              </div>
-            ) : (
-              <div className="text-center py-10 space-y-4">
-                <p className="text-base text-foreground font-medium">
-                  No AI brief for {periodLabel.toLowerCase()}
-                </p>
-                <p className="text-sm leading-6 text-muted-foreground max-w-md mx-auto">
-                  Generate AI Executive Brief for this period.
-                </p>
-                {generateError && (
-                  <p className="text-sm text-destructive">{generateError}</p>
-                )}
-                <Button
-                  onClick={() => handleGenerateBrief(false)}
-                  disabled={isBriefLoading}
-                  className="gap-2"
-                >
-                  <Sparkles className="h-4 w-4" />
-                  Generate Brief
-                </Button>
-              </div>
-            )}
               </CardContent>
             </div>
           </div>
@@ -1264,9 +1281,13 @@ function InsightsContent() {
                 <div>
                   <div className="flex items-center gap-2">
                     <SmilePlus className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                    <CardTitle className="text-base">Sentiment Breakdown</CardTitle>
+                    <CardTitle className="text-base">
+                      Sentiment Breakdown
+                    </CardTitle>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">Distribution across sentiments</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Distribution across sentiments
+                  </p>
                 </div>
                 <Badge variant="secondary" className="text-[11px] font-normal">
                   {stats.analyzed} total
@@ -1343,7 +1364,9 @@ function InsightsContent() {
                           <span className="text-muted-foreground">
                             {item.name}
                           </span>
-                          <span className="font-semibold text-foreground">{item.value}</span>
+                          <span className="font-semibold text-foreground">
+                            {item.value}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -1361,7 +1384,9 @@ function InsightsContent() {
                       Priority Distribution
                     </CardTitle>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">Triage severity allocation</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Triage severity allocation
+                  </p>
                 </div>
                 <Badge variant="secondary" className="text-[11px] font-normal">
                   {stats.analyzed} total
@@ -1438,7 +1463,9 @@ function InsightsContent() {
                           <span className="text-muted-foreground">
                             {item.name}
                           </span>
-                          <span className="font-semibold text-foreground">{item.value}</span>
+                          <span className="font-semibold text-foreground">
+                            {item.value}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -1461,7 +1488,10 @@ function InsightsContent() {
                   </p>
                 </div>
                 {trendTotal > 0 && (
-                  <Badge variant="secondary" className="text-[11px] font-normal">
+                  <Badge
+                    variant="secondary"
+                    className="text-[11px] font-normal"
+                  >
                     {selectedPeriod === "today"
                       ? `Avg ${dailyAverage}/hr`
                       : `Avg ${dailyAverage}/day`}
@@ -1484,9 +1514,23 @@ function InsightsContent() {
                           margin={{ top: 12, right: 12, left: 0, bottom: 4 }}
                         >
                           <defs>
-                            <linearGradient id="activityTrendGrad" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.35} />
-                              <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
+                            <linearGradient
+                              id="activityTrendGrad"
+                              x1="0"
+                              y1="0"
+                              x2="0"
+                              y2="1"
+                            >
+                              <stop
+                                offset="5%"
+                                stopColor="hsl(var(--primary))"
+                                stopOpacity={0.35}
+                              />
+                              <stop
+                                offset="95%"
+                                stopColor="hsl(var(--primary))"
+                                stopOpacity={0.02}
+                              />
                             </linearGradient>
                           </defs>
                           <CartesianGrid
@@ -1496,22 +1540,36 @@ function InsightsContent() {
                           />
                           <XAxis
                             dataKey="day"
-                            tick={{ fontSize: 10.5, fill: "hsl(var(--muted-foreground))" }}
+                            tick={{
+                              fontSize: 10.5,
+                              fill: "hsl(var(--muted-foreground))",
+                            }}
                             tickLine={false}
                             axisLine={{ stroke: "hsl(var(--border))" }}
-                            interval={trendData.length <= 7 ? 0 : "preserveStartEnd"}
+                            interval={
+                              trendData.length <= 7 ? 0 : "preserveStartEnd"
+                            }
                             minTickGap={trendData.length <= 7 ? 0 : 25}
                             dy={4}
                           />
                           <YAxis
                             allowDecimals={false}
-                            domain={[0, (dataMax: number) => Math.max(dataMax + 1, 2)]}
+                            domain={[
+                              0,
+                              (dataMax: number) => Math.max(dataMax + 1, 2),
+                            ]}
                             ticks={
                               peakDay.total <= 3
-                                ? Array.from({ length: Math.max(peakDay.total + 2, 3) }, (_, i) => i)
+                                ? Array.from(
+                                    { length: Math.max(peakDay.total + 2, 3) },
+                                    (_, i) => i,
+                                  )
                                 : undefined
                             }
-                            tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                            tick={{
+                              fontSize: 11,
+                              fill: "hsl(var(--muted-foreground))",
+                            }}
                             width={24}
                             tickLine={false}
                             axisLine={false}
@@ -1528,18 +1586,24 @@ function InsightsContent() {
                                     <div className="pt-1 space-y-0.5 border-t border-border/50">
                                       <p className="text-muted-foreground flex items-center justify-between gap-4">
                                         <span>Total Feedback:</span>
-                                        <span className="font-semibold text-foreground">{d.total}</span>
+                                        <span className="font-semibold text-foreground">
+                                          {d.total}
+                                        </span>
                                       </p>
                                       {d.positive > 0 && (
                                         <p className="text-emerald-600 dark:text-emerald-400 flex items-center justify-between gap-4">
                                           <span>Positive:</span>
-                                          <span className="font-medium">{d.positive}</span>
+                                          <span className="font-medium">
+                                            {d.positive}
+                                          </span>
                                         </p>
                                       )}
                                       {d.negative > 0 && (
                                         <p className="text-rose-600 dark:text-rose-400 flex items-center justify-between gap-4">
                                           <span>Negative:</span>
-                                          <span className="font-medium">{d.negative}</span>
+                                          <span className="font-medium">
+                                            {d.negative}
+                                          </span>
                                         </p>
                                       )}
                                     </div>
@@ -1575,21 +1639,29 @@ function InsightsContent() {
                       <div className="flex items-center gap-1.5 text-xs">
                         <div className="w-2.5 h-2.5 rounded-full bg-primary" />
                         <span className="text-muted-foreground">Total</span>
-                        <span className="font-semibold text-foreground">{trendTotal}</span>
+                        <span className="font-semibold text-foreground">
+                          {trendTotal}
+                        </span>
                       </div>
                       <div className="flex items-center gap-1.5 text-xs">
                         <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
                         <span className="text-muted-foreground">Positive</span>
-                        <span className="font-semibold text-foreground">{trendPositive}</span>
+                        <span className="font-semibold text-foreground">
+                          {trendPositive}
+                        </span>
                       </div>
                       <div className="flex items-center gap-1.5 text-xs">
                         <div className="w-2.5 h-2.5 rounded-full bg-rose-500" />
                         <span className="text-muted-foreground">Negative</span>
-                        <span className="font-semibold text-foreground">{trendNegative}</span>
+                        <span className="font-semibold text-foreground">
+                          {trendNegative}
+                        </span>
                       </div>
                       <div className="flex items-center gap-1.5 text-xs">
                         <span className="text-muted-foreground">Peak:</span>
-                        <span className="font-semibold text-foreground">{peakDay.day} ({peakDay.total})</span>
+                        <span className="font-semibold text-foreground">
+                          {peakDay.day} ({peakDay.total})
+                        </span>
                       </div>
                     </div>
                   </>

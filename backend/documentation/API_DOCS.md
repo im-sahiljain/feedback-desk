@@ -172,3 +172,17 @@ Used by the end-user widget to submit feedback. **No Token Required.**
   ]
 }
 ```
+
+## Issue Intelligence (Module 1 extension)
+
+Authenticated routes under `/api/intelligence`:
+
+- `GET /issues?product_id=<uuid>&days=30` — ranked persisted issue clusters, evidence IDs, sentiment/priority counts and window-over-window trends.
+- `POST /reconcile?product_id=<uuid>` — link up to 300 new feedback records into conservative category-scoped token clusters. Repeat while `remaining` is true.
+- `GET /issues/:id/evidence?product_id=<uuid>` — underlying feedback evidence (max 150).
+- `GET /issues/:id/history?product_id=<uuid>` — audit-friendly change events (max 100).
+- `PATCH /issues/:id?product_id=<uuid>` — editable `status`, `assignee`, `due_at`, and `resolution_notes` fields. Demo users cannot modify issues.
+- `POST /ask?product_id=<uuid>` — body `{ "question": "Which issues are increasing?", "days": 30 }`, returns deterministic matching summaries, source IDs and limitations.
+- `GET /alerts?product_id=<uuid>&days=30` — in-app emerging/urgent/overdue signals (max 50); not external notifications.
+
+The new persistence migration is `017_issue_intelligence.sql`. Full implementation notes and known limitations: `../../docs/MODULE_1_ISSUE_INTELLIGENCE_IMPLEMENTATION.md`.

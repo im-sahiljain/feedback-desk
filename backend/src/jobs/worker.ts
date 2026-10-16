@@ -1,12 +1,29 @@
-import { randomUUID } from 'node:crypto';
-import { getPool } from '../db.js';
-import { getConfig } from '../config/env.js';
-import { claimNextJob, completeJob, failJob, getQueueDepth, reclaimStaleLocks } from './queue.js';
-import { classifyImpactSingle, ANALYSIS_VERSION, SCHEMA_VERSION, PROMPT_VERSION } from '../ai/classify.js';
-import { sanitizeForAi } from '../ai/sanitize.js';
-import { logger } from '../logging/logger.js';
+import { reconcile } from "../intelligence/issues.js";
+import {
+  createSignals,
+  deliverAlertEmails,
+  syncCustomerIdentities,
+} from "../intelligence/advanced.js";
+import { randomUUID } from "node:crypto";
+import { getPool } from "../db.js";
+import { getConfig } from "../config/env.js";
+import {
+  claimNextJob,
+  completeJob,
+  failJob,
+  getQueueDepth,
+  reclaimStaleLocks,
+} from "./queue.js";
+import {
+  classifyImpactSingle,
+  ANALYSIS_VERSION,
+  SCHEMA_VERSION,
+  PROMPT_VERSION,
+} from "../ai/classify.js";
+import { sanitizeForAi } from "../ai/sanitize.js";
+import { logger } from "../logging/logger.js";
 
-export const JOB_ANALYZE_FEEDBACK = 'analyze_feedback';
+export const JOB_ANALYZE_FEEDBACK = "analyze_feedback";
 
 /** How often idle workers attempt stale-lock reclaim (ms). */
 const RECLAIM_POLL_INTERVAL_MS = 60_000;
@@ -32,8 +49,8 @@ async function runStaleLockReclaim(force = false): Promise<void> {
     try {
       await reclaimStaleLocks(getPool(), timeoutSeconds);
     } catch (err) {
-      logger.error('Stale lock reclaim failed', {
-        error: err instanceof Error ? err.message : 'unknown',
+      logger.error("Stale lock reclaim failed", {
+        error: err instanceof Error ? err.message : "unknown",
       });
     } finally {
       reclaimInFlight = null;
@@ -52,9 +69,9 @@ export async function processAnalyzeFeedbackJob(job: {
   created_at: Date;
 }): Promise<void> {
   const pool = getPool();
-  const feedbackId = String(job.payload.feedbackId || job.resource_id || '');
+  const feedbackId = String(job.payload.feedbackId || job.resource_id || "");
   if (!feedbackId) {
-    throw new Error('Missing feedbackId in job payload');
+    throw new Error("Missing feedbackId in job payload");
   }
 
   const fbRes = await pool.query<{
@@ -65,11 +82,14 @@ export async function processAnalyzeFeedbackJob(job: {
   }>(
     `SELECT id, feedback, product_id, processing_status
      FROM feedbacks WHERE id = $1 AND deleted_at IS NULL`,
-    [feedbackId]
+    [feedbackId],
   );
 
   if (fbRes.rows.length === 0) {
-    logger.warn('Feedback missing for analysis job; completing', { jobId: job.id, feedbackId });
+    logger.warn("Feedback missing for analysis job; completing", {
+      jobId: job.id,
+      feedbackId,
+    });
     await completeJob(pool, job.id);
     return;
   }
@@ -77,23 +97,26 @@ export async function processAnalyzeFeedbackJob(job: {
   const feedback = fbRes.rows[0];
 
   // Idempotent: already analyzed
-  if (feedback.processing_status === 'analyzed') {
+  if (feedback.processing_status === "analyzed") {
     await completeJob(pool, job.id);
     return;
   }
 
-  const queueWaitMs = Math.max(0, Date.now() - new Date(job.created_at).getTime());
+  const queueWaitMs = Math.max(
+    0,
+    Date.now() - new Date(job.created_at).getTime(),
+  );
 
   await pool.query(
     `UPDATE feedbacks
      SET processing_status = 'analyzing', analyzing_at = now(), status = 'analyzing'
      WHERE id = $1`,
-    [feedbackId]
+    [feedbackId],
   );
 
   const labelsRes = await pool.query<{ settings: { categories?: string[] } }>(
-    'SELECT settings FROM products WHERE id = $1',
-    [feedback.product_id]
+    "SELECT settings FROM products WHERE id = $1",
+    [feedback.product_id],
   );
   const customLabels = Array.isArray(labelsRes.rows[0]?.settings?.categories)
     ? labelsRes.rows[0].settings.categories!
@@ -137,19 +160,20 @@ export async function processAnalyzeFeedbackJob(job: {
       String(analysis.category.confidence),
       JSON.stringify(analysis),
       sanitized,
-    ]
+    ],
   );
 
   await pool.query(
     `INSERT INTO ai_processing_metrics
-     (job_id, feedback_id, provider, model_name, success, latency_ms, queue_wait_ms,
+     (job_id, feedback_id, product_id, operation_type, provider, model_name, success, latency_ms, queue_wait_ms,
       retry_count, parse_failure, prompt_version, schema_version, analysis_version,
       token_input, token_output, estimated_cost_usd)
-     VALUES ($1::uuid,$2::uuid,$3::text,$4::text,TRUE,$5::integer,$6::integer,$7::integer,$8::boolean,$9::text,$10::text,$11::text,
-             $12::integer,$13::integer,$14::numeric)`,
+     VALUES ($1::uuid,$2::uuid,$3::uuid,'classification',$4::text,$5::text,TRUE,$6::integer,$7::integer,$8::integer,$9::boolean,$10::text,$11::text,$12::text,
+             $13::integer,$14::integer,$15::numeric)`,
     [
       job.id,
       feedbackId,
+      feedback.product_id,
       analysis.model_provider,
       analysis.model_name,
       latencyMs,
@@ -162,23 +186,47 @@ export async function processAnalyzeFeedbackJob(job: {
       analysis.token_input ?? null,
       analysis.token_output ?? null,
       analysis.estimated_cost_usd ?? null,
-    ]
+    ],
   );
 
   await completeJob(pool, job.id);
+  // Best-effort enrichment: a clustering failure must never reprocess or fail a successfully analyzed feedback.
+  try {
+    await reconcile(pool, feedback.product_id, 50);
+    await syncCustomerIdentities(pool, feedback.product_id);
+    await createSignals(pool, feedback.product_id);
+    await deliverAlertEmails(pool, feedback.product_id);
+  } catch (issueError) {
+    logger.warn("Issue intelligence reconciliation delayed", {
+      feedbackId,
+      reason: issueError instanceof Error ? issueError.message : "unknown",
+    });
+  }
 }
 
 async function handleJobFailure(
-  job: { id: string; attempts: number; max_attempts: number; resource_id: string | null; payload: Record<string, unknown> },
-  err: unknown
+  job: {
+    id: string;
+    attempts: number;
+    max_attempts: number;
+    resource_id: string | null;
+    payload: Record<string, unknown>;
+  },
+  err: unknown,
 ): Promise<void> {
   const pool = getPool();
-  const message = err instanceof Error ? err.message : 'Unknown error';
-  const outcome = await failJob(pool, job.id, message, job.attempts, job.max_attempts);
+  const message = err instanceof Error ? err.message : "Unknown error";
+  const outcome = await failJob(
+    pool,
+    job.id,
+    message,
+    job.attempts,
+    job.max_attempts,
+  );
 
-  const feedbackId = String(job.payload.feedbackId || job.resource_id || '');
+  const feedbackId = String(job.payload.feedbackId || job.resource_id || "");
   if (feedbackId) {
-    const status = outcome === 'dead' ? 'analysis_failed' : 'queued';
+    const status = outcome === "dead" ? "analysis_failed" : "queued";
     await pool.query(
       `UPDATE feedbacks SET
          processing_status = $2::text,
@@ -187,7 +235,7 @@ async function handleJobFailure(
          analysis_failed_at = CASE WHEN $2::text = 'analysis_failed' THEN now() ELSE analysis_failed_at END,
          queued_at = CASE WHEN $2::text = 'queued' THEN now() ELSE queued_at END
        WHERE id = $1::uuid`,
-      [feedbackId, status, message.slice(0, 500)]
+      [feedbackId, status, message.slice(0, 500)],
     );
   }
 
@@ -201,15 +249,15 @@ async function handleJobFailure(
       feedbackId || null,
       MODEL_PLACEHOLDER,
       Math.max(0, job.attempts - 1),
-      'analysis_error',
+      "analysis_error",
       PROMPT_VERSION,
       SCHEMA_VERSION,
       ANALYSIS_VERSION,
-    ]
+    ],
   );
 }
 
-const MODEL_PLACEHOLDER = 'gemini-3.5-flash-lite';
+const MODEL_PLACEHOLDER = "gemini-3.5-flash-lite";
 
 async function workerLoop(workerId: string): Promise<void> {
   const pool = getPool();
@@ -241,8 +289,8 @@ async function workerLoop(workerId: string): Promise<void> {
       // 4500ms interval ensures worker runs at ~10-12 RPM, comfortably within quota
       await sleep(4500);
     } catch (err) {
-      logger.error('Worker loop error', {
-        error: err instanceof Error ? err.message : 'unknown',
+      logger.error("Worker loop error", {
+        error: err instanceof Error ? err.message : "unknown",
       });
       await sleep(2000);
     }
@@ -255,8 +303,11 @@ function sleep(ms: number) {
 
 export function startWorkers(): () => Promise<void> {
   const concurrency = getConfig().workerConcurrency;
-  const ids = Array.from({ length: concurrency }, () => `worker-${randomUUID().slice(0, 8)}`);
-  logger.info('Starting background workers', {
+  const ids = Array.from(
+    { length: concurrency },
+    () => `worker-${randomUUID().slice(0, 8)}`,
+  );
+  logger.info("Starting background workers", {
     concurrency,
     jobLockTimeoutSeconds: getConfig().jobLockTimeoutSeconds,
   });
@@ -270,12 +321,12 @@ export function startWorkers(): () => Promise<void> {
 
   return async () => {
     shuttingDown = true;
-    logger.info('Worker graceful shutdown initiated');
+    logger.info("Worker graceful shutdown initiated");
     const deadline = Date.now() + 15000;
     while (activeWorkers > 0 && Date.now() < deadline) {
       await sleep(200);
     }
     const depth = await getQueueDepth(getPool());
-    logger.info('Workers stopped', { queueDepth: depth, activeWorkers });
+    logger.info("Workers stopped", { queueDepth: depth, activeWorkers });
   };
 }

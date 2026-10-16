@@ -161,7 +161,7 @@ router.get('/ai-metrics', async (_req: AuthenticatedRequest, res: Response) => {
   const pool = getPool();
 
   try {
-    // 1. Latency & Token telemetry
+    // 1. Overall Latency & Token telemetry
     const metricsRes = await pool.query(`
       SELECT
         COUNT(*)::int AS total_ai_jobs,
@@ -171,6 +171,8 @@ router.get('/ai-metrics', async (_req: AuthenticatedRequest, res: Response) => {
         COALESCE(SUM(token_output), 0)::bigint AS candidate_tokens,
         COALESCE(SUM(token_input + token_output), 0)::bigint AS total_tokens,
         COALESCE(SUM(estimated_cost_usd), 0)::numeric AS estimated_cost_usd,
+        COUNT(*) FILTER (WHERE success = true)::int AS success_count,
+        COUNT(*) FILTER (WHERE success = false)::int AS failure_count,
         COUNT(*) FILTER (WHERE model_name ILIKE '%gemini%')::int AS gemini_success_count,
         COUNT(*) FILTER (WHERE model_name NOT ILIKE '%gemini%' OR model_name IS NULL)::int AS fallback_count
       FROM ai_processing_metrics
@@ -185,8 +187,54 @@ router.get('/ai-metrics', async (_req: AuthenticatedRequest, res: Response) => {
     const geminiCount = Number(m.gemini_success_count) || 0;
     const fallbackCount = Number(m.fallback_count) || 0;
     const geminiRatioPct = totalAiJobs > 0 ? Math.round((geminiCount / totalAiJobs) * 100) : 100;
+    const successCount = Number(m.success_count) || 0;
+    const successRatePct = totalAiJobs > 0 ? Number(((successCount / totalAiJobs) * 100).toFixed(1)) : 100;
 
-    // 2. Category taxonomy distribution across platform
+    // 2. Cost and token breakdown by operation type (classification, chat, embedding, clustering)
+    const operationsRes = await pool.query(`
+      SELECT
+        COALESCE(operation_type, 'classification') AS operation_type,
+        COUNT(*)::int AS count,
+        COALESCE(SUM(estimated_cost_usd), 0)::numeric AS cost_usd,
+        COALESCE(SUM(token_input), 0)::bigint AS prompt_tokens,
+        COALESCE(SUM(token_output), 0)::bigint AS candidate_tokens,
+        COALESCE(SUM(token_input + token_output), 0)::bigint AS total_tokens,
+        COALESCE(ROUND(AVG(latency_ms)), 0)::int AS avg_latency_ms,
+        COUNT(*) FILTER (WHERE success = true)::int AS success_count
+      FROM ai_processing_metrics
+      GROUP BY operation_type
+      ORDER BY cost_usd DESC, count DESC
+    `);
+
+    // 3. Cost breakdown by product / tenant
+    const productCostRes = await pool.query(`
+      SELECT
+        p.id AS product_id,
+        COALESCE(p.name, 'Unassigned / System') AS product_name,
+        COUNT(m.id)::int AS total_calls,
+        COALESCE(SUM(m.token_input + m.token_output), 0)::bigint AS total_tokens,
+        COALESCE(SUM(m.estimated_cost_usd), 0)::numeric AS total_cost_usd
+      FROM ai_processing_metrics m
+      LEFT JOIN products p ON p.id = m.product_id
+      GROUP BY p.id, p.name
+      ORDER BY total_cost_usd DESC
+      LIMIT 8
+    `);
+
+    // 4. Daily cost & request trends (last 30 days)
+    const dailyTrendsRes = await pool.query(`
+      SELECT
+        DATE_TRUNC('day', created_at)::date AS day,
+        COUNT(*)::int AS total_requests,
+        COALESCE(SUM(estimated_cost_usd), 0)::numeric AS cost_usd,
+        COALESCE(SUM(token_input + token_output), 0)::bigint AS total_tokens
+      FROM ai_processing_metrics
+      WHERE created_at >= NOW() - INTERVAL '30 days'
+      GROUP BY day
+      ORDER BY day ASC
+    `);
+
+    // 5. Category taxonomy distribution across platform
     const categoryRes = await pool.query(`
       SELECT
         COALESCE(NULLIF(category_name, ''), 'Uncategorized') AS category_name,
@@ -197,7 +245,7 @@ router.get('/ai-metrics', async (_req: AuthenticatedRequest, res: Response) => {
       LIMIT 10
     `);
 
-    // 3. Daily sentiment velocity (last 30 days)
+    // 6. Daily sentiment velocity (last 30 days)
     const velocityRes = await pool.query(`
       SELECT
         DATE_TRUNC('day', created_at)::date AS day,
@@ -211,7 +259,7 @@ router.get('/ai-metrics', async (_req: AuthenticatedRequest, res: Response) => {
       ORDER BY day ASC
     `);
 
-    // 4. Latest AI Executive Digest
+    // 7. Latest AI Executive Digest
     const briefRes = await pool.query(`
       SELECT brief AS structured_brief, period_key AS period, created_at
       FROM executive_briefs
@@ -231,13 +279,115 @@ router.get('/ai-metrics', async (_req: AuthenticatedRequest, res: Response) => {
         geminiSuccessCount: geminiCount,
         fallbackCount,
         geminiRatioPct,
+        successRatePct,
+        failureCount: Number(m.failure_count) || 0,
       },
+      operationsBreakdown: operationsRes.rows,
+      topProductCosts: productCostRes.rows,
+      dailyCostTrends: dailyTrendsRes.rows,
       categoryTaxonomy: categoryRes.rows,
       sentimentVelocity: velocityRes.rows,
       latestExecutiveDigest: briefRes.rows[0] || null,
     });
   } catch (err) {
     logger.error('Error in /api/admin/ai-metrics', { error: err instanceof Error ? err.message : 'unknown' });
+    const safe = toSafeClientError(err);
+    return res.status(safe.status).json(safe.body);
+  }
+});
+
+/**
+ * GET /api/admin/ai-metrics/logs
+ * Granular, paginated, and filterable telemetry logs for AI calls across the platform.
+ */
+router.get('/ai-metrics/logs', async (req: AuthenticatedRequest, res: Response) => {
+  const pool = getPool();
+  try {
+    const pageNum = Math.max(1, parseInt(req.query.page as string, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(req.query.limit as string, 10) || 20));
+    const offset = (pageNum - 1) * limitNum;
+
+    const operation = typeof req.query.operation === 'string' ? req.query.operation.trim() : '';
+    const status = typeof req.query.status === 'string' ? req.query.status.trim() : '';
+    const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
+
+    const conditions: string[] = [];
+    const values: any[] = [];
+    let idx = 1;
+
+    if (operation && operation !== 'all') {
+      conditions.push(`m.operation_type = $${idx++}`);
+      values.push(operation);
+    }
+
+    if (status === 'success') {
+      conditions.push(`m.success = TRUE`);
+    } else if (status === 'error') {
+      conditions.push(`m.success = FALSE`);
+    }
+
+    if (search) {
+      conditions.push(`(
+        m.model_name ILIKE $${idx} OR 
+        m.error_code ILIKE $${idx} OR 
+        p.name ILIKE $${idx} OR
+        u.email ILIKE $${idx}
+      )`);
+      values.push(`%${search}%`);
+      idx++;
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const countQuery = `
+      SELECT COUNT(*)::int AS total
+      FROM ai_processing_metrics m
+      LEFT JOIN products p ON p.id = m.product_id
+      LEFT JOIN users u ON u.id = m.user_id
+      ${whereClause}
+    `;
+    const countRes = await pool.query(countQuery, values);
+    const total = countRes.rows[0]?.total || 0;
+
+    const dataQuery = `
+      SELECT
+        m.id,
+        m.created_at,
+        m.operation_type,
+        m.model_name,
+        m.provider,
+        m.token_input,
+        m.token_output,
+        (m.token_input + m.token_output) AS total_tokens,
+        m.estimated_cost_usd,
+        m.latency_ms,
+        m.success,
+        m.error_code,
+        m.metadata,
+        m.product_id,
+        p.name AS product_name,
+        u.email AS user_email
+      FROM ai_processing_metrics m
+      LEFT JOIN products p ON p.id = m.product_id
+      LEFT JOIN users u ON u.id = m.user_id
+      ${whereClause}
+      ORDER BY m.created_at DESC
+      LIMIT $${idx++} OFFSET $${idx++}
+    `;
+    values.push(limitNum, offset);
+    const result = await pool.query(dataQuery, values);
+
+    return res.json({
+      logs: result.rows,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum),
+      },
+    });
+  } catch (err) {
+    logger.error('Error in /api/admin/ai-metrics/logs', { error: err instanceof Error ? err.message : 'unknown' });
     const safe = toSafeClientError(err);
     return res.status(safe.status).json(safe.body);
   }

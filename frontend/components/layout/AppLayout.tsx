@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useApp } from "@/context/AppContext";
+import { AiChatButton } from "@/components/ai/AiChatButton";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -80,7 +81,7 @@ export function AppLayout({
           </div>
         )}
 
-        <div className="flex shrink-0 items-start gap-3 px-4 py-4 md:gap-4 md:px-7 md:py-6">
+        <div className="flex shrink-0 items-start gap-3 px-4 py-4">
           <Button
             variant="ghost"
             size="icon"
@@ -115,14 +116,17 @@ export function AppLayout({
             className={cn(
               "mx-auto w-full max-w-7xl animate-fade-in",
               fill
-                ? "flex min-h-0 flex-1 flex-col px-4 pb-4 pt-3 md:px-7 md:pb-6 md:pt-4"
-                : "px-4 py-4 md:px-7 md:py-6",
+                ? "flex min-h-0 flex-1 flex-col px-4 pb-4 pt-3 "
+                : "px-4 py-4",
             )}
           >
             {children}
           </div>
         </div>
       </main>
+
+      {/* Application-wide floating AI Copilot button */}
+      <AiChatButton />
     </div>
   );
 }

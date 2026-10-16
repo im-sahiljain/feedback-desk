@@ -9,6 +9,7 @@ import {
   Package,
   MessageSquare,
   BarChart3,
+  ScanSearch,
   Settings,
   Plus,
   LogOut,
@@ -20,6 +21,7 @@ import {
   Check,
   Laptop,
   ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useApp } from "@/context/AppContext";
@@ -53,6 +55,8 @@ const navItems = [
   { title: "Products", url: "/products", icon: Package },
   { title: "Feedback", url: "/feedback", icon: MessageSquare },
   { title: "Insights", url: "/insights", icon: BarChart3 },
+  { title: "Issues", url: "/issues", icon: ScanSearch },
+  { title: "AI Copilot", url: "/chat", icon: Sparkles },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 
@@ -256,7 +260,7 @@ export function AppNavRail({
           <div className="mb-2 overflow-hidden">
             <button
               type="button"
-              className="flex h-10 w-full items-center overflow-hidden rounded-xl hover:bg-background/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+              className="flex h-10 w-full items-center overflow-hidden rounded-xl hover:bg-background/80 outline-none focus:outline-none focus-visible:outline-none transition-colors"
               onClick={() => setProductsOpen((o) => !o)}
               aria-expanded={productsOpen}
             >
@@ -297,7 +301,7 @@ export function AppNavRail({
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    className="mb-2 flex h-10 w-full items-center overflow-hidden rounded-xl hover:bg-background/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+                    className="mb-2 flex h-10 w-full items-center overflow-hidden rounded-xl hover:bg-background/80 outline-none focus:outline-none focus-visible:outline-none transition-colors"
                   >
                     <span className={cn(ICON_SLOT, "text-base leading-none")}>
                       {currentProduct ? (
@@ -318,7 +322,7 @@ export function AppNavRail({
                 </TooltipContent>
               )}
             </Tooltip>
-            <DropdownMenuContent side="right" align="start" className="w-56">
+            <DropdownMenuContent side="right" align="start" className="w-56" onCloseAutoFocus={(e) => e.preventDefault()}>
               {(products || []).length === 0 ? (
                 <DropdownMenuItem
                   onClick={openCreateProduct}
@@ -421,7 +425,7 @@ export function AppNavRail({
             <div className="overflow-hidden">
               <button
                 type="button"
-                className="flex h-10 w-full items-center overflow-hidden rounded-xl text-muted-foreground hover:bg-background/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+                className="flex h-10 w-full items-center overflow-hidden rounded-xl text-muted-foreground hover:bg-background/70 hover:text-foreground outline-none focus:outline-none focus-visible:outline-none transition-colors"
                 onClick={() => setThemeOpen((o) => !o)}
                 aria-expanded={themeOpen}
                 aria-label="Toggle theme options"
@@ -513,7 +517,7 @@ export function AppNavRail({
                   <DropdownMenuTrigger asChild>
                     <button
                       type="button"
-                      className="flex h-10 w-full items-center overflow-hidden rounded-xl text-muted-foreground hover:bg-background/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+                      className="flex h-10 w-full items-center overflow-hidden rounded-xl text-muted-foreground hover:bg-background/70 hover:text-foreground outline-none focus:outline-none focus-visible:outline-none transition-colors"
                       aria-label="Toggle theme"
                     >
                       <span className={cn(ICON_SLOT, "relative")}>
@@ -530,7 +534,7 @@ export function AppNavRail({
                   </TooltipContent>
                 )}
               </Tooltip>
-              <DropdownMenuContent side="right" align="end" sideOffset={8} className="w-36">
+              <DropdownMenuContent side="right" align="end" sideOffset={8} className="w-36" onCloseAutoFocus={(e) => e.preventDefault()}>
                 <DropdownMenuItem onClick={() => setTheme("light")} className="cursor-pointer flex items-center justify-between">
                   <span className="flex items-center gap-2">
                     <Sun className="h-4 w-4" />
@@ -562,7 +566,7 @@ export function AppNavRail({
               <TooltipTrigger asChild>
                 <button
                   type="button"
-                  className="flex h-10 w-full items-center overflow-hidden rounded-xl text-muted-foreground hover:bg-background/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+                  className="flex h-10 w-full items-center overflow-hidden rounded-xl text-muted-foreground hover:bg-background/70 hover:text-foreground outline-none focus:outline-none focus-visible:outline-none transition-colors"
                   onClick={toggleExpanded}
                   aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}
                 >
@@ -592,7 +596,7 @@ export function AppNavRail({
                   <DropdownMenuTrigger asChild>
                     <button
                       type="button"
-                      className="flex h-10 w-full items-center overflow-hidden rounded-xl text-muted-foreground hover:bg-background/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+                      className="flex h-10 w-full items-center overflow-hidden rounded-xl text-muted-foreground hover:bg-background/70 hover:text-foreground outline-none focus:outline-none focus-visible:outline-none transition-colors"
                       aria-label="User account menu"
                     >
                       <span className={ICON_SLOT}>
@@ -612,7 +616,7 @@ export function AppNavRail({
                   </TooltipContent>
                 )}
               </Tooltip>
-              <DropdownMenuContent side="right" align="end" className="w-56">
+              <DropdownMenuContent side="right" align="end" className="w-56" onCloseAutoFocus={(e) => e.preventDefault()}>
                 <div className="px-2 py-1.5">
                   <p className="text-sm font-medium">{user.name}</p>
                   <p className="text-xs text-muted-foreground">{user.email}</p>
@@ -654,7 +658,7 @@ export function AppNavRail({
               <TooltipTrigger asChild>
                 <button
                   type="button"
-                  className="flex h-10 w-full items-center overflow-hidden rounded-xl text-muted-foreground hover:bg-background/70 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+                  className="flex h-10 w-full items-center overflow-hidden rounded-xl text-muted-foreground hover:bg-background/70 hover:text-destructive outline-none focus:outline-none focus-visible:outline-none transition-colors"
                   onClick={() => api.auth.logout()}
                   aria-label="Logout"
                 >

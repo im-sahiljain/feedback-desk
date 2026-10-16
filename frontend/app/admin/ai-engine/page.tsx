@@ -5,10 +5,39 @@ import { useRouter } from "next/navigation";
 import { useApp } from "@/context/AppContext";
 import { api } from "@/lib/api";
 import { AdminLayout } from "@/components/layout/AdminLayout";
-import { Sparkles, RefreshCw, Play, Pause } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Sparkles,
+  RefreshCw,
+  Play,
+  Pause,
+  Coins,
+  Cpu,
+  Zap,
+  CheckCircle2,
+  AlertTriangle,
+  Search,
+  Filter,
+  ArrowUpRight,
+  Layers,
+  MessageSquare,
+  Tag,
+  Hash,
+  Building2,
+  ChevronLeft,
+  ChevronRight,
+  Activity,
+  SlidersHorizontal,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 
 export default function AdminAiEnginePage() {
   const { user, isBootstrapping } = useApp();
@@ -18,7 +47,23 @@ export default function AdminAiEnginePage() {
   const [isLivePolling, setIsLivePolling] = useState<boolean>(true);
   const [lastSyncTime, setLastSyncTime] = useState<string>("Just now");
 
+  // Metrics Data
   const [aiMetrics, setAiMetrics] = useState<any>(null);
+
+  // Telemetry Logs Data
+  const [logs, setLogs] = useState<any[]>([]);
+  const [logsPagination, setLogsPagination] = useState({
+    page: 1,
+    limit: 15,
+    total: 0,
+    totalPages: 1,
+  });
+  const [isLogsLoading, setIsLogsLoading] = useState<boolean>(false);
+
+  // Filters for Telemetry Logs
+  const [filterOperation, setFilterOperation] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   // RBAC Access Guard: Strictly verify role === 'admin'
   useEffect(() => {
@@ -31,23 +76,57 @@ export default function AdminAiEnginePage() {
     }
   }, [user, isBootstrapping, router]);
 
-  const loadData = useCallback(async () => {
-    setIsLoading(true);
+  const loadMetrics = useCallback(async () => {
     try {
       const res = await api.admin.getAiMetrics();
       setAiMetrics(res);
     } catch (err) {
       console.error("Failed to load AI metrics", err);
-    } finally {
-      setIsLoading(false);
     }
   }, []);
+
+  const loadLogs = useCallback(
+    async (page = 1) => {
+      setIsLogsLoading(true);
+      try {
+        const res = await api.admin.getAiLogs({
+          page,
+          limit: 15,
+          operation: filterOperation !== "all" ? filterOperation : undefined,
+          status: filterStatus !== "all" ? filterStatus : undefined,
+          search: searchQuery.trim() || undefined,
+        });
+        setLogs(res.logs || []);
+        if (res.pagination) {
+          setLogsPagination(res.pagination);
+        }
+      } catch (err) {
+        console.error("Failed to load AI logs", err);
+      } finally {
+        setIsLogsLoading(false);
+      }
+    },
+    [filterOperation, filterStatus, searchQuery]
+  );
+
+  const loadData = useCallback(async () => {
+    setIsLoading(true);
+    await Promise.all([loadMetrics(), loadLogs(1)]);
+    setIsLoading(false);
+  }, [loadMetrics, loadLogs]);
 
   useEffect(() => {
     if (user?.role === "admin") {
       loadData();
     }
   }, [user, loadData]);
+
+  // Handle filter changes for logs
+  useEffect(() => {
+    if (user?.role === "admin") {
+      loadLogs(1);
+    }
+  }, [filterOperation, filterStatus, loadLogs, user]);
 
   // Live Auto-Polling (every 6s)
   useEffect(() => {
@@ -57,8 +136,21 @@ export default function AdminAiEnginePage() {
       if (typeof document !== "undefined" && document.hidden) return;
 
       try {
-        const res = await api.admin.getAiMetrics();
-        setAiMetrics(res);
+        await loadMetrics();
+        // Silently reload current page of logs if on page 1
+        if (logsPagination.page === 1) {
+          const res = await api.admin.getAiLogs({
+            page: 1,
+            limit: 15,
+            operation: filterOperation !== "all" ? filterOperation : undefined,
+            status: filterStatus !== "all" ? filterStatus : undefined,
+            search: searchQuery.trim() || undefined,
+          });
+          setLogs(res.logs || []);
+          if (res.pagination) {
+            setLogsPagination(res.pagination);
+          }
+        }
         const now = new Date();
         setLastSyncTime(
           `${now.getHours().toString().padStart(2, "0")}:${now
@@ -72,7 +164,7 @@ export default function AdminAiEnginePage() {
     }, 6000);
 
     return () => clearInterval(interval);
-  }, [isLivePolling, user]);
+  }, [isLivePolling, user, loadMetrics, logsPagination.page, filterOperation, filterStatus, searchQuery]);
 
   if (isBootstrapping || !user || user.role !== "admin") {
     return (
@@ -85,10 +177,61 @@ export default function AdminAiEnginePage() {
     );
   }
 
+  const obs = aiMetrics?.observability || {};
+  const operations = aiMetrics?.operationsBreakdown || [];
+  const topProducts = aiMetrics?.topProductCosts || [];
+  const totalSpend = Number(obs.estimatedCostUsd || 0);
+
+  const getOperationBadge = (op: string) => {
+    switch (op) {
+      case "chat":
+        return (
+          <Badge className="bg-sky-500/10 text-sky-400 border border-sky-500/25 font-mono text-[10px] gap-1">
+            <MessageSquare className="h-2.5 w-2.5" />
+            AI Chat
+          </Badge>
+        );
+      case "embedding":
+        return (
+          <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 font-mono text-[10px] gap-1">
+            <Hash className="h-2.5 w-2.5" />
+            Embedding
+          </Badge>
+        );
+      case "clustering_verification":
+        return (
+          <Badge className="bg-purple-500/10 text-purple-400 border border-purple-500/25 font-mono text-[10px] gap-1">
+            <Layers className="h-2.5 w-2.5" />
+            Clustering
+          </Badge>
+        );
+      default:
+        return (
+          <Badge className="bg-orange-500/10 text-orange-400 border border-orange-500/25 font-mono text-[10px] gap-1">
+            <Tag className="h-2.5 w-2.5" />
+            Classification
+          </Badge>
+        );
+    }
+  };
+
+  const getOperationIcon = (op: string) => {
+    switch (op) {
+      case "chat":
+        return <MessageSquare className="h-4 w-4 text-sky-400" />;
+      case "embedding":
+        return <Hash className="h-4 w-4 text-emerald-400" />;
+      case "clustering_verification":
+        return <Layers className="h-4 w-4 text-purple-400" />;
+      default:
+        return <Tag className="h-4 w-4 text-orange-400" />;
+    }
+  };
+
   return (
     <AdminLayout
-      title="AI & Gemini Engine Observability"
-      description="Real-time latency trends, token consumption meter, API burn rate & category taxonomy"
+      title="AI Engine & Cost Observability"
+      description="Production telemetry ledger, token consumption meter, real-time burn rate & per-feature costing"
       activeTab="ai-engine"
       actions={
         <div className="flex items-center gap-2">
@@ -139,81 +282,273 @@ export default function AdminAiEnginePage() {
       }
     >
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="border-border/60">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-semibold text-muted-foreground uppercase">AI Latency (Avg / P95)</CardTitle>
+        {/* Top 4 KPI Observability & Cost Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* 1. Running Spend */}
+          <Card className="border-border/60 bg-gradient-to-br from-card to-card/60 relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-3 opacity-10">
+              <Coins className="h-16 w-16 text-orange-500" />
+            </div>
+            <CardHeader className="pb-1">
+              <CardTitle className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
+                <Coins className="h-3.5 w-3.5 text-orange-500" />
+                Cumulative Spend
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-black text-foreground">
-                {aiMetrics?.observability?.avgLatencyMs ?? 0}ms
+              <div className="text-2xl font-black text-foreground tracking-tight">
+                ${totalSpend.toFixed(4)} <span className="text-xs font-normal text-muted-foreground">USD</span>
               </div>
-              <p className="text-xs text-muted-foreground mt-1">P95: {aiMetrics?.observability?.p95LatencyMs ?? 0}ms</p>
-            </CardContent>
-          </Card>
-          <Card className="border-border/60">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-semibold text-muted-foreground uppercase">Token Consumption</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-black text-foreground">
-                {(Number(aiMetrics?.observability?.totalTokens ?? 0) / 1000).toFixed(1)}k
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                In: {(Number(aiMetrics?.observability?.promptTokens ?? 0) / 1000).toFixed(1)}k • Out: {(Number(aiMetrics?.observability?.candidateTokens ?? 0) / 1000).toFixed(1)}k
+              <p className="text-[11px] text-muted-foreground mt-1.5 flex items-center gap-1">
+                <span className="text-emerald-400 font-medium font-mono">
+                  {obs.totalAiJobs ? `${obs.totalAiJobs} calls logged` : "0 calls"}
+                </span>
+                <span>• Flash-Lite rates</span>
               </p>
             </CardContent>
           </Card>
-          <Card className="border-border/60">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-semibold text-muted-foreground uppercase">AI vs Fallback Ratio</CardTitle>
+
+          {/* 2. Token Consumption */}
+          <Card className="border-border/60 bg-gradient-to-br from-card to-card/60 relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-3 opacity-10">
+              <Cpu className="h-16 w-16 text-sky-500" />
+            </div>
+            <CardHeader className="pb-1">
+              <CardTitle className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
+                <Cpu className="h-3.5 w-3.5 text-sky-400" />
+                Total Tokens
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-black text-foreground">
-                {aiMetrics?.observability?.geminiRatioPct ?? 100}%
+              <div className="text-2xl font-black text-foreground tracking-tight">
+                {Number(obs.totalTokens || 0) > 1_000_000
+                  ? `${(Number(obs.totalTokens || 0) / 1_000_000).toFixed(2)}M`
+                  : `${(Number(obs.totalTokens || 0) / 1000).toFixed(1)}k`}
               </div>
-              <p className="text-xs text-emerald-500 mt-1">99.9% Gemini classification</p>
+              <p className="text-[11px] text-muted-foreground mt-1.5 font-mono">
+                In: {(Number(obs.promptTokens || 0) / 1000).toFixed(1)}k • Out: {(Number(obs.candidateTokens || 0) / 1000).toFixed(1)}k
+              </p>
             </CardContent>
           </Card>
-          <Card className="border-border/60">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-semibold text-muted-foreground uppercase">Running Cost (USD)</CardTitle>
+
+          {/* 3. Latency Metrics */}
+          <Card className="border-border/60 bg-gradient-to-br from-card to-card/60 relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-3 opacity-10">
+              <Zap className="h-16 w-16 text-amber-500" />
+            </div>
+            <CardHeader className="pb-1">
+              <CardTitle className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
+                <Zap className="h-3.5 w-3.5 text-amber-400" />
+                Engine Latency
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-black text-foreground">
-                ${aiMetrics?.observability?.estimatedCostUsd ?? "0.0000"}
+              <div className="text-2xl font-black text-foreground tracking-tight">
+                {obs.avgLatencyMs ?? 0}ms
               </div>
-              <p className="text-xs text-muted-foreground mt-1">Gemini 2.5 Flash token rates</p>
+              <p className="text-[11px] text-muted-foreground mt-1.5 font-mono">
+                P95 Latency: <span className="text-foreground font-semibold">{obs.p95LatencyMs ?? 0}ms</span>
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* 4. Engine Health & Success */}
+          <Card className="border-border/60 bg-gradient-to-br from-card to-card/60 relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-3 opacity-10">
+              <CheckCircle2 className="h-16 w-16 text-emerald-500" />
+            </div>
+            <CardHeader className="pb-1">
+              <CardTitle className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
+                <Activity className="h-3.5 w-3.5 text-emerald-400" />
+                Success Rate
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-black text-emerald-400 tracking-tight">
+                {obs.successRatePct ?? 100}%
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-1.5 flex items-center gap-1">
+                <span>{obs.geminiRatioPct ?? 100}% Gemini native</span>
+                {obs.failureCount > 0 && (
+                  <span className="text-rose-400">• {obs.failureCount} errors</span>
+                )}
+              </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* AI Category Taxonomy Heatmap */}
+        {/* Feature Cost Breakdown & Multi-Tenant Attribution */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Operation Cost Ledger (2 Cols) */}
+          <Card className="border-border/60 lg:col-span-2">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-base font-bold flex items-center gap-2">
+                    <SlidersHorizontal className="h-4 w-4 text-orange-500" />
+                    AI Spend Breakdown by Feature
+                  </CardTitle>
+                  <CardDescription className="text-xs mt-0.5">
+                    Attribution of token consumption and API spend across classification, chat, and embeddings
+                  </CardDescription>
+                </div>
+                <Badge variant="outline" className="text-xs font-mono">
+                  {operations.length} Active Operations
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {operations.length > 0 ? (
+                <div className="space-y-3.5">
+                  {operations.map((op: any, i: number) => {
+                    const cost = Number(op.cost_usd || 0);
+                    const pct = totalSpend > 0 ? Math.min(100, Math.round((cost / totalSpend) * 100)) : 0;
+                    return (
+                      <div
+                        key={i}
+                        className="p-3 rounded-lg border border-border/50 bg-muted/20 hover:bg-muted/40 transition-colors"
+                      >
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2 font-medium">
+                            {getOperationIcon(op.operation_type)}
+                            <span className="capitalize text-foreground font-semibold">
+                              {op.operation_type.replace("_", " ")}
+                            </span>
+                            <span className="text-[11px] text-muted-foreground font-normal">
+                              ({op.count} calls)
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <span className="font-bold text-foreground font-mono">
+                              ${cost.toFixed(4)}
+                            </span>
+                            <span className="text-muted-foreground text-[11px] ml-1.5 font-mono">
+                              ({pct}%)
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="h-2 w-full rounded-full bg-muted/60 mt-2 overflow-hidden">
+                          <div
+                            style={{ width: `${Math.max(4, pct)}%` }}
+                            className={`h-full rounded-full transition-all duration-300 ${
+                              op.operation_type === "chat"
+                                ? "bg-sky-500"
+                                : op.operation_type === "embedding"
+                                ? "bg-emerald-500"
+                                : op.operation_type === "clustering_verification"
+                                ? "bg-purple-500"
+                                : "bg-orange-500"
+                            }`}
+                          />
+                        </div>
+
+                        <div className="flex justify-between items-center text-[10px] text-muted-foreground mt-2 font-mono">
+                          <span>
+                            Tokens: {((Number(op.total_tokens) || 0) / 1000).toFixed(1)}k (In:{" "}
+                            {((Number(op.prompt_tokens) || 0) / 1000).toFixed(1)}k • Out:{" "}
+                            {((Number(op.candidate_tokens) || 0) / 1000).toFixed(1)}k)
+                          </span>
+                          <span>Avg: {op.avg_latency_ms || 0}ms</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-xs text-muted-foreground">
+                  No operational metrics recorded yet. Trigger classification or AI chat to see breakdown.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Top Tenant / Product Attribution (1 Col) */}
+          <Card className="border-border/60">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-bold flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-sky-400" />
+                Top Workspaces by Spend
+              </CardTitle>
+              <CardDescription className="text-xs mt-0.5">
+                Multi-tenant product attribution
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {topProducts.length > 0 ? (
+                <div className="space-y-3">
+                  {topProducts.map((p: any, i: number) => {
+                    const cost = Number(p.total_cost_usd || 0);
+                    return (
+                      <div
+                        key={i}
+                        className="flex items-center justify-between p-2.5 rounded-lg border border-border/40 bg-muted/20 text-xs"
+                      >
+                        <div className="min-w-0 pr-2">
+                          <p className="font-semibold text-foreground truncate">
+                            {p.product_name}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
+                            {p.total_calls} calls • {((Number(p.total_tokens) || 0) / 1000).toFixed(1)}k tokens
+                          </p>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <span className="font-bold text-foreground font-mono text-xs">
+                            ${cost.toFixed(4)}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-xs text-muted-foreground">
+                  No product metrics recorded yet.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* AI Category Taxonomy & Friction Points */}
         <Card className="border-border/60">
-          <CardHeader>
-            <CardTitle className="text-base font-bold flex items-center justify-between">
-              <span>Platform AI Category Taxonomy Breakdown</span>
-              <Badge variant="outline" className="text-xs font-mono">Top Friction Points</Badge>
-            </CardTitle>
-            <CardDescription className="text-xs">
-              Classifications assigned by Google Gemini across all ingested reviews
-            </CardDescription>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-base font-bold flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-orange-400" />
+                  AI Classification Taxonomy Breakdown
+                </CardTitle>
+                <CardDescription className="text-xs mt-0.5">
+                  Automated category labeling generated by Google Gemini across user reviews
+                </CardDescription>
+              </div>
+              <Badge variant="outline" className="text-xs font-mono">
+                Top Categories
+              </Badge>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-2">
               {aiMetrics?.categoryTaxonomy && aiMetrics.categoryTaxonomy.length > 0 ? (
                 aiMetrics.categoryTaxonomy.map((cat: any, i: number) => {
                   const total = aiMetrics?.observability?.totalAiJobs || 1;
                   const pct = Math.min(100, Math.round((Number(cat.count) / total) * 100));
                   return (
-                    <div key={i} className="space-y-1">
+                    <div
+                      key={i}
+                      className="p-3 rounded-lg border border-border/40 bg-muted/20 space-y-1.5"
+                    >
                       <div className="flex justify-between text-xs font-medium">
-                        <span className="text-foreground">{cat.category_name}</span>
-                        <span className="text-muted-foreground">{cat.count} ({pct}%)</span>
+                        <span className="text-foreground truncate" title={cat.category_name}>
+                          {cat.category_name}
+                        </span>
+                        <span className="text-muted-foreground font-mono ml-1">{cat.count}</span>
                       </div>
-                      <div className="h-2 w-full rounded-full bg-muted/60 overflow-hidden">
+                      <div className="h-1.5 w-full rounded-full bg-muted/60 overflow-hidden">
                         <div
-                          style={{ width: `${pct}%` }}
+                          style={{ width: `${Math.max(5, pct)}%` }}
                           className="h-full bg-orange-500 rounded-full transition-all duration-300"
                         />
                       </div>
@@ -221,9 +556,265 @@ export default function AdminAiEnginePage() {
                   );
                 })
               ) : (
-                <p className="text-xs text-muted-foreground text-center py-4">No categories recorded yet.</p>
+                <p className="text-xs text-muted-foreground text-center py-4 col-span-full">
+                  No taxonomy categories recorded yet.
+                </p>
               )}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Granular Real-Time AI Execution Telemetry Logs */}
+        <Card className="border-border/60">
+          <CardHeader>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <CardTitle className="text-base font-bold flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-orange-500" />
+                  Live AI Execution & Cost Telemetry Ledger
+                </CardTitle>
+                <CardDescription className="text-xs mt-0.5">
+                  Granular logs for every Gemini inference, token consumption, latency, and error code
+                </CardDescription>
+              </div>
+              <div className="text-xs text-muted-foreground font-mono">
+                Total Logs: <span className="text-foreground font-semibold">{logsPagination.total}</span>
+              </div>
+            </div>
+
+            {/* Filter Controls Bar */}
+            <div className="flex flex-wrap items-center gap-2.5 pt-3">
+              {/* Search Input */}
+              <div className="relative flex-1 min-w-[200px] max-w-sm">
+                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Search model, error, workspace..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && loadLogs(1)}
+                  className="h-8 pl-8 text-xs bg-muted/30 border-border/60"
+                />
+              </div>
+
+              {/* Operation Filter Buttons */}
+              <div className="flex items-center gap-1 bg-muted/40 p-0.5 rounded-lg border border-border/50 text-xs">
+                {["all", "classification", "chat", "embedding", "clustering_verification"].map((op) => (
+                  <button
+                    key={op}
+                    onClick={() => setFilterOperation(op)}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
+                      filterOperation === op
+                        ? "bg-background text-foreground shadow-sm font-semibold"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {op === "all"
+                      ? "All"
+                      : op === "clustering_verification"
+                      ? "Clustering"
+                      : op.charAt(0).toUpperCase() + op.slice(1)}
+                  </button>
+                ))}
+              </div>
+
+              {/* Status Filter */}
+              <div className="flex items-center gap-1 bg-muted/40 p-0.5 rounded-lg border border-border/50 text-xs">
+                {["all", "success", "error"].map((st) => (
+                  <button
+                    key={st}
+                    onClick={() => setFilterStatus(st)}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
+                      filterStatus === st
+                        ? "bg-background text-foreground shadow-sm font-semibold"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {st.charAt(0).toUpperCase() + st.slice(1)}
+                  </button>
+                ))}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => loadLogs(1)}
+                className="h-8 text-xs gap-1"
+                disabled={isLogsLoading}
+              >
+                <Filter className="h-3 w-3" />
+                Apply
+              </Button>
+            </div>
+          </CardHeader>
+
+          <CardContent className="p-0">
+            {/* Table wrapper with sticky column header best practice */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-border/60 bg-muted/30 text-muted-foreground font-semibold text-[11px] uppercase tracking-wider">
+                    <th className="py-2.5 px-4">Time</th>
+                    <th className="py-2.5 px-4">Operation</th>
+                    <th className="py-2.5 px-4">Model & Provider</th>
+                    <th className="py-2.5 px-4">Workspace / User</th>
+                    <th className="py-2.5 px-4 text-right">Tokens (In / Out)</th>
+                    <th className="py-2.5 px-4 text-right">Cost (USD)</th>
+                    <th className="py-2.5 px-4 text-right">Latency</th>
+                    <th className="py-2.5 px-4 text-center">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/40 font-mono">
+                  {isLogsLoading ? (
+                    <tr>
+                      <td colSpan={8} className="py-8 text-center text-muted-foreground">
+                        <div className="flex items-center justify-center gap-2">
+                          <RefreshCw className="h-4 w-4 animate-spin text-orange-500" />
+                          <span>Loading telemetry ledger...</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : logs.length > 0 ? (
+                    logs.map((log) => {
+                      const date = new Date(log.created_at);
+                      const timeStr = `${date.toLocaleDateString()} ${date
+                        .getHours()
+                        .toString()
+                        .padStart(2, "0")}:${date
+                        .getMinutes()
+                        .toString()
+                        .padStart(2, "0")}:${date
+                        .getSeconds()
+                        .toString()
+                        .padStart(2, "0")}`;
+
+                      const inTokens = log.token_input || 0;
+                      const outTokens = log.token_output || 0;
+                      const cost = Number(log.estimated_cost_usd || 0);
+
+                      return (
+                        <tr
+                          key={log.id}
+                          className="hover:bg-muted/30 transition-colors"
+                        >
+                          {/* Time */}
+                          <td className="py-2.5 px-4 text-muted-foreground whitespace-nowrap text-[11px]">
+                            {timeStr}
+                          </td>
+
+                          {/* Operation */}
+                          <td className="py-2.5 px-4 whitespace-nowrap">
+                            {getOperationBadge(log.operation_type)}
+                          </td>
+
+                          {/* Model */}
+                          <td className="py-2.5 px-4 whitespace-nowrap text-foreground text-[11px]">
+                            <div className="font-semibold text-zinc-200">
+                              {log.model_name || "gemini-3.5-flash-lite"}
+                            </div>
+                            <span className="text-[10px] text-muted-foreground">
+                              {log.provider || "google"}
+                            </span>
+                          </td>
+
+                          {/* Workspace / User */}
+                          <td className="py-2.5 px-4 whitespace-nowrap font-sans text-[11px]">
+                            <div className="font-medium text-foreground truncate max-w-[140px]" title={log.product_name}>
+                              {log.product_name || "Platform / Global"}
+                            </div>
+                            {log.user_email && (
+                              <div className="text-[10px] text-muted-foreground truncate max-w-[140px]" title={log.user_email}>
+                                {log.user_email}
+                              </div>
+                            )}
+                          </td>
+
+                          {/* Tokens */}
+                          <td className="py-2.5 px-4 text-right whitespace-nowrap text-[11px]">
+                            <span className="text-foreground font-semibold">
+                              {(inTokens + outTokens).toLocaleString()}
+                            </span>
+                            <div className="text-[10px] text-muted-foreground">
+                              {inTokens} in • {outTokens} out
+                            </div>
+                          </td>
+
+                          {/* Cost */}
+                          <td className="py-2.5 px-4 text-right whitespace-nowrap font-semibold text-foreground text-[11px]">
+                            ${cost.toFixed(6)}
+                          </td>
+
+                          {/* Latency */}
+                          <td className="py-2.5 px-4 text-right whitespace-nowrap text-[11px]">
+                            <span
+                              className={
+                                log.latency_ms > 2000
+                                  ? "text-amber-400"
+                                  : "text-foreground"
+                              }
+                            >
+                              {log.latency_ms}ms
+                            </span>
+                          </td>
+
+                          {/* Status */}
+                          <td className="py-2.5 px-4 text-center whitespace-nowrap">
+                            {log.success ? (
+                              <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-mono">
+                                OK
+                              </Badge>
+                            ) : (
+                              <Badge
+                                className="bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[10px] font-mono"
+                                title={log.error_code || "Unknown error"}
+                              >
+                                {log.error_code || "ERROR"}
+                              </Badge>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={8} className="py-8 text-center text-muted-foreground font-sans text-xs">
+                        No AI execution logs matching current filter.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Controls */}
+            {logsPagination.totalPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-border/60 text-xs">
+                <span className="text-muted-foreground font-mono text-[11px]">
+                  Page {logsPagination.page} of {logsPagination.totalPages} ({logsPagination.total} total)
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={logsPagination.page <= 1 || isLogsLoading}
+                    onClick={() => loadLogs(logsPagination.page - 1)}
+                    className="h-7 text-xs gap-1"
+                  >
+                    <ChevronLeft className="h-3 w-3" />
+                    Prev
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={logsPagination.page >= logsPagination.totalPages || isLogsLoading}
+                    onClick={() => loadLogs(logsPagination.page + 1)}
+                    className="h-7 text-xs gap-1"
+                  >
+                    Next
+                    <ChevronRight className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

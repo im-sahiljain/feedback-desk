@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { INDUSTRY_ICONS, INDUSTRY_LABELS, Industry, DEFAULT_CATEGORIES, DEFAULT_AI_PROMPTS, Product } from '@/types';
-import { Save, Plus, X, Loader2, Edit3 } from 'lucide-react';
+import { Save, Plus, X, Loader2, Edit3, Bell, Mail } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { authFetch } from '@/lib/api';
 
@@ -21,6 +21,11 @@ export default function Settings() {
   const [isEditing, setIsEditing] = useState(false);
   const [newCategory, setNewCategory] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [alertPrefs, setAlertPrefs] = useState({
+    email_enabled: false,
+    recipient_email: '',
+  });
+  const [isSavingAlerts, setIsSavingAlerts] = useState(false);
 
   // Sync editedProduct when currentProduct changes
   useEffect(() => {
@@ -28,6 +33,61 @@ export default function Settings() {
       setEditedProduct(currentProduct);
     }
   }, [currentProduct]);
+
+  // Load intelligence alert preferences for current product
+  useEffect(() => {
+    if (!currentProduct?.id) return;
+    let isCancelled = false;
+    authFetch(`/api/intelligence/preferences?product_id=${encodeURIComponent(currentProduct.id)}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!isCancelled && data?.preferences) {
+          setAlertPrefs({
+            email_enabled: !!data.preferences.email_enabled,
+            recipient_email: data.preferences.recipient_email || '',
+          });
+        }
+      })
+      .catch((err) => {
+        console.warn('Could not load intelligence alert preferences:', err);
+      });
+    return () => {
+      isCancelled = true;
+    };
+  }, [currentProduct?.id]);
+
+  const handleSaveAlerts = async () => {
+    if (!currentProduct) return;
+    setIsSavingAlerts(true);
+    try {
+      const res = await authFetch(
+        `/api/intelligence/preferences?product_id=${encodeURIComponent(currentProduct.id)}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(alertPrefs),
+        }
+      );
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Failed to save alert preferences');
+      }
+      toast({
+        title: 'Alert Preferences Saved',
+        description: alertPrefs.email_enabled
+          ? `Issue alert emails will be delivered to ${alertPrefs.recipient_email || 'the specified address'}.`
+          : 'Issue alert emails have been disabled.',
+      });
+    } catch (e: any) {
+      toast({
+        title: 'Error Saving Alerts',
+        description: e.message || 'Unable to update alert preferences.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSavingAlerts(false);
+    }
+  };
 
   if (isBootstrapping) {
     return (
@@ -448,6 +508,88 @@ export default function Settings() {
                           'general customer sentiment and service requests'}
                   </p>
                 </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Issue Intelligence & Alert Notifications Card */}
+        <Card className="shadow-sm border-border">
+          <CardHeader className="pb-3 border-b border-border/50">
+            <div className="flex items-center gap-2">
+              <Bell className="h-4 w-4 text-primary" />
+              <CardTitle className="text-base">Issue Intelligence & Alert Notifications</CardTitle>
+            </div>
+            <CardDescription className="text-xs">
+              Receive proactive alerts when new high-severity issue clusters or abnormal sentiment spikes are detected.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-4">
+            <div className="flex items-start gap-3 p-3.5 rounded-lg border border-border/60 bg-muted/20">
+              <input
+                id="alert-email-toggle"
+                type="checkbox"
+                checked={alertPrefs.email_enabled}
+                disabled={isDemo || isSavingAlerts}
+                onChange={(e) =>
+                  setAlertPrefs((prev) => ({
+                    ...prev,
+                    email_enabled: e.target.checked,
+                  }))
+                }
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer disabled:cursor-not-allowed"
+              />
+              <div className="space-y-1">
+                <Label
+                  htmlFor="alert-email-toggle"
+                  className="text-xs font-semibold cursor-pointer block text-foreground"
+                >
+                  Send automated email alerts for emerging high-severity issues
+                </Label>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  When enabled, our clustering engine notifies your team whenever newly analyzed feedback forms an urgent attention signal or breaks past critical volume thresholds.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="recipient_email" className="text-xs font-medium flex items-center gap-1.5">
+                <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                Alert Recipient Email
+              </Label>
+              <div className="flex flex-col sm:flex-row gap-2.5 max-w-lg">
+                <Input
+                  id="recipient_email"
+                  type="email"
+                  placeholder="alerts-team@yourdomain.com"
+                  value={alertPrefs.recipient_email}
+                  disabled={isDemo || isSavingAlerts}
+                  onChange={(e) =>
+                    setAlertPrefs((prev) => ({
+                      ...prev,
+                      recipient_email: e.target.value,
+                    }))
+                  }
+                  className="text-xs h-9"
+                />
+                <Button
+                  onClick={handleSaveAlerts}
+                  disabled={isDemo || isSavingAlerts}
+                  size="sm"
+                  className="text-xs h-9 shrink-0 gap-1.5"
+                >
+                  {isSavingAlerts ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-3.5 w-3.5" />
+                      Save Alert Settings
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
           </CardContent>

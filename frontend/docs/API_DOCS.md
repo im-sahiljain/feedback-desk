@@ -172,3 +172,7 @@ Used by the end-user widget to submit feedback. **No Token Required.**
   ]
 }
 ```
+
+## Module 1 Issue Intelligence
+
+Next.js authenticated BFF proxy: `/api/intelligence/[...path]`, supporting the backend's `/issues`, `/issues/:id/evidence`, `/issues/:id/history`, `/reconcile`, `/ask` and `/alerts` endpoints. The user-facing interface is `/issues`. Read the top-level `docs/MODULE_1_ISSUE_INTELLIGENCE_IMPLEMENTATION.md` for field contracts and limitations.
