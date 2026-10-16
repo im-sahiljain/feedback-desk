@@ -192,6 +192,7 @@ test('async AI job: feedback persists and job retries / completes', async () => 
   const user = await seedUser(`ai-${randomUUID().slice(0, 8)}@example.com`);
   const productId = await createProduct(user.userId, `AIProd-${randomUUID().slice(0, 6)}`);
   const pool = getPool();
+  await pool.query('DELETE FROM background_jobs');
 
   const fb = await pool.query(
     `INSERT INTO feedbacks
