@@ -23,7 +23,7 @@ const { enqueueJob, claimNextJob, completeJob, failJob } = await import('../../s
 const { processAnalyzeFeedbackJob, JOB_ANALYZE_FEEDBACK } = await import('../../src/jobs/worker.js');
 const { createSingleUseInvitation, verifyInvitation, submitInvitationFeedback } =
   await import('../../src/publicFeedback/invitations.js');
-const { ensurePersonalOrganization, requireProductAccess } = await import('../../src/authz/access.js');
+const { requireProductAccess } = await import('../../src/authz/access.js');
 const { normalizeEmail } = await import('../../src/organizations/roles.js');
 
 async function seedUser(email: string, name = 'Test User') {
@@ -42,17 +42,16 @@ async function seedUser(email: string, name = 'Test User') {
     );
     userId = res.rows[0].id;
   }
-  const orgId = await ensurePersonalOrganization(pool, userId, `${name} Org`);
-  return { userId, orgId, email: clean };
+  return { userId, email: clean };
 }
 
-async function createProduct(userId: string, orgId: string, name: string) {
+async function createProduct(userId: string, name: string) {
   const pool = getPool();
   const res = await pool.query(
-    `INSERT INTO products (user_id, organization_id, name, industry, settings)
-     VALUES ($1, $2, $3, 'Technology', '{"categories":["Bug Report","UI/UX"]}')
+    `INSERT INTO products (user_id, name, industry, settings)
+     VALUES ($1, $2, 'Technology', '{"categories":["Bug Report","UI/UX"]}')
      RETURNING id`,
-    [userId, orgId, name]
+    [userId, name]
   );
   return res.rows[0].id as string;
 }
@@ -145,7 +144,7 @@ test('OTP A cannot authenticate as B; expired/consumed/attempts enforced', async
 test('tenant isolation: user A cannot access user B product resources', async () => {
   const a = await seedUser(`tenant-a-${randomUUID().slice(0, 8)}@example.com`, 'Tenant A');
   const b = await seedUser(`tenant-b-${randomUUID().slice(0, 8)}@example.com`, 'Tenant B');
-  const productB = await createProduct(b.userId, b.orgId, `Product-${randomUUID().slice(0, 6)}`);
+  const productB = await createProduct(b.userId, `Product-${randomUUID().slice(0, 6)}`);
 
   await assert.rejects(
     () => requireProductAccess(getPool(), a.userId, productB, 'analytics:read'),
@@ -167,7 +166,7 @@ test('tenant isolation: user A cannot access user B product resources', async ()
 
 test('single-use invitation: creation, verification, and burn on submit', async () => {
   const user = await seedUser(`pub-${randomUUID().slice(0, 8)}@example.com`);
-  const productId = await createProduct(user.userId, user.orgId, `PubProd-${randomUUID().slice(0, 6)}`);
+  const productId = await createProduct(user.userId, `PubProd-${randomUUID().slice(0, 6)}`);
   const invite = await createSingleUseInvitation(getPool(), {
     productId,
     createdBy: user.userId,
@@ -191,22 +190,21 @@ test('single-use invitation: creation, verification, and burn on submit', async 
 
 test('async AI job: feedback persists and job retries / completes', async () => {
   const user = await seedUser(`ai-${randomUUID().slice(0, 8)}@example.com`);
-  const productId = await createProduct(user.userId, user.orgId, `AIProd-${randomUUID().slice(0, 6)}`);
+  const productId = await createProduct(user.userId, `AIProd-${randomUUID().slice(0, 6)}`);
   const pool = getPool();
 
   const fb = await pool.query(
     `INSERT INTO feedbacks
-     (product_id, organization_id, feedback, status, processing_status, received_at, queued_at)
-     VALUES ($1, $2, 'The checkout page is broken and payments fail', 'received', 'queued', now(), now())
+     (product_id, feedback, status, processing_status, received_at, queued_at)
+     VALUES ($1, 'The checkout page is broken and payments fail', 'received', 'queued', now(), now())
      RETURNING id`,
-    [productId, user.orgId]
+    [productId]
   );
   const feedbackId = fb.rows[0].id;
 
   const job = await enqueueJob(pool, {
     jobType: JOB_ANALYZE_FEEDBACK,
     payload: { feedbackId },
-    organizationId: user.orgId,
     resourceType: 'feedback',
     resourceId: feedbackId,
     idempotencyKey: `analyze:${feedbackId}`,
@@ -217,7 +215,6 @@ test('async AI job: feedback persists and job retries / completes', async () => 
   const again = await enqueueJob(pool, {
     jobType: JOB_ANALYZE_FEEDBACK,
     payload: { feedbackId },
-    organizationId: user.orgId,
     resourceType: 'feedback',
     resourceId: feedbackId,
     idempotencyKey: `analyze:${feedbackId}`,
@@ -232,7 +229,7 @@ test('async AI job: feedback persists and job retries / completes', async () => 
   await processAnalyzeFeedbackJob(claimed!);
 
   const updated = await pool.query(
-    `SELECT processing_status, raw_ai_metadata, analysis_version FROM feedbacks WHERE id = $1`,
+    `SELECT processing_status, raw_ai_metadata FROM feedbacks WHERE id = $1`,
     [feedbackId]
   );
   assert.equal(updated.rows[0].processing_status, 'analyzed');
@@ -242,14 +239,13 @@ test('async AI job: feedback persists and job retries / completes', async () => 
   // Feedback still present after simulated permanent failure path on another row
   const fb2 = await pool.query(
     `INSERT INTO feedbacks
-     (product_id, organization_id, feedback, status, processing_status)
-     VALUES ($1, $2, 'another issue', 'received', 'queued') RETURNING id`,
-    [productId, user.orgId]
+     (product_id, feedback, status, processing_status)
+     VALUES ($1, 'another issue', 'received', 'queued') RETURNING id`,
+    [productId]
   );
   const job2 = await enqueueJob(pool, {
     jobType: JOB_ANALYZE_FEEDBACK,
     payload: { feedbackId: fb2.rows[0].id },
-    organizationId: user.orgId,
     resourceId: fb2.rows[0].id,
     idempotencyKey: `analyze:${fb2.rows[0].id}`,
     maxAttempts: 1,
@@ -265,29 +261,23 @@ test('async AI job: feedback persists and job retries / completes', async () => 
   assert.equal(stillThere.rows[0].feedback, 'another issue');
 });
 
-test('RBAC analyst cannot delete feedback product settings', async () => {
-  const owner = await seedUser(`owner-${randomUUID().slice(0, 8)}@example.com`, 'Owner');
-  const analystEmail = `analyst-${randomUUID().slice(0, 8)}@example.com`;
-  const analyst = await seedUser(analystEmail, 'Analyst');
+test('RBAC demo user cannot perform write operations', async () => {
+  const demoEmail = `demo-${randomUUID().slice(0, 8)}@example.com`;
+  const demoUser = await seedUser(demoEmail, 'Demo User');
   const pool = getPool();
 
-  // Move analyst into owner's org as analyst
-  await pool.query(`DELETE FROM organization_members WHERE user_id = $1`, [analyst.userId]);
-  await pool.query(
-    `INSERT INTO organization_members (organization_id, user_id, role) VALUES ($1, $2, 'analyst')`,
-    [owner.orgId, analyst.userId]
-  );
+  await pool.query(`UPDATE users SET role = 'demo' WHERE id = $1`, [demoUser.userId]);
 
-  const productId = await createProduct(owner.userId, owner.orgId, `RBAC-${randomUUID().slice(0, 6)}`);
+  const productId = await createProduct(demoUser.userId, `DemoProd-${randomUUID().slice(0, 6)}`);
 
-  await requireProductAccess(pool, analyst.userId, productId, 'feedback:read');
+  await requireProductAccess(pool, demoUser.userId, productId, 'feedback:read');
   await assert.rejects(
-    () => requireProductAccess(pool, analyst.userId, productId, 'feedback:delete'),
-    /Insufficient/
+    () => requireProductAccess(pool, demoUser.userId, productId, 'feedback:delete'),
+    /demo mode/i
   );
   await assert.rejects(
-    () => requireProductAccess(pool, analyst.userId, productId, 'settings:update'),
-    /Insufficient/
+    () => requireProductAccess(pool, demoUser.userId, productId, 'settings:update'),
+    /demo mode/i
   );
 });
 
