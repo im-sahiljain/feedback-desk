@@ -520,10 +520,109 @@ router.get('/queue', async (_req: AuthenticatedRequest, res: Response) => {
 });
 
 /**
- * POST /api/admin/queue/replay-dead
- * Replay dead letter jobs back into the active processing queue.
+ * POST /api/admin/queue
+ * Replay dead-letter jobs or specific job without disturbing the active worker.
  */
-router.post('/queue/replay-dead', async (_req: AuthenticatedRequest, res: Response) => {
+router.post('/queue', async (req: AuthenticatedRequest, res: Response) => {
+  const pool = getPool();
+  try {
+    const jobId = req.body?.jobId;
+
+    if (jobId) {
+      // Replay a single specific job
+      const jobRes = await pool.query(
+        `UPDATE background_jobs
+         SET status = 'queued',
+             attempts = 0,
+             last_error = NULL,
+             available_at = NOW(),
+             updated_at = NOW()
+         WHERE id = $1
+         RETURNING id, resource_id, payload`,
+        [jobId]
+      );
+
+      if (jobRes.rows.length === 0) {
+        return res.status(404).json({ message: 'Job not found' });
+      }
+
+      const row = jobRes.rows[0];
+      const fbId = row.resource_id || row.payload?.feedbackId;
+      if (fbId) {
+        await pool.query(
+          `UPDATE feedbacks
+           SET processing_status = 'queued',
+               status = 'received',
+               processing_error = NULL,
+               analysis_failed_at = NULL
+           WHERE id::text = $1::text`,
+          [String(fbId)]
+        );
+      }
+
+      return res.json({
+        success: true,
+        message: 'Job successfully re-queued for processing.',
+        replayedCount: 1,
+      });
+    }
+
+    // Default: Replay ALL dead letter jobs
+    const deadRes = await pool.query<{ id: string; resource_id: string; payload: Record<string, any> }>(
+      `SELECT id, resource_id, payload FROM background_jobs WHERE status = 'dead'`
+    );
+
+    if (deadRes.rows.length === 0) {
+      return res.json({
+        success: true,
+        message: 'No dead letter jobs to replay.',
+        replayedCount: 0,
+      });
+    }
+
+    const feedbackIds = deadRes.rows
+      .map((r) => r.resource_id || r.payload?.feedbackId)
+      .filter(Boolean);
+
+    await pool.query(`
+      UPDATE background_jobs
+      SET status = 'queued',
+          attempts = 0,
+          last_error = NULL,
+          available_at = NOW(),
+          updated_at = NOW()
+      WHERE status = 'dead'
+    `);
+
+    if (feedbackIds.length > 0) {
+      await pool.query(
+        `UPDATE feedbacks
+         SET processing_status = 'queued',
+             status = 'received',
+             processing_error = NULL,
+             analysis_failed_at = NULL
+         WHERE id::text = ANY($1::text[]) AND processing_status = 'analysis_failed'`,
+        [feedbackIds]
+      );
+    }
+
+    return res.json({
+      success: true,
+      message: `Successfully re-queued ${deadRes.rows.length} dead letter jobs for AI processing.`,
+      replayedCount: deadRes.rows.length,
+    });
+  } catch (err) {
+    const safe = toSafeClientError(err);
+    return res.status(safe.status).json(safe.body);
+  }
+});
+
+/**
+ * POST /api/admin/queue/replay-dead
+ * Legacy alias for replaying dead letter jobs back into the active processing queue.
+ */
+router.post('/queue/replay-dead', async (req: AuthenticatedRequest, res: Response) => {
+  req.body = { ...req.body, jobId: undefined };
   const pool = getPool();
   try {
     const deadRes = await pool.query<{ id: string; resource_id: string; payload: Record<string, any> }>(

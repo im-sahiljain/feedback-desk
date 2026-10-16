@@ -114,6 +114,29 @@ test('FeedbackDesk AI Platform Admin integration tests', async (t) => {
     assert.ok(data.pagination);
   });
 
+  await t.test('allows admin to inspect background queue health and replay dead jobs', async () => {
+    const token = signAccessToken({ userId: adminUser.id });
+    const getRes = await fetch(`${baseUrl}/api/admin/queue`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    assert.equal(getRes.status, 200);
+    const queueData = await getRes.json();
+    assert.ok(queueData.queue);
+    assert.ok(Array.isArray(queueData.jobs));
+
+    const postRes = await fetch(`${baseUrl}/api/admin/queue`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({}),
+    });
+    assert.equal(postRes.status, 200);
+    const postData = await postRes.json();
+    assert.equal(postData.success, true);
+  });
+
   await t.test('allows admin to manage user roles and protects against self-demotion', async () => {
     const token = signAccessToken({ userId: adminUser.id });
 

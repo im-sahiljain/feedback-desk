@@ -36,9 +36,10 @@ let lastGeminiCallFinished = 0;
 const MIN_GEMINI_INTERVAL_MS = 4500; // ~13.3 calls/min, safely under Gemini Free Tier 15 RPM limit
 
 /**
- * Parses Gemini error messages to extract exact requested backoff seconds (with safety buffer).
+ * Parses Gemini error messages to extract exact requested backoff seconds (with safety buffer),
+ * or computes adaptive backoff for transient server spikes (503 / UNAVAILABLE).
  */
-export function extractRetryDelayMs(errorMsg: string): number {
+export function extractRetryDelayMs(errorMsg: string, attempt: number = 1): number {
   // Check for JSON or text retryDelay e.g. "retryDelay": "22s" or "retryDelay": "22.5s"
   const jsonMatch = errorMsg.match(/["']?retryDelay["']?\s*:\s*["']?(\d+(?:\.\d+)?)s?["']?/i);
   if (jsonMatch && jsonMatch[1]) {
@@ -55,6 +56,11 @@ export function extractRetryDelayMs(errorMsg: string): number {
     if (!isNaN(sec) && sec > 0) {
       return Math.ceil(sec * 1000) + 2000;
     }
+  }
+
+  // For 503 / Service Unavailable / High demand spikes, back off adaptively (e.g. 8s, 16s, 24s)
+  if (/503|UNAVAILABLE|high demand|service unavailable/i.test(errorMsg)) {
+    return Math.min(30000, attempt * 8000);
   }
 
   // Default conservative fallback (25s) for Gemini Free Tier replenishment window
@@ -1178,9 +1184,18 @@ Before returning JSON verify:
       } catch (err) {
         const errMsg = err instanceof Error ? err.message : "unknown";
         const isRateLimit = errMsg.includes("429") || errMsg.includes("RESOURCE_EXHAUSTED") || errMsg.includes("quota");
-        if (isRateLimit && attempt < MAX_RATE_LIMIT_RETRIES) {
-          const delayMs = extractRetryDelayMs(errMsg);
-          logger.warn(`Gemini Free Tier rate limit encountered (attempt ${attempt}/${MAX_RATE_LIMIT_RETRIES}). Backing off for ${Math.round(delayMs / 1000)}s before retry...`, {
+        const isServerUnavailable =
+          errMsg.includes("503") ||
+          errMsg.includes("UNAVAILABLE") ||
+          errMsg.includes("high demand") ||
+          errMsg.includes("Service Unavailable");
+
+        if ((isRateLimit || isServerUnavailable) && attempt < MAX_RATE_LIMIT_RETRIES) {
+          const delayMs = extractRetryDelayMs(errMsg, attempt);
+          const reason = isServerUnavailable
+            ? "Gemini temporary capacity spike (503)"
+            : "Gemini Free Tier rate limit (429)";
+          logger.warn(`${reason} encountered (attempt ${attempt}/${MAX_RATE_LIMIT_RETRIES}). Backing off for ${Math.round(delayMs / 1000)}s before retry...`, {
             attempt,
             delayMs,
             error: errMsg.slice(0, 300),

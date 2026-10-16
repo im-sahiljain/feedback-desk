@@ -118,6 +118,8 @@ export async function processAnalyzeFeedbackJob(job: {
     "SELECT settings FROM products WHERE id = $1",
     [feedback.product_id],
   );
+  const productExists = labelsRes.rows.length > 0;
+  const validProductId = productExists ? feedback.product_id : null;
   const customLabels = Array.isArray(labelsRes.rows[0]?.settings?.categories)
     ? labelsRes.rows[0].settings.categories!
     : [];
@@ -173,7 +175,7 @@ export async function processAnalyzeFeedbackJob(job: {
     [
       job.id,
       feedbackId,
-      feedback.product_id,
+      validProductId,
       analysis.model_provider,
       analysis.model_name,
       latencyMs,
@@ -191,16 +193,18 @@ export async function processAnalyzeFeedbackJob(job: {
 
   await completeJob(pool, job.id);
   // Best-effort enrichment: a clustering failure must never reprocess or fail a successfully analyzed feedback.
-  try {
-    await reconcile(pool, feedback.product_id, 50);
-    await syncCustomerIdentities(pool, feedback.product_id);
-    await createSignals(pool, feedback.product_id);
-    await deliverAlertEmails(pool, feedback.product_id);
-  } catch (issueError) {
-    logger.warn("Issue intelligence reconciliation delayed", {
-      feedbackId,
-      reason: issueError instanceof Error ? issueError.message : "unknown",
-    });
+  if (validProductId) {
+    try {
+      await reconcile(pool, validProductId, 50);
+      await syncCustomerIdentities(pool, validProductId);
+      await createSignals(pool, validProductId);
+      await deliverAlertEmails(pool, validProductId);
+    } catch (issueError) {
+      logger.warn("Issue intelligence reconciliation delayed", {
+        feedbackId,
+        reason: issueError instanceof Error ? issueError.message : "unknown",
+      });
+    }
   }
 }
 
