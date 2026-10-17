@@ -65,6 +65,25 @@ export default function AdminAiEnginePage() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
+  // Active Model Health Probe State
+  const [probeResult, setProbeResult] = useState<any>(null);
+  const [isProbing, setIsProbing] = useState<boolean>(false);
+
+  const handleProbe = async () => {
+    setIsProbing(true);
+    try {
+      const res = await api.admin.probeAi();
+      setProbeResult({ ...res, success: true });
+    } catch (err: any) {
+      setProbeResult({
+        success: false,
+        error: err?.message || "Health probe failed",
+      });
+    } finally {
+      setIsProbing(false);
+    }
+  };
+
   // RBAC Access Guard: Strictly verify role === 'admin'
   useEffect(() => {
     if (!isBootstrapping) {
@@ -282,6 +301,89 @@ export default function AdminAiEnginePage() {
       }
     >
       <div className="space-y-6">
+        {/* Active AI Gateway Runtime & Health Probe */}
+        <Card className="border-orange-500/20 bg-gradient-to-r from-orange-500/5 via-amber-500/5 to-transparent border">
+          <CardHeader className="pb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="space-y-1">
+                <CardTitle className="text-base font-bold flex items-center gap-2 text-foreground">
+                  <Cpu className="h-4 w-4 text-orange-500" />
+                  <span>Active AI Gateway Runtime</span>
+                  <Badge
+                    variant="outline"
+                    className="border-orange-500/40 text-orange-400 bg-orange-500/10 text-xs font-mono capitalize"
+                  >
+                    {obs.activeProvider === "local" ? "Local LLM" : "Google GenAI"}
+                  </Badge>
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Unified AI Gateway adapter routing classifications, embeddings, and executive digests
+                </CardDescription>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleProbe}
+                  disabled={isProbing}
+                  className="h-8 text-xs gap-1.5 border-orange-500/30 hover:bg-orange-500/10 text-orange-400"
+                >
+                  <RefreshCw className={`h-3 w-3 ${isProbing ? "animate-spin" : ""}`} />
+                  <span>{isProbing ? "Probing..." : "Test Model Connection"}</span>
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+            <div className="p-3 rounded-xl bg-background/60 border border-border/50 space-y-1">
+              <span className="text-[11px] text-muted-foreground font-medium">Primary LLM Model</span>
+              <p className="text-sm font-bold text-foreground font-mono truncate" title={obs.activeModel ?? "gemini-3.5-flash-lite"}>
+                {obs.activeModel ?? "gemini-3.5-flash-lite"}
+              </p>
+              <p className="text-[10px] text-muted-foreground">Main qualitative classifier</p>
+            </div>
+            <div className="p-3 rounded-xl bg-background/60 border border-border/50 space-y-1">
+              <span className="text-[11px] text-muted-foreground font-medium">Embedding Model</span>
+              <p className="text-sm font-bold text-foreground font-mono truncate" title={obs.activeEmbeddingModel ?? "gemini-embedding-001"}>
+                {obs.activeEmbeddingModel ?? "gemini-embedding-001"}
+              </p>
+              <p className="text-[10px] text-muted-foreground">Vector similarity engine</p>
+            </div>
+            <div className="p-3 rounded-xl bg-background/60 border border-border/50 space-y-1">
+              <span className="text-[11px] text-muted-foreground font-medium">Quota / Pacing Tier</span>
+              <p className="text-sm font-bold text-emerald-400 truncate">
+                {obs.activeProvider === "local" ? "Unthrottled (Zero Cost)" : obs.activeTier === "payg" ? "Pay-As-You-Go" : "Free Tier (15 RPM)"}
+              </p>
+              <p className="text-[10px] text-muted-foreground">Rate limit governor</p>
+            </div>
+            <div className="p-3 rounded-xl bg-background/60 border border-border/50 space-y-1">
+              <span className="text-[11px] text-muted-foreground font-medium">Connectivity Health</span>
+              {probeResult ? (
+                probeResult.success ? (
+                  <p className="text-sm font-bold text-emerald-400 flex items-center gap-1.5 font-mono">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    Connected ({probeResult.latencyMs}ms)
+                  </p>
+                ) : (
+                  <p className="text-sm font-bold text-rose-400 flex items-center gap-1.5 font-mono">
+                    <span className="w-2 h-2 rounded-full bg-rose-400"></span>
+                    Degraded
+                  </p>
+                )
+              ) : (
+                <p className="text-sm font-bold text-foreground flex items-center gap-1.5 font-mono">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  Ready to probe
+                </p>
+              )}
+              <p className="text-[10px] text-muted-foreground truncate">
+                {probeResult ? (probeResult.success ? `Checked at ${new Date(probeResult.checkedAt).toLocaleTimeString()}` : probeResult.error) : "Click test to ping active model"}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Top 4 KPI Observability & Cost Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* 1. Running Spend */}
@@ -303,7 +405,7 @@ export default function AdminAiEnginePage() {
                 <span className="text-emerald-400 font-medium font-mono">
                   {obs.totalAiJobs ? `${obs.totalAiJobs} calls logged` : "0 calls"}
                 </span>
-                <span>• Flash-Lite rates</span>
+                <span>• {obs.activeModel ? `${obs.activeModel} rates` : "Gateway rates"}</span>
               </p>
             </CardContent>
           </Card>
@@ -368,7 +470,7 @@ export default function AdminAiEnginePage() {
                 {obs.successRatePct ?? 100}%
               </div>
               <p className="text-[11px] text-muted-foreground mt-1.5 flex items-center gap-1">
-                <span>{obs.geminiRatioPct ?? 100}% Gemini native</span>
+                <span>{obs.aiSuccessRatioPct ?? obs.geminiRatioPct ?? 100}% primary AI</span>
                 {obs.failureCount > 0 && (
                   <span className="text-rose-400">• {obs.failureCount} errors</span>
                 )}
@@ -511,6 +613,90 @@ export default function AdminAiEnginePage() {
           </Card>
         </div>
 
+        {/* Multi-Model Telemetry & Usage Ledger */}
+        <Card className="border-border/60">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-base font-bold flex items-center gap-2">
+                  <Cpu className="h-4 w-4 text-orange-500" />
+                  Multi-Model Runtime Telemetry & Performance Ledger
+                </CardTitle>
+                <CardDescription className="text-xs mt-0.5">
+                  Historical telemetry and performance metrics aggregated across all active and configured LLM models
+                </CardDescription>
+              </div>
+              <Badge variant="outline" className="text-xs font-mono">
+                {aiMetrics?.modelsBreakdown?.length ?? 0} Models Detected
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-muted/40 text-muted-foreground border-b border-border/60">
+                  <tr>
+                    <th className="p-2.5 font-semibold">Model Name</th>
+                    <th className="p-2.5 font-semibold">Provider</th>
+                    <th className="p-2.5 font-semibold text-right">Inferences</th>
+                    <th className="p-2.5 font-semibold text-right">Avg Latency</th>
+                    <th className="p-2.5 font-semibold text-right">P95 Latency</th>
+                    <th className="p-2.5 font-semibold text-right">Total Tokens</th>
+                    <th className="p-2.5 font-semibold text-right">Total Cost ($)</th>
+                    <th className="p-2.5 font-semibold text-right">Success Rate</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/40">
+                  {aiMetrics?.modelsBreakdown && aiMetrics.modelsBreakdown.length > 0 ? (
+                    aiMetrics.modelsBreakdown.map((row: any, idx: number) => {
+                      const total = Number(row.total_calls) || 0;
+                      const successes = Number(row.success_count) || 0;
+                      const pct = total > 0 ? ((successes / total) * 100).toFixed(1) : "100.0";
+                      const cost = Number(row.total_cost_usd) || 0;
+                      return (
+                        <tr key={idx} className="hover:bg-muted/30 transition-colors">
+                          <td className="p-2.5 font-mono font-medium text-foreground">
+                            {row.model_name}
+                          </td>
+                          <td className="p-2.5">
+                            <Badge variant="outline" className="capitalize text-[10px] py-0">
+                              {row.provider}
+                            </Badge>
+                          </td>
+                          <td className="p-2.5 text-right font-mono font-semibold text-foreground">
+                            {row.total_calls}
+                          </td>
+                          <td className="p-2.5 text-right font-mono text-zinc-300">
+                            {row.avg_latency_ms}ms
+                          </td>
+                          <td className="p-2.5 text-right font-mono text-zinc-400">
+                            {row.p95_latency_ms}ms
+                          </td>
+                          <td className="p-2.5 text-right font-mono text-zinc-300">
+                            {(Number(row.total_tokens) / 1000).toFixed(1)}k
+                          </td>
+                          <td className="p-2.5 text-right font-mono font-semibold text-emerald-400">
+                            ${cost.toFixed(4)}
+                          </td>
+                          <td className="p-2.5 text-right font-mono text-emerald-400">
+                            {pct}%
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={8} className="p-4 text-center text-muted-foreground text-xs">
+                        No model breakdown telemetry logged yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* AI Category Taxonomy & Friction Points */}
         <Card className="border-border/60">
           <CardHeader className="pb-2">
@@ -521,7 +707,7 @@ export default function AdminAiEnginePage() {
                   AI Classification Taxonomy Breakdown
                 </CardTitle>
                 <CardDescription className="text-xs mt-0.5">
-                  Automated category labeling generated by Google Gemini across user reviews
+                  Automated category labeling generated by AI Gateway across customer reviews
                 </CardDescription>
               </div>
               <Badge variant="outline" className="text-xs font-mono">
@@ -574,7 +760,7 @@ export default function AdminAiEnginePage() {
                   Live AI Execution & Cost Telemetry Ledger
                 </CardTitle>
                 <CardDescription className="text-xs mt-0.5">
-                  Granular logs for every Gemini inference, token consumption, latency, and error code
+                  Granular logs for every AI Gateway inference, token consumption, latency, and error code
                 </CardDescription>
               </div>
               <div className="text-xs text-muted-foreground font-mono">
@@ -709,10 +895,10 @@ export default function AdminAiEnginePage() {
                           {/* Model */}
                           <td className="py-2.5 px-4 whitespace-nowrap text-foreground text-[11px]">
                             <div className="font-semibold text-zinc-200">
-                              {log.model_name || "gemini-3.5-flash-lite"}
+                              {log.model_name || "ai-model"}
                             </div>
                             <span className="text-[10px] text-muted-foreground">
-                              {log.provider || "google"}
+                              {log.provider || "ai"}
                             </span>
                           </td>
 

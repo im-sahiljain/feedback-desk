@@ -1,0 +1,2402 @@
+[
+  {
+    "rating": 1,
+    "daysAgo": 29,
+    "email": "sunita.sharma@gmail.com",
+    "text": "Waited over 4 hours in the Emergency Room with severe abdominal pain before anyone even took my vitals. The triage desk was completely chaotic and nobody gave any updates on when a doctor would be available."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 29,
+    "email": "rahul.verma@bangaloreai.in",
+    "text": "Dr. Ramesh and the cardiology nursing team on the 4th floor were extraordinarily attentive and compassionate during my father's post-op recovery. They explained every medication and monitored him round the clock."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 28,
+    "email": "priya.nair@delhistartups.io",
+    "text": "Received a surprise bill of ₹45,000 for diagnostic lab tests that the insurance desk explicitly assured me were 100% pre-authorized under cashless coverage. Billing staff refused to assist when I asked for an itemized invoice."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 28,
+    "email": "vikram.mehta@mumbaicapital.com",
+    "text": "The patient room and ICU hallways were impeccably sanitized and clean. However, the air conditioning unit in room 302 was rattling loudly all night and made it very hard for the patient to rest."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 27,
+    "email": "ananya.iyer@puneinnovate.in",
+    "text": "The CarePulse mobile app kept crashing whenever I attempted to join the scheduled video consultation with Dr. Sen. By the time I could log back in, the slot was marked as missed and I had to rebook."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 27,
+    "email": "arjun.patel@gurgaontech.co",
+    "text": "The outpatient orthopedic consultation was right on time. Dr. Kulkarni gave a clear diagnosis of my meniscus tear and showed me the MRI scan slice by slice without rushing the consultation."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 26,
+    "email": "kavita.deshmukh@hyderabadops.in",
+    "text": "The reception desk staff at the main lobby were remarkably dismissive and rude when my elderly mother asked for wheelchair assistance. We had to locate and fetch an empty wheelchair ourselves."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 26,
+    "email": "siddharth.reddy@chennaisoft.in",
+    "text": "My blood test was scheduled for 8:30 AM but the phlebotomist did not arrive until 9:45 AM. The blood draw itself was painless and quick, but the delay forced me to miss a work meeting."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 25,
+    "email": "neha.gupta@noidastack.in",
+    "text": "The hospital pharmacy charged me twice on my credit card for the prescribed asthma inhalers. When I pointed out the duplicate swipe on my SMS alert, the cashier asked me to return on Monday for a refund."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 25,
+    "email": "aditya.menon@fintechpulse.in",
+    "text": "Using the CarePulse portal to review my blood lipid profile and discharge summary was seamless. The results arrived in the app within 4 hours of the sample collection with clear reference ranges."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 24,
+    "email": "sneha.bhat@cloudscale.in",
+    "text": "Excellent nursing care in the pediatric ward. The pediatricians were very gentle with my 3-year-old daughter. The only issue was the visitor parking lot which was completely full with no valet."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 24,
+    "email": "karan.malhotra@tcs-consulting.in",
+    "text": "Post-surgery discharge process took nearly 6 hours after the doctor signed off at 10 AM. We sat in the hallway waiting for the pharmacy clearance and billing stamps until 4:15 PM."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 23,
+    "email": "divya.roy@tatadigital.in",
+    "text": "Dr. Ananya Roy in the neurology clinic provided exceptional care. She spent 45 minutes listening to my migraine symptoms and customized a preventive treatment plan that has already brought relief."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 23,
+    "email": "manish.chopra@wipro-ops.in",
+    "text": "Restrooms on the 2nd floor outpatient wing were completely untidy with no hand soap and water pooling near the sinks. For a tertiary hospital this is an unacceptable hygiene standard."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 22,
+    "email": "pooja.kapoor@infosys-infra.in",
+    "text": "Medical care was satisfactory, but the patient portal does not allow downloading PDF receipts for tax submission. I had to physically visit the accounts department to obtain a stamped receipt."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 22,
+    "email": "rajesh.singhal@hcltech.in",
+    "text": "Transparent billing experience. The financial counselor gave an upfront estimate for the laparoscopic hernia surgery, and the final invoice at discharge matched the estimate down to the rupee."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 21,
+    "email": "meera.bose@zomato-partner.in",
+    "text": "The resident on duty in the morning round barely spent 30 seconds examining my surgical incision and did not answer my questions about ongoing fever. Felt very neglected as an inpatient."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 21,
+    "email": "amit.dutta@flipkart-ops.in",
+    "text": "Scheduled consultation with the dermatologist was handled efficiently. Clean waiting area and digital token display kept everyone informed of their queue position."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 20,
+    "email": "shreya.ghosh@swiggy-dev.in",
+    "text": "The hospital pharmacy was missing two essential antibiotics prescribed by the discharge physician. I had to travel to another commercial pharmacy late at night to purchase them."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 20,
+    "email": "varun.saxena@paytm-merchant.in",
+    "text": "Appointment booking through the mobile app showed Dr. Joshi available on Tuesday, but when I arrived at the clinic the receptionist informed me the doctor was on leave. The app should reflect doctor leaves."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 20,
+    "email": "ritu.pandey@razorpay-merchant.in",
+    "text": "The maternity ward nurses provided outstanding round-the-clock support. Their lactation guidance and patient encouragement made our first delivery experience smooth and stress-free."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 19,
+    "email": "sanjay.mishra@cred-partner.in",
+    "text": "Billing department added duplicate ICU monitoring charges for a day my mother was already moved to the step-down room. Resolving this took three phone calls and endless arguing."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 19,
+    "email": "gaurav.trivedi@bangaloreai.in",
+    "text": "The MRI imaging department was very prompt and handled claustrophobia concerns gently. Results were linked to my CarePulse portal within 12 hours."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 19,
+    "email": "mohit.tiwari@mumbaicapital.com",
+    "text": "Extreme wait times in the ultrasound wing. Patients with appointment tokens at 11 AM were called at 2:30 PM without any notification or explanation of emergency disruptions."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 18,
+    "email": "aarti.bhatt@gurgaontech.co",
+    "text": "Day-care chemotherapy center was peaceful, spotless, and staffed by wonderful oncology nurses who administered medication with extreme precision and empathy."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 18,
+    "email": "harish.nambiar@hyderabadops.in",
+    "text": "The doctors are top notch, but the hospital cafeteria food is stale and cold. For patients on special diabetic diets, there were very limited healthy meal choices."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 17,
+    "email": "ishita.pannu@puneinnovate.in",
+    "text": "Forgot password option on the patient portal does not send the reset OTP to registered Indian mobile numbers. Tried four times and had to call customer support."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 17,
+    "email": "kunal.gill@delhistartups.io",
+    "text": "Nurse administered intravenous painkiller too rapidly despite my warning about previous dizziness, causing immediate nausea and vertigo. Better clinical adherence to infusion rates is required."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 17,
+    "email": "preeti.dhillon@chennaisoft.in",
+    "text": "Prompt outpatient billing at counter 3. The staff member was polite, applied my corporate discount immediately, and handed over an organized receipt folder."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 16,
+    "email": "smriti.khanna@noidastack.in",
+    "text": "Wait time to collect prescribed medicines from the central pharmacy exceeded 50 minutes. Only two of the six counters were staffed during the peak 6 PM rush hour."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 16,
+    "email": "alok.sethi@fintechpulse.in",
+    "text": "Physical therapy rehabilitation team designed a very practical knee exercise program. My range of motion has improved significantly within two weeks."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 16,
+    "email": "shilpa.grover@cloudscale.in",
+    "text": "Security staff at the gate was shouting at visitors and refused entry to my husband during permitted evening visiting hours despite showing the patient pass."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 15,
+    "email": "sandeep.ahuja@tatadigital.in",
+    "text": "Telehealth consultation with the endocrinologist was crisp, audio-video quality was flawless, and the electronic prescription was uploaded to the app within 2 minutes."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 15,
+    "email": "nisha.oberoi@wipro-ops.in",
+    "text": "Insurance TPA desk took over 8 hours to submit the initial pre-authorization query to Star Health, unnecessarily delaying my planned gallbladder surgery."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 15,
+    "email": "vivek.singhania@infosys-infra.in",
+    "text": "Medical treatment was effective, but the room linen had visible stains and was not replaced until I reminded the housekeeping staff twice."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 14,
+    "email": "vandana.bansal@hcltech.in",
+    "text": "The ENT surgeon Dr. Mehta explained the sinus procedure clearly and alleviated all my anxieties. Post-op follow up check was completely free of charge."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 14,
+    "email": "ashish.goel@zomato-partner.in",
+    "text": "Waited 3 hours in the pediatric OPD with a baby running 102 fever. Even emergency triage showed no urgency in assigning a junior doctor to check temperature."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 14,
+    "email": "kriti.singhal@flipkart-ops.in",
+    "text": "The digital lab reports are convenient, but the app should allow parents to switch between their own medical records and their dependent children's profiles seamlessly."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 13,
+    "email": "tarun.maheshwari@swiggy-dev.in",
+    "text": "Pharmacy billed an expensive brand-name supplement instead of the generic multivitamin written on the prescription without asking my preference."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 13,
+    "email": "pallavi.kothari@paytm-merchant.in",
+    "text": "Nurse Sister Mary on the 5th floor oncology ward is a true angel. Her kindness, warmth, and gentle IV cannulation made a difficult day much easier."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 13,
+    "email": "abhinav.rathi@razorpay-merchant.in",
+    "text": "Wheelchair ramp near the casualty entrance was obstructed by parked hospital delivery vans. It was extremely dangerous pushing my father across the curb."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 12,
+    "email": "sonam.somani@cred-partner.in",
+    "text": "Diagnostic ultrasound was conducted with high professionalism. The radiologist patiently explained the liver findings and provided the printed report within 30 minutes."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 12,
+    "email": "sameer.shah@bangaloreai.in",
+    "text": "CarePulse app keeps logging me out every 5 minutes. When looking at long CT scan reports, having to enter biometrics and 2FA repeatedly is frustrating."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 12,
+    "email": "rekha.parekh@mumbaicapital.com",
+    "text": "The dialysis center staff adheres to strict hygiene and sterilization protocols. Dialysis technician Manoj is skilled and always cheerful."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 11,
+    "email": "mayank.dalal@gurgaontech.co",
+    "text": "Cashless insurance desk demanded a ₹15,000 cash deposit for admission despite an active corporate cashless policy with 100% room rent coverage. Highly unethical."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 11,
+    "email": "bhavna.modi@hyderabadops.in",
+    "text": "Doctor consultation was great, but the outpatient queue calling system was broken, resulting in people jumping queues and shouting at the nurse."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 11,
+    "email": "pranav.merchant@puneinnovate.in",
+    "text": "Good sanitation in the corridors and sanitizers placed outside every patient room. Hospital feels clean and well ventilated."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 10,
+    "email": "divyansh.nadkarni@delhistartups.io",
+    "text": "Rapid response by the cardiac emergency team when my father experienced chest discomfort. EKG was done within 3 minutes and the cardiologist arrived immediately."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 10,
+    "email": "chetan.pai@chennaisoft.in",
+    "text": "Front office executive was arguing on personal phone call while a line of 6 patients was waiting to collect discharge summary folders."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 10,
+    "email": "yash.kamat@noidastack.in",
+    "text": "Laboratory portal uploaded another patient's urine culture report into my account. This is a severe HIPAA and patient data privacy violation."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 9,
+    "email": "ankit.shenoy@fintechpulse.in",
+    "text": "Billing process was transparent, and the accounts team explained the hospital consumables charges line by line before taking payment."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 9,
+    "email": "akash.prabhu@cloudscale.in",
+    "text": "Waiting time for the echo-cardiogram was 2.5 hours past the appointment time. Elderly cardiac patients should not be made to sit on metal benches this long."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 9,
+    "email": "ayush.nayak@tatadigital.in",
+    "text": "Dr. Sunita Kulkarni is one of the best gynecologists in the city. Her diagnosis was accurate and she avoided recommending unnecessary surgical interventions."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 8,
+    "email": "bharat.bhandari@wipro-ops.in",
+    "text": "Room 408 had a leaking bathroom tap that kept dripping loudly onto the bucket. Housekeeping promised a plumber but nobody showed up during my 2-day stay."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 8,
+    "email": "chirag.choudhary@infosys-infra.in",
+    "text": "Telehealth appointment was okay, but the doctor joined 20 minutes late with no apology or message from the clinic coordinator."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 8,
+    "email": "devendra.mishra@hcltech.in",
+    "text": "The patient counseling department helped us navigate complex insurance approvals with patience and secured cashless clearance within an hour."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 7,
+    "email": "govind.pandey@zomato-partner.in",
+    "text": "Blood sample collection caused a massive hematoma on my arm because the technician was in a hurry and did not apply proper pressure dressing."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 7,
+    "email": "hemant.shukla@flipkart-ops.in",
+    "text": "We were made to wait from 9 AM to 3 PM for a routine ultrasound because hospital prioritized walk-in VIP patients over confirmed online appointments."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 7,
+    "email": "ishaan.dubey@swiggy-dev.in",
+    "text": "The digital discharge process through the CarePulse portal saved us a lot of time. Prescriptions and follow-up slots were automatically populated in the calendar."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 6,
+    "email": "jayesh.tripathi@paytm-merchant.in",
+    "text": "The nursing supervisors on the 3rd floor are phenomenal. They anticipated patient needs, kept the room sanitized, and treated my grandfather with deep dignity."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 6,
+    "email": "kapil.tiwari@razorpay-merchant.in",
+    "text": "Surprise billing charge of ₹8,500 for 'sanitization kits and administrative handling' that was not disclosed during the pre-admission financial estimate."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 6,
+    "email": "madhav.bhatt@cred-partner.in",
+    "text": "Air conditioning broke down in the post-operative recovery room during peak summer. Patients were sweating and nurses had to bring small pedestal fans."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 5,
+    "email": "naveen.gill@bangaloreai.in",
+    "text": "Prompt vaccination clinic for infants. The pediatrician gave comprehensive post-vaccination fever management advice and entered the batch details in the app."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 5,
+    "email": "aarav.reddy@mumbaicapital.com",
+    "text": "CarePulse app does not send reminder notifications before specialist appointments. Missed my ophthalmologist review because I relied on the app calendar alert."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 5,
+    "email": "rohan.menon@gurgaontech.co",
+    "text": "Dr. Rajesh Iyer diagnosed my chronic autoimmune condition after 3 other hospitals had failed. His treatment regimen has given me my life back."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 4,
+    "email": "ananya.mittal@hyderabadops.in",
+    "text": "Night shift nursing staff was chatting loudly and watching videos near the nurse station, making it impossible for surgical recovery patients to sleep."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 4,
+    "email": "vikram.sen@puneinnovate.in",
+    "text": "Emergency room pharmacy queue took 45 minutes for urgent anti-emetic injections. Emergency medications must have a dedicated fast-track window."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 4,
+    "email": "aditya.gupta@delhistartups.io",
+    "text": "Very clean hospital premises, wide corridors, and clear directional signboards everywhere. Escalators and elevators were clean and operational."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 3,
+    "email": "sneha.bhatia@chennaisoft.in",
+    "text": "Online appointment booking on the CarePulse portal was frictionless. Got instant confirmation SMS and WhatsApp directions with parking gate instructions."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 3,
+    "email": "siddharth.malhotra@noidastack.in",
+    "text": "Final bill contained charges for two consultations with a visiting nephrologist who never came to the room. Had to wait 2 hours at discharge to get it removed."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 3,
+    "email": "neha.kapoor@fintechpulse.in",
+    "text": "The doctor is competent, but bedside manners could be improved. Spoke only to the medical intern and barely acknowledged my mother who was in pain."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 3,
+    "email": "rahul.chopra@cloudscale.in",
+    "text": "Exceptional cataract surgery outcome by the ophthalmology unit. Fast, painless, and discharge was completed within two hours with clear eye drop schedules."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 2,
+    "email": "pooja.sethi@tatadigital.in",
+    "text": "Lab test results took 48 hours instead of the promised 12 hours. We had to postpone our doctor consultation because the liver panel was not uploaded."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 2,
+    "email": "arjun.grover@wipro-ops.in",
+    "text": "Hospital maintains high sanitation in high-touch areas like elevator buttons and door handles. Hand sanitizer dispensers were full at every corner."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 2,
+    "email": "kavita.ahuja@infosys-infra.in",
+    "text": "CarePulse Android app crashes immediately on startup on Android 14. Cannot view my father's ongoing prescription list or contact doctor."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 2,
+    "email": "nikhil.singhania@hcltech.in",
+    "text": "Billing staff was extremely courteous. They processed my Mediclaim claim quickly and handed back the original discharge folder in proper order."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 2,
+    "email": "swati.bansal@zomato-partner.in",
+    "text": "Triage doctor in casualty seemed inexperienced and dismissed high fever as mild viral without ordering basic blood tests. We had to insist on a dengue test which came back positive."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 1,
+    "email": "deepak.goel@flipkart-ops.in",
+    "text": "Waited 3.5 hours for an MRI scan appointment that was pre-booked two days in advance. No drinking water was available in the basement radiology waiting hall."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 1,
+    "email": "tanvi.singhal@swiggy-dev.in",
+    "text": "Daycare surgery team was organized. Pre-op briefing by the anesthesiologist was thorough and put my mind at complete ease."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 1,
+    "email": "karan.maheshwari@paytm-merchant.in",
+    "text": "Front office staff member refused to accept digital payments via UPI claiming server downtime, insisting on cash when the hospital ATM was out of cash."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 1,
+    "email": "divya.kothari@razorpay-merchant.in",
+    "text": "Dr. Pradeep Rao and the nephrology nursing staff provided world-class clinical care during my aunt's kidney biopsy. Procedure was completely painless."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 1,
+    "email": "rajesh.rathi@cred-partner.in",
+    "text": "The patient room toilet had a foul smell and was not cleaned for over 24 hours despite raising a complaint on the in-room touch panel."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 1,
+    "email": "meera.somani@bangaloreai.in",
+    "text": "Prescription refill feature on the portal is confusing. It asks for doctor signature upload even for recurring chronic hypertension medicines."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 0,
+    "email": "amit.shah@mumbaicapital.com",
+    "text": "Smooth and stress-free insurance settlement. The billing supervisor coordinated directly with HDFC ERGO and the approval came through in 35 minutes."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 0,
+    "email": "shreya.parekh@gurgaontech.co",
+    "text": "Wait time at the sample collection phlebotomy lab was over an hour on a Saturday morning. There were only two phlebotomists for 80 waiting patients."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 0,
+    "email": "varun.dalal@hyderabadops.in",
+    "text": "The hospital is well equipped with modern ICU facilities and ventilators. Doctors in the pulmonology team are experienced and caring."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 0,
+    "email": "ritu.modi@puneinnovate.in",
+    "text": "Doctor rushed through the 5-minute consultation without listening to my chronic stomach pain history, prescribed three expensive medicines and moved to the next patient."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 0,
+    "email": "sanjay.merchant@delhistartups.io",
+    "text": "Nurse Anita in the post-surgical ICU monitored my oxygen saturation and vitals with utmost vigilance. Her caring touch and warmth gave our family great reassurance."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 0,
+    "email": "sunita.nadkarni@chennaisoft.in",
+    "text": "Hospital billing desk charged an extra ₹2,000 for emergency consultation even though I arrived during normal OPD hours. No explanation was provided."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 0,
+    "email": "gaurav.pai@noidastack.in",
+    "text": "The hospital building is clean and modern, but finding parking took 30 minutes due to poor signage and lack of attendants."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 0,
+    "email": "riya.kamat@fintechpulse.in",
+    "text": "CarePulse app sent me an instant notification when my thyroid test was ready, allowing me to share the PDF directly with my doctor on WhatsApp."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 0,
+    "email": "mohit.shenoy@cloudscale.in",
+    "text": "Severe delays in blood sample pickup from the 3rd floor ward meant tests had to be redrawn because the sample sat at room temperature for 4 hours."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 0,
+    "email": "aarti.prabhu@tatadigital.in",
+    "text": "General ward was clean and beds were spaced properly. Housekeeping staff swept and mopped twice a day with disinfectant."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 0,
+    "email": "harish.nayak@wipro-ops.in",
+    "text": "The customer care phone number listed on the portal kept ringing with no response when I called to reschedule an ultrasound."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 0,
+    "email": "ishita.bhandari@infosys-infra.in",
+    "text": "Outstanding physiotherapy session for lumbar spondylosis. The therapist explained the biomechanics and gave an easy home workout chart."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 0,
+    "email": "kunal.choudhary@hcltech.in",
+    "text": "Billing counter was understaffed during evening discharge hours. Patients and families stood in a single queue for over an hour just to clear bills."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 0,
+    "email": "preeti.mishra@zomato-partner.in",
+    "text": "Consultation with the pediatric cardiologist was reassuring. The doctor answered all our questions patiently and outlined clear follow-up milestones."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 0,
+    "email": "manish.pandey@flipkart-ops.in",
+    "text": "The hospital wheelchair available at casualty was squeaking, had a torn seat, and one footrest was completely broken."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 0,
+    "email": "smriti.trivedi@swiggy-dev.in",
+    "text": "Telehealth follow-up was prompt and convenient. Saved an elderly patient from traveling across the city for a 5-minute prescription renewal."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 0,
+    "email": "alok.shukla@paytm-merchant.in",
+    "text": "Surgeon was 3 hours late for a scheduled elective morning surgery without any prior update to the waiting patient and anxious family."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 1,
+    "email": "vinay.bakshi474@tcs.com",
+    "text": "The wait time at the inpatient pharmacy counter at 8 PM was over 45 minutes with only one executive handling a queue of 25 patients."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 1,
+    "email": "rajesh.singh719@outlook.com",
+    "text": "Nursing staff during day shifts are polite and proactive, but the night shift nurses seem disengaged and slow to answer patient calls."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 3,
+    "email": "vishal.patel207@hotmail.com",
+    "text": "Exceptional clinical care in the Neonatal ICU. The neonatology team managed our premature baby's respiratory distress with unmatched expertise and daily updates."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 1,
+    "email": "priya.menon951@gmail.com",
+    "text": "Assisted us with the Ayushman Bharat government scheme paperwork with great patience and empathy. Complete cashless treatment delivered without any friction."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 2,
+    "email": "lakshmi.das144@proton.me",
+    "text": "The air conditioning in the patient room was broken during peak summer heat, blowing warm air. Maintenance took over 14 hours to bring a portable cooler."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 4,
+    "email": "vineet.sharma737@rediffmail.com",
+    "text": "Received automated WhatsApp alerts with direct PDF download links as soon as my thyroid and lipid profile test results were validated."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 2,
+    "email": "gayatri.mehta452@tcs.com",
+    "text": "Phlebotomy blood collection counter had a token queue of 80 people on a Monday morning with only two technicians drawing samples. Waited 1 hour and 40 minutes fasting."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 2,
+    "email": "nikhil.mehta647@proton.me",
+    "text": "The primary surgeon Dr. Joshi was world-class, but the administrative front desk staff are consistently blunt and lacking basic hospitality training."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 4,
+    "email": "rohit.srivastava706@icloud.com",
+    "text": "Doctor accurately diagnosed my pneumonia, but the prescribed intravenous antibiotics caused severe gastric upset that wasn't addressed until 48 hours later."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 4,
+    "email": "nikhil.tiwari356@outlook.com",
+    "text": "Hospital billed ₹68,000 extra under 'miscellaneous disposable charges' that our insurance provider rejected. The billing department refused to explain the breakdown."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 5,
+    "email": "sunita.mehta515@hotmail.com",
+    "text": "Room cleanliness was decent, but the street noise and construction sounds from the new wing made it impossible to sleep soundly."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 5,
+    "email": "shashi.patel912@gmail.com",
+    "text": "The medicine refill order placed through the CarePulse digital pharmacy was silently cancelled after 3 days without any SMS or notification."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 5,
+    "email": "gaurav.kaul456@rediffmail.com",
+    "text": "Chemotherapy daycare unit had patients with pre-scheduled 9 AM infusion slots waiting till 1 PM because the oncology pharmacy had not prepared the drug admixtures."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 6,
+    "email": "sridhar.bansal599@hotmail.com",
+    "text": "The junior resident who performed the morning rounds was completely inattentive, barely glanced at the post-op surgical drain, and dismissed my questions about fever spikes."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 6,
+    "email": "varun.vaidya942@yahoo.com",
+    "text": "Patient was prescribed an antibiotic that was explicitly documented in his file as a known penicillin allergy. Thankfully the pharmacy pharmacist caught the error before administration."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 6,
+    "email": "rajesh.tiwari257@outlook.com",
+    "text": "The cashless insurance TPA desk delayed pre-authorization paperwork by 24 hours, forcing us to postpone a critical elective spine surgery."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 7,
+    "email": "aparna.chauhan763@yahoo.com",
+    "text": "Infection control standards in the surgical ICU are truly world-class. Strict hand hygiene protocols followed by every visitor and medical staff."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 5,
+    "email": "kavita.jha954@hotmail.com",
+    "text": "The OTP verification for logging into the patient records app never arrives on international mobile numbers, making post-op follow-up impossible for NRI patients."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 6,
+    "email": "sneha.saxena233@proton.me",
+    "text": "The wait time at the inpatient pharmacy counter at 8 PM was over 45 minutes with only one executive handling a queue of 25 patients."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 6,
+    "email": "naveen.bakshi249@proton.me",
+    "text": "Nursing staff during day shifts are polite and proactive, but the night shift nurses seem disengaged and slow to answer patient calls."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 8,
+    "email": "nikhil.verma925@rediffmail.com",
+    "text": "Knee arthroscopy showed no improvement even after 4 months of following the prescribed rehab protocol. A second opinion revealed incomplete meniscus resection."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 8,
+    "email": "aishwarya.deshmukh989@outlook.com",
+    "text": "Itemized billing was clear and transparent. All medications and lab tests were documented with clear timestamps and doctor orders."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 7,
+    "email": "aparna.tandon309@tcs.com",
+    "text": "Spotted a cockroach crawling near the food tray cart on the 3rd-floor maternity ward. Unacceptable hygiene standard for a tertiary care hospital."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 8,
+    "email": "naveen.tiwari225@infosys.com",
+    "text": "Teleconsultation feature is seamless. Dr. Bannerjee reviewed my ECG upload in real time and prescribed medication directly to the app within 15 minutes."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 8,
+    "email": "tanvi.ahuja309@infosys.com",
+    "text": "Discharge summary paperwork was prepared quickly, but the final TPA insurance settlement queue took an extra 3 hours."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 8,
+    "email": "bhavna.sarin352@tcs.com",
+    "text": "Night duty nurse on the 5th floor ignored my father's call bell for over 40 minutes when his IV cannula became dislodged and started leaking blood onto the bedsheets."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 9,
+    "email": "prashant.chauhan361@tcs.com",
+    "text": "Accurate diagnosis of a rare autoimmune condition after 2 years of other clinics guessing. The rheumatology department here changed my life for the better."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 9,
+    "email": "bhavna.reddy791@infosys.com",
+    "text": "Assisted us with the Ayushman Bharat government scheme paperwork with great patience and empathy. Complete cashless treatment delivered without any friction."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 9,
+    "email": "vikas.ahuja109@infosys.com",
+    "text": "Visitor cafeteria food was unhygienic; two of our family members developed severe stomach cramps after eating the buffet lunch."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 10,
+    "email": "prashant.kulkarni746@gmail.com",
+    "text": "The OTP verification for logging into the patient records app never arrives on international mobile numbers, making post-op follow-up impossible for NRI patients."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 11,
+    "email": "vedant.bakshi574@tcs.com",
+    "text": "Pediatric emergency room triage was painfully slow. Several infants with high fevers were kept waiting over 90 minutes in the general waiting area."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 11,
+    "email": "manish.rao339@wipro.com",
+    "text": "The receptionist at the 2nd-floor oncology desk was rude and dismissive when I asked where to submit my biopsy slides. She rolled her eyes and told me to read the signboards."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 10,
+    "email": "shashi.agarwal388@wipro.com",
+    "text": "Patient was prescribed an antibiotic that was explicitly documented in his file as a known penicillin allergy. Thankfully the pharmacy pharmacist caught the error before administration."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 12,
+    "email": "shruti.soni752@outlook.com",
+    "text": "Overcharged for ICU consumable packs that were never opened or used in room 412. Had to spend 3 hours arguing with the billing supervisor to get them removed."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 11,
+    "email": "satish.patil577@hotmail.com",
+    "text": "Hospital building and entrance lobby look like a 5-star hotel, but the shared waiting room restrooms on the OPD floor were poorly maintained."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 11,
+    "email": "siddharth.bahl580@infosys.com",
+    "text": "Received automated WhatsApp alerts with direct PDF download links as soon as my thyroid and lipid profile test results were validated."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 12,
+    "email": "ishaan.shukla185@outlook.com",
+    "text": "Pediatric emergency room triage was painfully slow. Several infants with high fevers were kept waiting over 90 minutes in the general waiting area."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 12,
+    "email": "alok.soni196@gmail.com",
+    "text": "The physiotherapy team led by Dr. Sneha was encouraging, patient, and highly motivating during my post-hip replacement rehabilitation sessions."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 13,
+    "email": "anirudh.mehta194@tcs.com",
+    "text": "Dental extraction resulted in a dry socket and severe localized nerve numbness. Follow-up care was rushed and provided minimal relief."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 12,
+    "email": "arjun.kaul116@hotmail.com",
+    "text": "The insurance desk executive, Rajesh, handled our Star Health cashless approval seamlessly within 45 minutes of admission. Completely hassle-free experience."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 13,
+    "email": "santhosh.bahl254@proton.me",
+    "text": "The main passenger elevator was out of order, causing massive crowding and delays in wheeling patients between diagnostic floors."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 12,
+    "email": "varun.bhatia128@rediffmail.com",
+    "text": "Received automated WhatsApp alerts with direct PDF download links as soon as my thyroid and lipid profile test results were validated."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 14,
+    "email": "gayatri.tandon990@icloud.com",
+    "text": "Booked an appointment with Dr. Mehta for 11:30 AM, but was only called into the consultation room at 2:15 PM. No explanation was given for the 2.5-hour delay."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 14,
+    "email": "naveen.chauhan299@yahoo.com",
+    "text": "Phlebotomist was impatient, made three painful attempts to find a vein without apologizing, and was visibly frustrated when I winced."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 14,
+    "email": "vaishali.pandey452@wipro.com",
+    "text": "The sports medicine and orthopedic team accurately diagnosed my rotator cuff tear and provided a non-surgical regenerative therapy that fully restored mobility."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 13,
+    "email": "kunal.bansal272@gmail.com",
+    "text": "Insurance desk helped process our cashless claim, but failed to inform us in advance about the ₹12,000 co-payment deduction."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 16,
+    "email": "rohan.sarin935@hotmail.com",
+    "text": "The hospital campus is beautifully landscaped, wheelchair-accessible throughout, and possesses ample clean seating for waiting family members."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 15,
+    "email": "sarita.bansal708@gmail.com",
+    "text": "Scheduled a video consult with Dr. Kapoor, but the video link inside the app kept disconnecting every 2 minutes with audio lag."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 15,
+    "email": "ravi.vaidya372@outlook.com",
+    "text": "Walked into the Urgent Care clinic with a minor burn and was seen by the attending physician within 7 minutes. Outstanding responsiveness and minimal wait time."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 15,
+    "email": "vedant.purohit907@infosys.com",
+    "text": "The junior resident who performed the morning rounds was completely inattentive, barely glanced at the post-op surgical drain, and dismissed my questions about fever spikes."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 17,
+    "email": "anirudh.mishra203@rediffmail.com",
+    "text": "The spine surgery itself was technically successful and relieved my sciatica, but the post-discharge physiotherapy follow-up guidance was vague and uncoordinated."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 17,
+    "email": "shruti.yadav266@rediffmail.com",
+    "text": "Overcharged for ICU consumable packs that were never opened or used in room 412. Had to spend 3 hours arguing with the billing supervisor to get them removed."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 17,
+    "email": "vikram.rao246@yahoo.com",
+    "text": "Bed linens were stained with old antiseptic stains and were not changed for 48 hours until we complained directly to the nursing supervisor."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 16,
+    "email": "shankar.ahuja166@gmail.com",
+    "text": "Cannot download pathology blood test reports on the patient portal. The PDF viewer shows an endless loading spinner on both iOS and Android."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 18,
+    "email": "umesh.reddy715@infosys.com",
+    "text": "Pediatric emergency room triage was painfully slow. Several infants with high fevers were kept waiting over 90 minutes in the general waiting area."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 17,
+    "email": "sumit.kapoor818@icloud.com",
+    "text": "From the valet parking attendant to the senior consultant, every staff member we encountered greeted us warmly and guided us with genuine care."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 17,
+    "email": "pradeep.shah750@outlook.com",
+    "text": "Initial ultrasound report failed to detect an acute appendicitis, declaring it 'mild gastritis'. We had to rush to another facility the next morning for emergency surgery."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 18,
+    "email": "ravi.shah552@outlook.com",
+    "text": "Security deposit of ₹15,000 paid at admission has still not been refunded to our bank account after 4 weeks and multiple emails to billing accounts."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 18,
+    "email": "deepika.sarin675@proton.me",
+    "text": "The air conditioning in the patient room was broken during peak summer heat, blowing warm air. Maintenance took over 14 hours to bring a portable cooler."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 19,
+    "email": "rani.singh415@yahoo.com",
+    "text": "The web portal interface is cluttered, confusing, and resets the appointment booking form every time you switch dates."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 18,
+    "email": "akash.menon390@tcs.com",
+    "text": "Expected a long wait on a Saturday morning in Cardiology OPD, but the entire consultation, ECG, and 2D echo were wrapped up in under 75 minutes."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 19,
+    "email": "vishal.pillai466@rediffmail.com",
+    "text": "The receptionist at the 2nd-floor oncology desk was rude and dismissive when I asked where to submit my biopsy slides. She rolled her eyes and told me to read the signboards."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 19,
+    "email": "yash.vyas767@outlook.com",
+    "text": "Received conflicting medical advice from two different duty doctors regarding post-stroke blood thinner dosages, creating immense anxiety for our family."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 20,
+    "email": "siddharth.tripathi151@infosys.com",
+    "text": "The medical care was great, but the billing department needs serious streamlining. Why does an itemized bill take 4 hours to print out?"
+  },
+  {
+    "rating": 1,
+    "daysAgo": 21,
+    "email": "santhosh.talwar870@hotmail.com",
+    "text": "Spotted a cockroach crawling near the food tray cart on the 3rd-floor maternity ward. Unacceptable hygiene standard for a tertiary care hospital."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 21,
+    "email": "chetan.varma360@proton.me",
+    "text": "Scheduled a video consult with Dr. Kapoor, but the video link inside the app kept disconnecting every 2 minutes with audio lag."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 20,
+    "email": "shashi.vyas383@outlook.com",
+    "text": "Phlebotomy blood collection counter had a token queue of 80 people on a Monday morning with only two technicians drawing samples. Waited 1 hour and 40 minutes fasting."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 21,
+    "email": "aarav.pillai663@infosys.com",
+    "text": "Nursing staff during day shifts are polite and proactive, but the night shift nurses seem disengaged and slow to answer patient calls."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 20,
+    "email": "akash.rao865@infosys.com",
+    "text": "The spine surgery itself was technically successful and relieved my sciatica, but the post-discharge physiotherapy follow-up guidance was vague and uncoordinated."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 22,
+    "email": "rashmi.talwar181@wipro.com",
+    "text": "Itemized billing was clear and transparent. All medications and lab tests were documented with clear timestamps and doctor orders."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 23,
+    "email": "vikas.varma176@icloud.com",
+    "text": "Healthy, diet-compliant meals prepared by clinical nutritionists were served hot and neatly packaged in eco-friendly containers."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 21,
+    "email": "vinay.mukherjee220@yahoo.com",
+    "text": "The app is great for viewing lab results once they appear, but notifications for when new reports are ready rarely fire."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 24,
+    "email": "arjun.khan404@icloud.com",
+    "text": "Ambulance arrival took 45 minutes despite being located just 4 km from the hospital. The dispatch desk kept promising '5 more minutes'."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 23,
+    "email": "rajesh.khan734@hotmail.com",
+    "text": "The receptionist at the 2nd-floor oncology desk was rude and dismissive when I asked where to submit my biopsy slides. She rolled her eyes and told me to read the signboards."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 23,
+    "email": "pooja.chauhan446@infosys.com",
+    "text": "Dr. Venkatesh performed coronary stenting with exceptional precision. My angina symptoms disappeared immediately, and his post-cardiac care plan has been life-changing."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 23,
+    "email": "aishwarya.patel890@tcs.com",
+    "text": "Transparent billing with zero surprise costs. The estimate given during surgical counseling matched the final invoice to the exact rupee."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 23,
+    "email": "sumit.singh142@icloud.com",
+    "text": "Hospital parking lot was pure chaos. Took 45 minutes to find parking while accompanying a chemotherapy patient who could barely walk."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 23,
+    "email": "prashant.dutta115@icloud.com",
+    "text": "Teleconsultation feature is seamless. Dr. Bannerjee reviewed my ECG upload in real time and prescribed medication directly to the app within 15 minutes."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 24,
+    "email": "divya.agarwal299@icloud.com",
+    "text": "Scheduled an outpatient MRI of the spine at 3 PM. Was made to change into a gown and wait in a freezing waiting corridor until 5:45 PM before being taken into the scanner."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 25,
+    "email": "prakash.talwar246@infosys.com",
+    "text": "Dr. Arvind in Pediatric Pulmonology spent 30 minutes explaining asthma management to our 7-year-old in a gentle, reassuring way that removed all her fear."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 23,
+    "email": "sujata.sharma737@tcs.com",
+    "text": "Blood pressure medications were suddenly altered without explaining the potential dizziness side effects, leading to a fainting episode at home."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 25,
+    "email": "arjun.jain311@proton.me",
+    "text": "The cashless insurance TPA desk delayed pre-authorization paperwork by 24 hours, forcing us to postpone a critical elective spine surgery."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 25,
+    "email": "pranav.malhotra477@hotmail.com",
+    "text": "Bed linens were stained with old antiseptic stains and were not changed for 48 hours until we complained directly to the nursing supervisor."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 27,
+    "email": "umesh.jha163@infosys.com",
+    "text": "The medicine refill order placed through the CarePulse digital pharmacy was silently cancelled after 3 days without any SMS or notification."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 26,
+    "email": "shankar.bahl373@yahoo.com",
+    "text": "Waited 3.5 hours in the Emergency Department with kidney stone pain before receiving any pain relief. The triage nurse repeatedly told us 'the doctor is on rounds' without any actual timeline."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 28,
+    "email": "amit.chauhan690@infosys.com",
+    "text": "The primary surgeon Dr. Joshi was world-class, but the administrative front desk staff are consistently blunt and lacking basic hospitality training."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 25,
+    "email": "deepak.jain732@infosys.com",
+    "text": "Doctor accurately diagnosed my pneumonia, but the prescribed intravenous antibiotics caused severe gastric upset that wasn't addressed until 48 hours later."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 28,
+    "email": "abhishek.bahl394@hotmail.com",
+    "text": "Insurance desk helped process our cashless claim, but failed to inform us in advance about the ₹12,000 co-payment deduction."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 28,
+    "email": "shiva.jain787@outlook.com",
+    "text": "Hospital parking lot was pure chaos. Took 45 minutes to find parking while accompanying a chemotherapy patient who could barely walk."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 26,
+    "email": "mohan.ahuja977@rediffmail.com",
+    "text": "The OTP verification for logging into the patient records app never arrives on international mobile numbers, making post-op follow-up impossible for NRI patients."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 26,
+    "email": "shashi.agarwal724@hotmail.com",
+    "text": "The ultrasound queue in the radiology wing had pregnant mothers waiting on hard plastic chairs for nearly 3 hours past their token slots."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 28,
+    "email": "sameer.khatri741@rediffmail.com",
+    "text": "Ward attendant demanded a tip ('baksheesh') from my family before wheeling my grandmother to the discharge car park."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 29,
+    "email": "vedant.prasad367@infosys.com",
+    "text": "Underwent total laparoscopic hysterectomy with minimal post-op discomfort and was able to walk the same evening. Outstanding surgical quality."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 28,
+    "email": "kavita.bhatia270@outlook.com",
+    "text": "Security deposit of ₹15,000 paid at admission has still not been refunded to our bank account after 4 weeks and multiple emails to billing accounts."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 29,
+    "email": "nandini.shah681@rediffmail.com",
+    "text": "The main passenger elevator was out of order, causing massive crowding and delays in wheeling patients between diagnostic floors."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 28,
+    "email": "umesh.chauhan537@proton.me",
+    "text": "Uploaded previous MRI scans to the portal as requested before the specialist appointment, but the doctor's workstation showed 'file not found'."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 30,
+    "email": "ravi.varma234@outlook.com",
+    "text": "The wait time at the inpatient pharmacy counter at 8 PM was over 45 minutes with only one executive handling a queue of 25 patients."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 30,
+    "email": "yogesh.pillai611@proton.me",
+    "text": "Billing clerk shouted at my wife when she asked for clarification regarding ambiguous line items on the pharmacy bill. Extremely unprofessional behavior."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 31,
+    "email": "vineet.shetty479@outlook.com",
+    "text": "The spine surgery itself was technically successful and relieved my sciatica, but the post-discharge physiotherapy follow-up guidance was vague and uncoordinated."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 29,
+    "email": "shruti.ahuja674@proton.me",
+    "text": "Security deposit of ₹15,000 paid at admission has still not been refunded to our bank account after 4 weeks and multiple emails to billing accounts."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 30,
+    "email": "sujata.malhotra659@tcs.com",
+    "text": "Bed linens were stained with old antiseptic stains and were not changed for 48 hours until we complained directly to the nursing supervisor."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 30,
+    "email": "deepak.bahl915@tcs.com",
+    "text": "Telehealth consultation audio was clear, but the electronic prescription took 24 hours to appear in the app dashboard."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 30,
+    "email": "siddharth.sen944@wipro.com",
+    "text": "Ambulance arrival took 45 minutes despite being located just 4 km from the hospital. The dispatch desk kept promising '5 more minutes'."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 31,
+    "email": "sridhar.soni411@outlook.com",
+    "text": "Phlebotomist was impatient, made three painful attempts to find a vein without apologizing, and was visibly frustrated when I winced."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 31,
+    "email": "anil.vyas324@wipro.com",
+    "text": "Patient was prescribed an antibiotic that was explicitly documented in his file as a known penicillin allergy. Thankfully the pharmacy pharmacist caught the error before administration."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 32,
+    "email": "sameer.chakraborty831@proton.me",
+    "text": "The insurance desk executive, Rajesh, handled our Star Health cashless approval seamlessly within 45 minutes of admission. Completely hassle-free experience."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 32,
+    "email": "umesh.singh280@tcs.com",
+    "text": "Hospital parking lot was pure chaos. Took 45 minutes to find parking while accompanying a chemotherapy patient who could barely walk."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 32,
+    "email": "rashmi.jha128@rediffmail.com",
+    "text": "The web portal interface is cluttered, confusing, and resets the appointment booking form every time you switch dates."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 34,
+    "email": "shankar.bahl931@hotmail.com",
+    "text": "Expected a long wait on a Saturday morning in Cardiology OPD, but the entire consultation, ECG, and 2D echo were wrapped up in under 75 minutes."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 33,
+    "email": "vivek.kumar382@gmail.com",
+    "text": "The hospital patient experience coordinator visited our room daily to check on our comfort and resolved our request for an extra blanket within 10 minutes."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 33,
+    "email": "vivek.roy205@rediffmail.com",
+    "text": "Dr. Venkatesh performed coronary stenting with exceptional precision. My angina symptoms disappeared immediately, and his post-cardiac care plan has been life-changing."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 35,
+    "email": "subhash.tiwari935@hotmail.com",
+    "text": "Was promised cashless coverage for dengue hospitalization, but at the time of discharge was suddenly told to pay ₹42,000 in cash and claim reimbursement manually."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 34,
+    "email": "deepika.vaidya366@rediffmail.com",
+    "text": "Spotted a cockroach crawling near the food tray cart on the 3rd-floor maternity ward. Unacceptable hygiene standard for a tertiary care hospital."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 35,
+    "email": "madhav.khatri699@proton.me",
+    "text": "The integrated medication reminder feature in the portal helped my elderly father stay on schedule with his post-angioplasty drug regimen."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 36,
+    "email": "sneha.shah530@gmail.com",
+    "text": "The ultrasound queue in the radiology wing had pregnant mothers waiting on hard plastic chairs for nearly 3 hours past their token slots."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 36,
+    "email": "aishwarya.nair396@yahoo.com",
+    "text": "The primary surgeon Dr. Joshi was world-class, but the administrative front desk staff are consistently blunt and lacking basic hospitality training."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 34,
+    "email": "sujata.vaidya981@proton.me",
+    "text": "Doctor accurately diagnosed my pneumonia, but the prescribed intravenous antibiotics caused severe gastric upset that wasn't addressed until 48 hours later."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 35,
+    "email": "abhishek.malhotra532@yahoo.com",
+    "text": "Insurance desk helped process our cashless claim, but failed to inform us in advance about the ₹12,000 co-payment deduction."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 36,
+    "email": "mohan.dutta534@outlook.com",
+    "text": "The air conditioning in the patient room was broken during peak summer heat, blowing warm air. Maintenance took over 14 hours to bring a portable cooler."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 35,
+    "email": "ravi.agarwal912@rediffmail.com",
+    "text": "Telehealth consultation audio was clear, but the electronic prescription took 24 hours to appear in the app dashboard."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 37,
+    "email": "alok.bakshi760@tcs.com",
+    "text": "Discharge took an absurd 7 hours after the consultant doctor signed the discharge papers at 10 AM. We sat in the room waiting for billing clearance until 5:30 PM."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 36,
+    "email": "siddharth.tiwari930@hotmail.com",
+    "text": "Ward attendant demanded a tip ('baksheesh') from my family before wheeling my grandmother to the discharge car park."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 38,
+    "email": "rakesh.bansal927@rediffmail.com",
+    "text": "Dental extraction resulted in a dry socket and severe localized nerve numbness. Follow-up care was rushed and provided minimal relief."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 39,
+    "email": "madhav.jain611@outlook.com",
+    "text": "Hospital billed ₹68,000 extra under 'miscellaneous disposable charges' that our insurance provider rejected. The billing department refused to explain the breakdown."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 39,
+    "email": "vikas.vaidya187@hotmail.com",
+    "text": "The air conditioning in the patient room was broken during peak summer heat, blowing warm air. Maintenance took over 14 hours to bring a portable cooler."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 39,
+    "email": "subhash.kulkarni536@outlook.com",
+    "text": "Scheduled a video consult with Dr. Kapoor, but the video link inside the app kept disconnecting every 2 minutes with audio lag."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 38,
+    "email": "vikram.das984@icloud.com",
+    "text": "Discharge took an absurd 7 hours after the consultant doctor signed the discharge papers at 10 AM. We sat in the room waiting for billing clearance until 5:30 PM."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 39,
+    "email": "sujata.jha785@proton.me",
+    "text": "From the valet parking attendant to the senior consultant, every staff member we encountered greeted us warmly and guided us with genuine care."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 38,
+    "email": "swati.kaul331@proton.me",
+    "text": "Underwent total laparoscopic hysterectomy with minimal post-op discomfort and was able to walk the same evening. Outstanding surgical quality."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 39,
+    "email": "karan.vaidya810@rediffmail.com",
+    "text": "Security deposit of ₹15,000 paid at admission has still not been refunded to our bank account after 4 weeks and multiple emails to billing accounts."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 39,
+    "email": "meera.jain495@wipro.com",
+    "text": "Spotted a cockroach crawling near the food tray cart on the 3rd-floor maternity ward. Unacceptable hygiene standard for a tertiary care hospital."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 41,
+    "email": "sandhya.khatri424@wipro.com",
+    "text": "The OTP verification for logging into the patient records app never arrives on international mobile numbers, making post-op follow-up impossible for NRI patients."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 42,
+    "email": "vishal.singh255@proton.me",
+    "text": "Booked an appointment with Dr. Mehta for 11:30 AM, but was only called into the consultation room at 2:15 PM. No explanation was given for the 2.5-hour delay."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 39,
+    "email": "abhishek.jha667@rediffmail.com",
+    "text": "Nursing staff during day shifts are polite and proactive, but the night shift nurses seem disengaged and slow to answer patient calls."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 40,
+    "email": "ishaan.purohit222@tcs.com",
+    "text": "Dental extraction resulted in a dry socket and severe localized nerve numbness. Follow-up care was rushed and provided minimal relief."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 41,
+    "email": "shruti.bansal204@yahoo.com",
+    "text": "The insurance desk executive, Rajesh, handled our Star Health cashless approval seamlessly within 45 minutes of admission. Completely hassle-free experience."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 42,
+    "email": "vikram.tandon617@wipro.com",
+    "text": "Modern, spotless dialysis unit with dedicated television screens and ergonomic reclining chairs for patients undergoing 4-hour sessions."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 41,
+    "email": "sunil.vyas765@icloud.com",
+    "text": "The integrated medication reminder feature in the portal helped my elderly father stay on schedule with his post-angioplasty drug regimen."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 42,
+    "email": "mohan.mehta142@hotmail.com",
+    "text": "Scheduled an outpatient MRI of the spine at 3 PM. Was made to change into a gown and wait in a freezing waiting corridor until 5:45 PM before being taken into the scanner."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 43,
+    "email": "rahul.varma526@gmail.com",
+    "text": "Dietary staff delivered cold meals and threw the food tray on the bedside table without even greeting the patient or checking if the table was reachable."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 43,
+    "email": "shalini.purohit121@proton.me",
+    "text": "Knee arthroscopy showed no improvement even after 4 months of following the prescribed rehab protocol. A second opinion revealed incomplete meniscus resection."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 42,
+    "email": "vivek.chopra731@tcs.com",
+    "text": "Assisted us with the Ayushman Bharat government scheme paperwork with great patience and empathy. Complete cashless treatment delivered without any friction."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 42,
+    "email": "sumit.vyas583@outlook.com",
+    "text": "Healthy, diet-compliant meals prepared by clinical nutritionists were served hot and neatly packaged in eco-friendly containers."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 43,
+    "email": "karan.jain321@rediffmail.com",
+    "text": "The medicine refill order placed through the CarePulse digital pharmacy was silently cancelled after 3 days without any SMS or notification."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 45,
+    "email": "sneha.pandey589@icloud.com",
+    "text": "Chemotherapy daycare unit had patients with pre-scheduled 9 AM infusion slots waiting till 1 PM because the oncology pharmacy had not prepared the drug admixtures."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 44,
+    "email": "vishal.jain229@gmail.com",
+    "text": "The primary surgeon Dr. Joshi was world-class, but the administrative front desk staff are consistently blunt and lacking basic hospitality training."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 45,
+    "email": "rohan.mishra841@proton.me",
+    "text": "Accurate diagnosis of a rare autoimmune condition after 2 years of other clinics guessing. The rheumatology department here changed my life for the better."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 46,
+    "email": "pradeep.shukla271@outlook.com",
+    "text": "The cashless insurance TPA desk delayed pre-authorization paperwork by 24 hours, forcing us to postpone a critical elective spine surgery."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 46,
+    "email": "nikhil.ghosh897@outlook.com",
+    "text": "Spotted a cockroach crawling near the food tray cart on the 3rd-floor maternity ward. Unacceptable hygiene standard for a tertiary care hospital."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 46,
+    "email": "varun.sharma454@hotmail.com",
+    "text": "Uploaded previous MRI scans to the portal as requested before the specialist appointment, but the doctor's workstation showed 'file not found'."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 46,
+    "email": "suresh.bhatia908@rediffmail.com",
+    "text": "The doctor consultation was thorough and unhurried, but having to wait 90 minutes past my scheduled slot on a weekday afternoon is very inconvenient for working professionals."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 47,
+    "email": "sudhir.sinha267@icloud.com",
+    "text": "Ward attendant demanded a tip ('baksheesh') from my family before wheeling my grandmother to the discharge car park."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 47,
+    "email": "yogesh.talwar531@hotmail.com",
+    "text": "Exceptional clinical care in the Neonatal ICU. The neonatology team managed our premature baby's respiratory distress with unmatched expertise and daily updates."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 47,
+    "email": "sridhar.purohit141@icloud.com",
+    "text": "The cashless insurance TPA desk delayed pre-authorization paperwork by 24 hours, forcing us to postpone a critical elective spine surgery."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 48,
+    "email": "vikas.sinha761@icloud.com",
+    "text": "The private suite on the 6th floor was immaculate, whisper-quiet, and cleaned three times a day with hospital-grade sanitizers."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 47,
+    "email": "deepika.saxena998@hotmail.com",
+    "text": "Cannot download pathology blood test reports on the patient portal. The PDF viewer shows an endless loading spinner on both iOS and Android."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 48,
+    "email": "suresh.saxena815@rediffmail.com",
+    "text": "Waited 3.5 hours in the Emergency Department with kidney stone pain before receiving any pain relief. The triage nurse repeatedly told us 'the doctor is on rounds' without any actual timeline."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 48,
+    "email": "vikram.kaul799@rediffmail.com",
+    "text": "Dr. Arvind in Pediatric Pulmonology spent 30 minutes explaining asthma management to our 7-year-old in a gentle, reassuring way that removed all her fear."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 47,
+    "email": "aarav.sharma115@outlook.com",
+    "text": "Patient was prescribed an antibiotic that was explicitly documented in his file as a known penicillin allergy. Thankfully the pharmacy pharmacist caught the error before administration."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 48,
+    "email": "sarita.purohit289@hotmail.com",
+    "text": "Pharmacy bills for inpatient stay were significantly higher than standard retail MRP on identical cardiovascular medications."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 48,
+    "email": "jaya.jha335@yahoo.com",
+    "text": "Healthy, diet-compliant meals prepared by clinical nutritionists were served hot and neatly packaged in eco-friendly containers."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 50,
+    "email": "chetan.verma669@infosys.com",
+    "text": "The integrated medication reminder feature in the portal helped my elderly father stay on schedule with his post-angioplasty drug regimen."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 49,
+    "email": "umesh.pandey602@yahoo.com",
+    "text": "Phlebotomy blood collection counter had a token queue of 80 people on a Monday morning with only two technicians drawing samples. Waited 1 hour and 40 minutes fasting."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 49,
+    "email": "amit.khatri607@tcs.com",
+    "text": "Night duty nurse on the 5th floor ignored my father's call bell for over 40 minutes when his IV cannula became dislodged and started leaking blood onto the bedsheets."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 51,
+    "email": "rohit.iyer510@rediffmail.com",
+    "text": "Exceptional clinical care in the Neonatal ICU. The neonatology team managed our premature baby's respiratory distress with unmatched expertise and daily updates."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 49,
+    "email": "nandini.pandey231@proton.me",
+    "text": "Overcharged for ICU consumable packs that were never opened or used in room 412. Had to spend 3 hours arguing with the billing supervisor to get them removed."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 52,
+    "email": "vaishali.tripathi414@outlook.com",
+    "text": "The private suite on the 6th floor was immaculate, whisper-quiet, and cleaned three times a day with hospital-grade sanitizers."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 49,
+    "email": "gaurav.ghosh777@wipro.com",
+    "text": "The CarePulse app makes booking appointments, checking lab reports, and paying bills completely effortless. Best hospital portal I have used."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 50,
+    "email": "sumit.kulkarni610@wipro.com",
+    "text": "Waited 3.5 hours in the Emergency Department with kidney stone pain before receiving any pain relief. The triage nurse repeatedly told us 'the doctor is on rounds' without any actual timeline."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 50,
+    "email": "siddharth.reddy358@proton.me",
+    "text": "The hospital patient experience coordinator visited our room daily to check on our comfort and resolved our request for an extra blanket within 10 minutes."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 52,
+    "email": "kavita.gandhi779@proton.me",
+    "text": "Underwent total laparoscopic hysterectomy with minimal post-op discomfort and was able to walk the same evening. Outstanding surgical quality."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 52,
+    "email": "arjun.bansal893@hotmail.com",
+    "text": "The medical care was great, but the billing department needs serious streamlining. Why does an itemized bill take 4 hours to print out?"
+  },
+  {
+    "rating": 5,
+    "daysAgo": 51,
+    "email": "sunil.yadav225@hotmail.com",
+    "text": "The private suite on the 6th floor was immaculate, whisper-quiet, and cleaned three times a day with hospital-grade sanitizers."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 52,
+    "email": "rekha.dutta162@icloud.com",
+    "text": "Cannot download pathology blood test reports on the patient portal. The PDF viewer shows an endless loading spinner on both iOS and Android."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 54,
+    "email": "vikram.das155@gmail.com",
+    "text": "Phlebotomy blood collection counter had a token queue of 80 people on a Monday morning with only two technicians drawing samples. Waited 1 hour and 40 minutes fasting."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 52,
+    "email": "bhavna.vaidya385@yahoo.com",
+    "text": "The security guards at the main entrance were aggressive and hostile towards my elderly mother who was having difficulty walking without wheelchair assistance."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 52,
+    "email": "divya.prasad802@infosys.com",
+    "text": "Clinical review: Underwent total laparoscopic hysterectomy with minimal post-op discomfort and was able to walk the same evening. Outstanding surgical quality."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 54,
+    "email": "bhavna.singh851@infosys.com",
+    "text": "The insurance desk executive, Rajesh, handled our Star Health cashless approval seamlessly within 45 minutes of admission. Completely hassle-free experience."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 54,
+    "email": "tarun.srivastava393@rediffmail.com",
+    "text": "Modern, spotless dialysis unit with dedicated television screens and ergonomic reclining chairs for patients undergoing 4-hour sessions."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 53,
+    "email": "mohan.khan984@outlook.com",
+    "text": "Teleconsultation feature is seamless. Dr. Bannerjee reviewed my ECG upload in real time and prescribed medication directly to the app within 15 minutes."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 54,
+    "email": "sneha.patil582@wipro.com",
+    "text": "The ultrasound queue in the radiology wing had pregnant mothers waiting on hard plastic chairs for nearly 3 hours past their token slots."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 54,
+    "email": "gaurav.dutta364@proton.me",
+    "text": "The junior resident who performed the morning rounds was completely inattentive, barely glanced at the post-op surgical drain, and dismissed my questions about fever spikes."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 55,
+    "email": "varun.ghosh953@hotmail.com",
+    "text": "The spine surgery itself was technically successful and relieved my sciatica, but the post-discharge physiotherapy follow-up guidance was vague and uncoordinated."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 56,
+    "email": "pranav.mishra492@icloud.com",
+    "text": "Transparent billing with zero surprise costs. The estimate given during surgical counseling matched the final invoice to the exact rupee."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 54,
+    "email": "deepak.chakraborty757@hotmail.com",
+    "text": "Spotted a cockroach crawling near the food tray cart on the 3rd-floor maternity ward. Unacceptable hygiene standard for a tertiary care hospital."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 56,
+    "email": "kavita.deshmukh830@wipro.com",
+    "text": "The app is great for viewing lab results once they appear, but notifications for when new reports are ready rarely fire."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 56,
+    "email": "pradeep.bansal425@wipro.com",
+    "text": "The new digital token system at the Outpatient Lab is phenomenal. Received an SMS 10 minutes before my turn and had my blood drawn within 15 minutes of arriving."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 55,
+    "email": "vipul.singh753@proton.me",
+    "text": "From the valet parking attendant to the senior consultant, every staff member we encountered greeted us warmly and guided us with genuine care."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 58,
+    "email": "karan.saxena423@rediffmail.com",
+    "text": "Underwent total laparoscopic hysterectomy with minimal post-op discomfort and was able to walk the same evening. Outstanding surgical quality."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 58,
+    "email": "nandini.mukherjee178@tcs.com",
+    "text": "Overcharged for ICU consumable packs that were never opened or used in room 412. Had to spend 3 hours arguing with the billing supervisor to get them removed."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 59,
+    "email": "ravi.purohit519@tcs.com",
+    "text": "Spotted a cockroach crawling near the food tray cart on the 3rd-floor maternity ward. Unacceptable hygiene standard for a tertiary care hospital."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 58,
+    "email": "shilpa.ghosh309@outlook.com",
+    "text": "The CarePulse app makes booking appointments, checking lab reports, and paying bills completely effortless. Best hospital portal I have used."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 58,
+    "email": "rohan.patel420@rediffmail.com",
+    "text": "Scheduled an outpatient MRI of the spine at 3 PM. Was made to change into a gown and wait in a freezing waiting corridor until 5:45 PM before being taken into the scanner."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 57,
+    "email": "amit.iyer490@gmail.com",
+    "text": "Dr. Arvind in Pediatric Pulmonology spent 30 minutes explaining asthma management to our 7-year-old in a gentle, reassuring way that removed all her fear."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 58,
+    "email": "gayatri.prasad615@icloud.com",
+    "text": "Exceptional clinical care in the Neonatal ICU. The neonatology team managed our premature baby's respiratory distress with unmatched expertise and daily updates."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 59,
+    "email": "chetan.menon586@tcs.com",
+    "text": "Itemized billing was clear and transparent. All medications and lab tests were documented with clear timestamps and doctor orders."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 59,
+    "email": "prakash.khan754@icloud.com",
+    "text": "The hospital campus is beautifully landscaped, wheelchair-accessible throughout, and possesses ample clean seating for waiting family members."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 59,
+    "email": "divya.dutta815@tcs.com",
+    "text": "Teleconsultation feature is seamless. Dr. Bannerjee reviewed my ECG upload in real time and prescribed medication directly to the app within 15 minutes."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 60,
+    "email": "rajesh.khatri793@wipro.com",
+    "text": "Day-care cataract surgery admission and discharge process was like clockwork. Admitted at 7:30 AM, operated by 9:00 AM, and discharged happily by 12:30 PM."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 59,
+    "email": "alok.mukherjee156@yahoo.com",
+    "text": "The security guards at the main entrance were aggressive and hostile towards my elderly mother who was having difficulty walking without wheelchair assistance."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 59,
+    "email": "rajesh.kulkarni196@rediffmail.com",
+    "text": "Post-operative surgical site developed a severe bacterial infection 3 days after laparoscopic hernia repair. The discharge instructions never mentioned monitoring for redness."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 61,
+    "email": "vinay.varma680@infosys.com",
+    "text": "The cashless insurance TPA desk delayed pre-authorization paperwork by 24 hours, forcing us to postpone a critical elective spine surgery."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 60,
+    "email": "meera.shah417@hotmail.com",
+    "text": "The washroom in room 204 had overflowing drainage and smelled terribly throughout our 3-day admission. Housekeeping only mopped once despite repeated requests."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 60,
+    "email": "bhavna.sarin832@proton.me",
+    "text": "The app is great for viewing lab results once they appear, but notifications for when new reports are ready rarely fire."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 63,
+    "email": "vivek.verma177@icloud.com",
+    "text": "Expected a long wait on a Saturday morning in Cardiology OPD, but the entire consultation, ECG, and 2D echo were wrapped up in under 75 minutes."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 63,
+    "email": "jaya.verma147@tcs.com",
+    "text": "The hospital patient experience coordinator visited our room daily to check on our comfort and resolved our request for an extra blanket within 10 minutes."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 63,
+    "email": "amit.pillai132@proton.me",
+    "text": "The spine surgery itself was technically successful and relieved my sciatica, but the post-discharge physiotherapy follow-up guidance was vague and uncoordinated."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 63,
+    "email": "pranav.chauhan647@rediffmail.com",
+    "text": "Pharmacy bills for inpatient stay were significantly higher than standard retail MRP on identical cardiovascular medications."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 62,
+    "email": "amit.jha686@tcs.com",
+    "text": "Healthy, diet-compliant meals prepared by clinical nutritionists were served hot and neatly packaged in eco-friendly containers."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 63,
+    "email": "sanjay.purohit296@tcs.com",
+    "text": "Scheduled a video consult with Dr. Kapoor, but the video link inside the app kept disconnecting every 2 minutes with audio lag."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 63,
+    "email": "chetan.kaul371@hotmail.com",
+    "text": "Pediatric emergency room triage was painfully slow. Several infants with high fevers were kept waiting over 90 minutes in the general waiting area."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 64,
+    "email": "nandini.pandey248@wipro.com",
+    "text": "Dietary staff delivered cold meals and threw the food tray on the bedside table without even greeting the patient or checking if the table was reachable."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 63,
+    "email": "kavita.khan912@infosys.com",
+    "text": "The sports medicine and orthopedic team accurately diagnosed my rotator cuff tear and provided a non-surgical regenerative therapy that fully restored mobility."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 63,
+    "email": "santhosh.patil374@proton.me",
+    "text": "Rapid cashless discharge approval in under 90 minutes. Compared to other private hospitals, CarePulse billing efficiency is top-notch."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 64,
+    "email": "vineet.sinha980@proton.me",
+    "text": "Healthy, diet-compliant meals prepared by clinical nutritionists were served hot and neatly packaged in eco-friendly containers."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 66,
+    "email": "varun.patel458@infosys.com",
+    "text": "Scheduled a video consult with Dr. Kapoor, but the video link inside the app kept disconnecting every 2 minutes with audio lag."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 65,
+    "email": "subhash.singh584@wipro.com",
+    "text": "Day-care cataract surgery admission and discharge process was like clockwork. Admitted at 7:30 AM, operated by 9:00 AM, and discharged happily by 12:30 PM."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 64,
+    "email": "aparna.mishra919@hotmail.com",
+    "text": "Night duty nurse on the 5th floor ignored my father's call bell for over 40 minutes when his IV cannula became dislodged and started leaking blood onto the bedsheets."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 66,
+    "email": "nikhil.patil606@icloud.com",
+    "text": "Dental extraction resulted in a dry socket and severe localized nerve numbness. Follow-up care was rushed and provided minimal relief."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 67,
+    "email": "prashant.sarin287@gmail.com",
+    "text": "Insurance desk helped process our cashless claim, but failed to inform us in advance about the ₹12,000 co-payment deduction."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 65,
+    "email": "shalini.mehta635@rediffmail.com",
+    "text": "Modern, spotless dialysis unit with dedicated television screens and ergonomic reclining chairs for patients undergoing 4-hour sessions."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 66,
+    "email": "jaya.varma384@yahoo.com",
+    "text": "The CarePulse mobile app failed during online payment for our teleconsultation, debited the ₹1,500 fee, but never generated the booking confirmation."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 66,
+    "email": "rekha.patel653@yahoo.com",
+    "text": "Discharge took an absurd 7 hours after the consultant doctor signed the discharge papers at 10 AM. We sat in the room waiting for billing clearance until 5:30 PM."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 68,
+    "email": "suresh.shetty697@yahoo.com",
+    "text": "Phlebotomist was impatient, made three painful attempts to find a vein without apologizing, and was visibly frustrated when I winced."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 67,
+    "email": "siddharth.iyer129@proton.me",
+    "text": "Post-operative surgical site developed a severe bacterial infection 3 days after laparoscopic hernia repair. The discharge instructions never mentioned monitoring for redness."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 68,
+    "email": "subhash.chopra314@gmail.com",
+    "text": "Itemized billing was clear and transparent. All medications and lab tests were documented with clear timestamps and doctor orders."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 69,
+    "email": "aditi.shukla452@tcs.com",
+    "text": "The main passenger elevator was out of order, causing massive crowding and delays in wheeling patients between diagnostic floors."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 70,
+    "email": "pranav.talwar515@wipro.com",
+    "text": "Smart check-in kiosk at the hospital lobby using QR code from the app allowed us to skip the front desk registration line entirely."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 69,
+    "email": "sarita.pandey597@yahoo.com",
+    "text": "Phlebotomy blood collection counter had a token queue of 80 people on a Monday morning with only two technicians drawing samples. Waited 1 hour and 40 minutes fasting."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 69,
+    "email": "rashmi.chopra220@wipro.com",
+    "text": "Billing clerk shouted at my wife when she asked for clarification regarding ambiguous line items on the pharmacy bill. Extremely unprofessional behavior."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 70,
+    "email": "rahul.sharma105@icloud.com",
+    "text": "The spine surgery itself was technically successful and relieved my sciatica, but the post-discharge physiotherapy follow-up guidance was vague and uncoordinated."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 69,
+    "email": "vipul.iyer676@yahoo.com",
+    "text": "The medical care was great, but the billing department needs serious streamlining. Why does an itemized bill take 4 hours to print out?"
+  },
+  {
+    "rating": 2,
+    "daysAgo": 70,
+    "email": "sridhar.jain281@hotmail.com",
+    "text": "Visitor cafeteria food was unhygienic; two of our family members developed severe stomach cramps after eating the buffet lunch."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 69,
+    "email": "vikram.kaul564@rediffmail.com",
+    "text": "The integrated medication reminder feature in the portal helped my elderly father stay on schedule with his post-angioplasty drug regimen."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 69,
+    "email": "sujata.gupta837@infosys.com",
+    "text": "Discharge took an absurd 7 hours after the consultant doctor signed the discharge papers at 10 AM. We sat in the room waiting for billing clearance until 5:30 PM."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 70,
+    "email": "rekha.bhatia567@rediffmail.com",
+    "text": "Ward attendant demanded a tip ('baksheesh') from my family before wheeling my grandmother to the discharge car park."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 71,
+    "email": "umesh.reddy901@wipro.com",
+    "text": "Patient was prescribed an antibiotic that was explicitly documented in his file as a known penicillin allergy. Thankfully the pharmacy pharmacist caught the error before administration."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 71,
+    "email": "pranav.mishra657@infosys.com",
+    "text": "Overcharged for ICU consumable packs that were never opened or used in room 412. Had to spend 3 hours arguing with the billing supervisor to get them removed."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 71,
+    "email": "mohan.bakshi206@rediffmail.com",
+    "text": "The air conditioning in the patient room was broken during peak summer heat, blowing warm air. Maintenance took over 14 hours to bring a portable cooler."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 71,
+    "email": "tarun.menon964@infosys.com",
+    "text": "The web portal interface is cluttered, confusing, and resets the appointment booking form every time you switch dates."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 71,
+    "email": "sarita.malhotra788@infosys.com",
+    "text": "Booked an appointment with Dr. Mehta for 11:30 AM, but was only called into the consultation room at 2:15 PM. No explanation was given for the 2.5-hour delay."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 72,
+    "email": "rani.vaidya292@infosys.com",
+    "text": "The junior resident who performed the morning rounds was completely inattentive, barely glanced at the post-op surgical drain, and dismissed my questions about fever spikes."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 73,
+    "email": "rohit.tiwari249@proton.me",
+    "text": "Dermatology consultation for chronic psoriasis was very effective. The modern biologic treatment prescribed has cleared my skin within 6 weeks."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 72,
+    "email": "prakash.sarin681@icloud.com",
+    "text": "Security deposit of ₹15,000 paid at admission has still not been refunded to our bank account after 4 weeks and multiple emails to billing accounts."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 73,
+    "email": "kunal.chauhan975@outlook.com",
+    "text": "Modern, spotless dialysis unit with dedicated television screens and ergonomic reclining chairs for patients undergoing 4-hour sessions."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 72,
+    "email": "rashmi.ghosh827@wipro.com",
+    "text": "The app is great for viewing lab results once they appear, but notifications for when new reports are ready rarely fire."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 73,
+    "email": "madhav.verma198@icloud.com",
+    "text": "Day-care cataract surgery admission and discharge process was like clockwork. Admitted at 7:30 AM, operated by 9:00 AM, and discharged happily by 12:30 PM."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 74,
+    "email": "deepak.varma304@wipro.com",
+    "text": "From the valet parking attendant to the senior consultant, every staff member we encountered greeted us warmly and guided us with genuine care."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 74,
+    "email": "abhishek.reddy667@outlook.com",
+    "text": "Knee arthroscopy showed no improvement even after 4 months of following the prescribed rehab protocol. A second opinion revealed incomplete meniscus resection."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 74,
+    "email": "sujata.sarin393@infosys.com",
+    "text": "Insurance desk helped process our cashless claim, but failed to inform us in advance about the ₹12,000 co-payment deduction."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 75,
+    "email": "ananya.nair209@rediffmail.com",
+    "text": "The air conditioning in the patient room was broken during peak summer heat, blowing warm air. Maintenance took over 14 hours to bring a portable cooler."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 74,
+    "email": "vipul.chakraborty599@rediffmail.com",
+    "text": "The web portal interface is cluttered, confusing, and resets the appointment booking form every time you switch dates."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 76,
+    "email": "sunita.kapoor582@outlook.com",
+    "text": "Discharge summary paperwork was prepared quickly, but the final TPA insurance settlement queue took an extra 3 hours."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 75,
+    "email": "ananya.dutta657@proton.me",
+    "text": "Phlebotomist was impatient, made three painful attempts to find a vein without apologizing, and was visibly frustrated when I winced."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 76,
+    "email": "anil.yadav646@icloud.com",
+    "text": "Dermatology consultation for chronic psoriasis was very effective. The modern biologic treatment prescribed has cleared my skin within 6 weeks."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 78,
+    "email": "shankar.pandey320@outlook.com",
+    "text": "The cashless insurance TPA desk delayed pre-authorization paperwork by 24 hours, forcing us to postpone a critical elective spine surgery."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 77,
+    "email": "sarita.menon382@proton.me",
+    "text": "Spotted a cockroach crawling near the food tray cart on the 3rd-floor maternity ward. Unacceptable hygiene standard for a tertiary care hospital."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 76,
+    "email": "sachin.purohit519@wipro.com",
+    "text": "Cannot download pathology blood test reports on the patient portal. The PDF viewer shows an endless loading spinner on both iOS and Android."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 77,
+    "email": "alok.sinha130@rediffmail.com",
+    "text": "The wait time at the inpatient pharmacy counter at 8 PM was over 45 minutes with only one executive handling a queue of 25 patients."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 78,
+    "email": "pradeep.sen676@rediffmail.com",
+    "text": "The receptionist at the 2nd-floor oncology desk was rude and dismissive when I asked where to submit my biopsy slides. She rolled her eyes and told me to read the signboards."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 78,
+    "email": "gaurav.tripathi465@infosys.com",
+    "text": "Blood pressure medications were suddenly altered without explaining the potential dizziness side effects, leading to a fainting episode at home."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 78,
+    "email": "madhav.khan726@proton.me",
+    "text": "The insurance desk executive, Rajesh, handled our Star Health cashless approval seamlessly within 45 minutes of admission. Completely hassle-free experience."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 79,
+    "email": "vikas.singh317@icloud.com",
+    "text": "Spotted a cockroach crawling near the food tray cart on the 3rd-floor maternity ward. Unacceptable hygiene standard for a tertiary care hospital."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 78,
+    "email": "gayatri.joshi510@yahoo.com",
+    "text": "The app is great for viewing lab results once they appear, but notifications for when new reports are ready rarely fire."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 79,
+    "email": "vikram.saxena263@gmail.com",
+    "text": "Discharge summary paperwork was prepared quickly, but the final TPA insurance settlement queue took an extra 3 hours."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 81,
+    "email": "umesh.srivastava876@hotmail.com",
+    "text": "The security guards at the main entrance were aggressive and hostile towards my elderly mother who was having difficulty walking without wheelchair assistance."
+  },
+  {
+    "rating": 3,
+    "daysAgo": 79,
+    "email": "siddharth.malhotra934@proton.me",
+    "text": "Doctor accurately diagnosed my pneumonia, but the prescribed intravenous antibiotics caused severe gastric upset that wasn't addressed until 48 hours later."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 80,
+    "email": "aishwarya.das283@wipro.com",
+    "text": "Assisted us with the Ayushman Bharat government scheme paperwork with great patience and empathy. Complete cashless treatment delivered without any friction."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 80,
+    "email": "ravi.vyas920@icloud.com",
+    "text": "The private suite on the 6th floor was immaculate, whisper-quiet, and cleaned three times a day with hospital-grade sanitizers."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 81,
+    "email": "sumit.saxena171@wipro.com",
+    "text": "The CarePulse mobile app failed during online payment for our teleconsultation, debited the ₹1,500 fee, but never generated the booking confirmation."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 80,
+    "email": "rashmi.jha178@yahoo.com",
+    "text": "Pediatric emergency room triage was painfully slow. Several infants with high fevers were kept waiting over 90 minutes in the general waiting area."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 80,
+    "email": "ramesh.yadav720@proton.me",
+    "text": "Phlebotomist was impatient, made three painful attempts to find a vein without apologizing, and was visibly frustrated when I winced."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 83,
+    "email": "rashmi.reddy925@rediffmail.com",
+    "text": "Blood pressure medications were suddenly altered without explaining the potential dizziness side effects, leading to a fainting episode at home."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 82,
+    "email": "shiva.ghosh608@icloud.com",
+    "text": "Was promised cashless coverage for dengue hospitalization, but at the time of discharge was suddenly told to pay ₹42,000 in cash and claim reimbursement manually."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 84,
+    "email": "vivek.pillai728@icloud.com",
+    "text": "Infection control standards in the surgical ICU are truly world-class. Strict hand hygiene protocols followed by every visitor and medical staff."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 83,
+    "email": "sanjay.shah448@wipro.com",
+    "text": "The web portal interface is cluttered, confusing, and resets the appointment booking form every time you switch dates."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 83,
+    "email": "tarun.nair347@yahoo.com",
+    "text": "Day-care cataract surgery admission and discharge process was like clockwork. Admitted at 7:30 AM, operated by 9:00 AM, and discharged happily by 12:30 PM."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 82,
+    "email": "rakesh.mehta115@hotmail.com",
+    "text": "The receptionist at the 2nd-floor oncology desk was rude and dismissive when I asked where to submit my biopsy slides. She rolled her eyes and told me to read the signboards."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 83,
+    "email": "shruti.vaidya649@gmail.com",
+    "text": "Exceptional clinical care in the Neonatal ICU. The neonatology team managed our premature baby's respiratory distress with unmatched expertise and daily updates."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 85,
+    "email": "tarun.gupta790@proton.me",
+    "text": "Itemized billing was clear and transparent. All medications and lab tests were documented with clear timestamps and doctor orders."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 83,
+    "email": "anirudh.sharma935@proton.me",
+    "text": "Infection control standards in the surgical ICU are truly world-class. Strict hand hygiene protocols followed by every visitor and medical staff."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 86,
+    "email": "sneha.kulkarni258@infosys.com",
+    "text": "Cannot download pathology blood test reports on the patient portal. The PDF viewer shows an endless loading spinner on both iOS and Android."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 85,
+    "email": "kunal.khan287@wipro.com",
+    "text": "Walked into the Urgent Care clinic with a minor burn and was seen by the attending physician within 7 minutes. Outstanding responsiveness and minimal wait time."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 84,
+    "email": "rekha.shetty719@tcs.com",
+    "text": "The security guards at the main entrance were aggressive and hostile towards my elderly mother who was having difficulty walking without wheelchair assistance."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 86,
+    "email": "rajesh.tiwari919@proton.me",
+    "text": "Post-operative surgical site developed a severe bacterial infection 3 days after laparoscopic hernia repair. The discharge instructions never mentioned monitoring for redness."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 86,
+    "email": "harish.reddy472@outlook.com",
+    "text": "Itemized billing was clear and transparent. All medications and lab tests were documented with clear timestamps and doctor orders."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 84,
+    "email": "rakesh.malhotra608@icloud.com",
+    "text": "The main passenger elevator was out of order, causing massive crowding and delays in wheeling patients between diagnostic floors."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 85,
+    "email": "prakash.roy243@wipro.com",
+    "text": "The medicine refill order placed through the CarePulse digital pharmacy was silently cancelled after 3 days without any SMS or notification."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 86,
+    "email": "neha.chakraborty947@infosys.com",
+    "text": "Chemotherapy daycare unit had patients with pre-scheduled 9 AM infusion slots waiting till 1 PM because the oncology pharmacy had not prepared the drug admixtures."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 88,
+    "email": "rohit.singh212@yahoo.com",
+    "text": "Night duty nurse on the 5th floor ignored my father's call bell for over 40 minutes when his IV cannula became dislodged and started leaking blood onto the bedsheets."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 86,
+    "email": "chetan.singh220@proton.me",
+    "text": "Exceptional clinical care in the Neonatal ICU. The neonatology team managed our premature baby's respiratory distress with unmatched expertise and daily updates."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 86,
+    "email": "vineet.pillai457@gmail.com",
+    "text": "The insurance desk executive, Rajesh, handled our Star Health cashless approval seamlessly within 45 minutes of admission. Completely hassle-free experience."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 87,
+    "email": "vishal.joshi188@tcs.com",
+    "text": "The hospital campus is beautifully landscaped, wheelchair-accessible throughout, and possesses ample clean seating for waiting family members."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 87,
+    "email": "amit.tripathi283@wipro.com",
+    "text": "The web portal interface is cluttered, confusing, and resets the appointment booking form every time you switch dates."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 90,
+    "email": "lakshmi.khan401@icloud.com",
+    "text": "The ultrasound queue in the radiology wing had pregnant mothers waiting on hard plastic chairs for nearly 3 hours past their token slots."
+  },
+  {
+    "rating": 4,
+    "daysAgo": 90,
+    "email": "nandini.talwar952@icloud.com",
+    "text": "The physiotherapy team led by Dr. Sneha was encouraging, patient, and highly motivating during my post-hip replacement rehabilitation sessions."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 88,
+    "email": "ravi.kapoor836@proton.me",
+    "text": "Accurate diagnosis of a rare autoimmune condition after 2 years of other clinics guessing. The rheumatology department here changed my life for the better."
+  },
+  {
+    "rating": 2,
+    "daysAgo": 90,
+    "email": "rekha.joshi191@icloud.com",
+    "text": "Pharmacy bills for inpatient stay were significantly higher than standard retail MRP on identical cardiovascular medications."
+  },
+  {
+    "rating": 5,
+    "daysAgo": 89,
+    "email": "deepak.jha653@proton.me",
+    "text": "Modern, spotless dialysis unit with dedicated television screens and ergonomic reclining chairs for patients undergoing 4-hour sessions."
+  },
+  {
+    "rating": 1,
+    "daysAgo": 90,
+    "email": "gaurav.patil551@tcs.com",
+    "text": "The web portal interface is cluttered, confusing, and resets the appointment booking form every time you switch dates."
+  }
+]

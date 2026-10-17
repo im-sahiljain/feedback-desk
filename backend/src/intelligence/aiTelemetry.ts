@@ -20,28 +20,13 @@ export interface AiMetricInput {
   metadata?: Record<string, unknown>;
 }
 
+import { estimateCostUsd } from '../ai/gateway/pricing.js';
+
 /**
- * Calculates estimated USD cost based on official Google Gemini rates.
- * - Gemini 3.5 Flash Lite: $0.075 per 1M prompt tokens, $0.30 per 1M candidate tokens.
- * - Gemini 3.5 Flash: $0.15 per 1M prompt tokens, $0.60 per 1M candidate tokens.
- * - Text/Gemini Embedding 001/004: $0.02 per 1M input tokens.
+ * Calculates estimated USD cost based on unified Gateway token pricing.
  */
 export function calculateAiCost(model: string, tokenInput = 0, tokenOutput = 0): number {
-  const norm = (model || '').toLowerCase();
-  let cost = 0;
-
-  if (norm.includes('flash-lite')) {
-    cost = (tokenInput / 1_000_000) * 0.075 + (tokenOutput / 1_000_000) * 0.3;
-  } else if (norm.includes('flash')) {
-    cost = (tokenInput / 1_000_000) * 0.15 + (tokenOutput / 1_000_000) * 0.6;
-  } else if (norm.includes('embedding')) {
-    cost = (tokenInput / 1_000_000) * 0.02;
-  } else {
-    // Default fallback calculation
-    cost = (tokenInput / 1_000_000) * 0.075 + (tokenOutput / 1_000_000) * 0.3;
-  }
-
-  return Number(cost.toFixed(6));
+  return estimateCostUsd(model, tokenInput, tokenOutput);
 }
 
 /**

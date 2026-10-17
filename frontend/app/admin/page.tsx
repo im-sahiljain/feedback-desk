@@ -205,7 +205,7 @@ export default function AdminOverviewPage() {
           <Card className="border-border/60 shadow-sm bg-gradient-to-br from-background to-muted/20">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Gemini API Cost & Burn
+                AI Gateway Cost & Burn
               </CardTitle>
               <Sparkles className="h-4 w-4 text-purple-500" />
             </CardHeader>
@@ -217,6 +217,12 @@ export default function AdminOverviewPage() {
                 <span>{overview?.aiEngine?.avgLatencyMs ?? 0}ms avg latency</span>
                 <span>•</span>
                 <span>{(Number(overview?.aiEngine?.totalTokens ?? 0) / 1000).toFixed(1)}k tokens</span>
+                {overview?.aiEngine?.activeModel && (
+                  <>
+                    <span>•</span>
+                    <span className="font-mono text-foreground font-medium truncate max-w-[140px]">{overview.aiEngine.activeModel}</span>
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -310,7 +316,11 @@ export default function AdminOverviewPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between p-2.5 rounded-xl bg-muted/30 border border-border/40 text-xs">
-                <span className="font-medium text-foreground">Google Gemini 2.5 Flash</span>
+                <span className="font-medium text-foreground">
+                  {overview?.aiEngine?.provider === "local"
+                    ? `Local LLM (${overview?.aiEngine?.activeModel ?? "Active"})`
+                    : `Google GenAI (${overview?.aiEngine?.activeModel ?? "Gemini"})`}
+                </span>
                 <Badge variant="outline" className="text-emerald-500 border-emerald-500/40 bg-emerald-500/10 text-[10px]">
                   CONNECTED
                 </Badge>

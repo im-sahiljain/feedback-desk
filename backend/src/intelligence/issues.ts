@@ -1,6 +1,7 @@
 import type { Pool, PoolClient } from "pg";
 import { embed, cosine, verifyMatch } from "./ai.js";
 import { searchIssueVectors } from "./vectorSearch.js";
+import { getConfig } from "../config/env.js";
 
 /** Conservative, transparent lexical similarity (no external embedding service required).
  * Grouping is category-scoped; the matching score is exposed for future calibration.
@@ -226,7 +227,7 @@ export async function reconcile(
         await client.query(
           `INSERT INTO intelligence_feedback_embeddings(feedback_id,product_id,model,embedding) VALUES ($1,$2,$3,$4::jsonb)
         ON CONFLICT(feedback_id) DO UPDATE SET embedding=excluded.embedding,model=excluded.model`,
-          [row.id, productId, "gemini-embedding-001", JSON.stringify(vector)],
+          [row.id, productId, getConfig().aiEmbeddingModel, JSON.stringify(vector)],
         );
     }
     await client.query(

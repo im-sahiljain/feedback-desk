@@ -1,12 +1,13 @@
 "use client";
 
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { PanelLeft, ShieldCheck, Cpu } from "lucide-react";
 import { AdminNavRail } from "./AdminNavRail";
 import { LoadingBackdrop } from "./LoadingBackdrop";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
+import { api } from "@/lib/api";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -20,12 +21,30 @@ interface AdminLayoutProps {
 export function AdminLayout({
   children,
   title = "FeedbackDesk AI Control Plane",
-  description = "Platform-wide operations, Gemini AI observability & tenant governance",
+  description = "Platform-wide operations, AI Gateway observability & tenant governance",
   activeTab = "overview",
   onSelectTab,
   actions,
 }: AdminLayoutProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [activeAiModel, setActiveAiModel] = useState<string>("AI Gateway Online");
+
+  useEffect(() => {
+    let active = true;
+    api.admin
+      .getOverview()
+      .then((res: any) => {
+        if (!active) return;
+        if (res?.aiEngine?.activeModel) {
+          const prov = res.aiEngine.provider === "local" ? "Local" : "Google";
+          setActiveAiModel(`${prov} • ${res.aiEngine.activeModel} Online`);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <div className="flex fixed inset-0 overflow-hidden bg-background md:bg-zinc-950/60 md:gap-3 md:p-3">
@@ -64,7 +83,7 @@ export function AdminLayout({
             <span className="font-semibold text-zinc-100">FeedbackDesk AI Core</span>
             <span className="text-zinc-500 hidden sm:inline">•</span>
             <span className="text-zinc-400 hidden sm:inline flex items-center gap-1">
-              <Cpu className="h-3 w-3 text-orange-400 inline" /> Gemini 2.5 Flash Online
+              <Cpu className="h-3 w-3 text-orange-400 inline" /> {activeAiModel}
             </span>
             <span className="text-zinc-500 hidden sm:inline">•</span>
             <span className="text-zinc-400 hidden md:inline flex items-center gap-1">

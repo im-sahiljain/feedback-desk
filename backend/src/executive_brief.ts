@@ -1,4 +1,5 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { getConfig } from "./config/env.js";
+import { getAiGateway } from "./ai/gateway/index.js";
 import { Pool } from "pg";
 
 import { formatFriendlyDate } from "./dates.js";
@@ -2288,13 +2289,11 @@ async function synthesizeWithGemini(
       metrics,
     });
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const config = getConfig();
 
-  if (!apiKey) {
+  if (config.aiProvider === "google" && !config.geminiApiKey) {
     return assembleAuthoritative(fallbackHeadline, fallbackSummary);
   }
-
-  const ai = new GoogleGenAI({ apiKey });
 
   const prompt = `
 You are an AI Customer Feedback Intelligence writer.
@@ -2336,49 +2335,43 @@ AUTHORITATIVE STRUCTURED BRIEF:
 ${JSON.stringify(authoritativePayload, null, 2)}
 `;
 
-  for (let attempt = 1; attempt <= 2; attempt++) {
-    try {
-      const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash-lite",
-        contents: prompt,
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              headline: { type: Type.STRING },
-              executiveSummary: { type: Type.STRING },
-            },
-            required: ["headline", "executiveSummary"],
-          },
-        },
-      });
+  const BRIEF_SCHEMA: Record<string, unknown> = {
+    type: "object",
+    properties: {
+      headline: { type: "string" },
+      executiveSummary: { type: "string" },
+    },
+    required: ["headline", "executiveSummary"],
+  };
 
-      const parsed = JSON.parse(response.text || "{}");
+  try {
+    const gateway = getAiGateway();
+    const result = await gateway.llm.generateStructured<{ headline?: string; executiveSummary?: string }>({
+      prompt,
+      schema: BRIEF_SCHEMA,
+      model: config.aiBriefModel,
+    });
 
-      return normalizeGeneratedBrief({
-        parsed,
-        metrics,
-        deterministicIssues: issues,
-        deterministicHypotheses: hypotheses,
-        deterministicStrengths: strengths,
-        deterministicFindings: findings,
-        deterministicRecommendations: recommendations,
-        dataContext,
-        deterministicStatus: status,
-        periodLabel,
-        authoritativePayload,
-      });
-    } catch (err: any) {
-      console.warn(
-        `Gemini executive narrative attempt ${attempt} failed:`,
-        err?.message || "Unknown error",
-      );
+    const parsed = result.data || {};
 
-      if (attempt === 1) {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
-    }
+    return normalizeGeneratedBrief({
+      parsed,
+      metrics,
+      deterministicIssues: issues,
+      deterministicHypotheses: hypotheses,
+      deterministicStrengths: strengths,
+      deterministicFindings: findings,
+      deterministicRecommendations: recommendations,
+      dataContext,
+      deterministicStatus: status,
+      periodLabel,
+      authoritativePayload,
+    });
+  } catch (err: any) {
+    console.warn(
+      `AI executive narrative generation failed:`,
+      err?.message || "Unknown error",
+    );
   }
 
   return assembleAuthoritative(fallbackHeadline, fallbackSummary);

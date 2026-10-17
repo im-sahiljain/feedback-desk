@@ -118,7 +118,7 @@ export default function AdminFeedbacksPage() {
   return (
     <AdminLayout
       title="Platform Feedback Stream"
-      description="Cross-tenant triage stream, Gemini root-cause insights & administrative status resolution"
+      description="Cross-tenant triage stream, AI root-cause insights & administrative status resolution"
       activeTab="feedbacks"
       actions={
         <Button
@@ -288,7 +288,7 @@ export default function AdminFeedbacksPage() {
           <SheetHeader>
             <SheetTitle className="text-base font-bold">Feedback Item Inspection</SheetTitle>
             <SheetDescription className="text-xs">
-              Gemini root-cause intelligence, tenant attribution & administrative triage
+              AI root-cause intelligence, tenant attribution & administrative triage
             </SheetDescription>
           </SheetHeader>
 
@@ -307,12 +307,19 @@ export default function AdminFeedbacksPage() {
                 )}
               </div>
 
-              {/* Gemini Insights */}
+              {/* AI Insights */}
               {selectedFeedback.raw_ai_metadata && (
                 <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20 space-y-2">
-                  <div className="flex items-center gap-1.5 font-bold text-orange-400">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    <span>Gemini Root-Cause Intelligence</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 font-bold text-orange-400">
+                      <Sparkles className="h-3.5 w-3.5" />
+                      <span>AI Root-Cause Intelligence</span>
+                    </div>
+                    {selectedFeedback.raw_ai_metadata.model && (
+                      <Badge variant="outline" className="text-[10px] font-mono py-0 border-orange-500/30 text-orange-400">
+                        {selectedFeedback.raw_ai_metadata.model}
+                      </Badge>
+                    )}
                   </div>
                   {selectedFeedback.raw_ai_metadata.root_cause && (
                     <p className="text-zinc-300">

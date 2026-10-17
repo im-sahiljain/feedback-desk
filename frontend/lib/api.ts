@@ -285,6 +285,14 @@ export const api = {
             if (!response.ok) throw await parseErrorResponse(response, 'Failed to fetch AI metrics');
             return response.json();
         },
+        probeAi: async () => {
+            const response = await authFetch('/api/admin/ai-metrics/probe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+            });
+            if (!response.ok) throw await parseErrorResponse(response, 'AI gateway probe failed');
+            return response.json();
+        },
         getAiLogs: async (params?: { page?: number; limit?: number; operation?: string; status?: string; search?: string }) => {
             const q = new URLSearchParams();
             if (params?.page) q.set('page', String(params.page));

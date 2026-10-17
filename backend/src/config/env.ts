@@ -21,6 +21,14 @@ export interface AppConfig {
   jobLockTimeoutSeconds: number;
   /** Non-production: print OTP to terminal and skip email delivery */
   devOtpToConsole: boolean;
+  /** AI Gateway configuration */
+  aiProvider: 'google' | 'local';
+  aiClassifyModel: string;
+  aiBriefModel: string;
+  aiReasoningModel: string;
+  aiEmbeddingModel: string;
+  localAiBaseUrl: string;
+  geminiTier: 'free' | 'payg';
 }
 
 function requireEnv(name: string, value: string | undefined): string {
@@ -102,6 +110,15 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     // Default on in development/test; set DEV_OTP_TO_CONSOLE=false to send real emails instead
     devOtpToConsole:
       nodeEnv !== 'production' && env.DEV_OTP_TO_CONSOLE !== 'false',
+    aiProvider: env.AI_PROVIDER === 'local' ? 'local' : 'google',
+    aiClassifyModel: env.AI_CLASSIFY_MODEL?.trim() || 'gemini-3.5-flash-lite',
+    aiBriefModel: env.AI_BRIEF_MODEL?.trim() || 'gemini-3.5-flash-lite',
+    aiReasoningModel:
+      env.AI_REASONING_MODEL?.trim() || env.MODULE1_GENERATION_MODEL?.trim() || 'gemini-3.5-flash',
+    aiEmbeddingModel:
+      env.AI_EMBEDDING_MODEL?.trim() || env.MODULE1_EMBEDDING_MODEL?.trim() || 'gemini-embedding-001',
+    localAiBaseUrl: env.LOCAL_AI_BASE_URL?.trim() || 'http://127.0.0.1:11434/v1',
+    geminiTier: env.GEMINI_TIER === 'payg' ? 'payg' : 'free',
   };
 
   if (nodeEnv === 'production' && !config.resendApiKey) {

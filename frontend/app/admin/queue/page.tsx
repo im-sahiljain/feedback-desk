@@ -376,7 +376,7 @@ export default function AdminQueuePage() {
                 {analyzingCount}
               </div>
               <p className="text-[11px] text-muted-foreground mt-1">
-                In-flight Gemini calls
+                In-flight AI inferences
               </p>
             </CardContent>
           </Card>
@@ -441,26 +441,27 @@ export default function AdminQueuePage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <CardTitle className="text-sm font-bold flex items-center gap-2 text-foreground">
                 <Timer className="h-4 w-4 text-orange-500" />
-                <span>Live Gemini Free Tier Pacing & Delay Monitor</span>
+                <span>AI Rate Limit & Queue Pacing Monitor</span>
                 <Badge
                   variant="outline"
                   className="border-orange-500/30 text-orange-400 text-[10px] py-0 px-1.5 font-mono"
                 >
-                  15 RPM Free Tier Guard
+                  {pacing?.tier ?? "Active Pacing Guard"}
                 </Badge>
               </CardTitle>
               <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
                 <span className="flex items-center gap-1.5 text-emerald-400">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  Active 4.5s Pacing Delay
+                  {pacing?.interJobDelaySeconds && pacing.interJobDelaySeconds > 0
+                    ? `Active ${pacing.interJobDelaySeconds}s Pacing Delay`
+                    : "Direct Low-Latency Mode"}
                 </span>
               </div>
             </div>
             <CardDescription className="text-xs">
-              Every feedback analysis is spaced by a 4.5s sleep delay. With ~
-              {pacing?.avgLatencySeconds ?? 2.1}s inference time, the worker
-              safely runs at ~{pacing?.effectiveRpm ?? 9.1} RPM (comfortably
-              under the 15 RPM quota limit).
+              {pacing?.interJobDelaySeconds && pacing.interJobDelaySeconds > 0
+                ? `Every feedback analysis is spaced by a ${pacing.interJobDelaySeconds}s pacing delay. With ~${pacing?.avgLatencySeconds ?? 1.5}s inference latency, the worker safely operates at ~${pacing?.effectiveRpm ?? 10.2} RPM (${pacing?.rpmLimit ? `strictly within the ${pacing.rpmLimit} RPM quota` : "quota-safe"}).`
+                : `Worker operates in unthrottled zero-delay mode with ~${pacing?.avgLatencySeconds ?? 1.5}s inference latency (~${pacing?.effectiveRpm ?? 40} RPM capacity).`}
             </CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs">
@@ -485,7 +486,7 @@ export default function AdminQueuePage() {
                 {pacing?.avgLatencySeconds ?? 2.1}s
               </p>
               <p className="text-[10px] text-muted-foreground">
-                Gemini 3.5 Flash-Lite inference
+                Model inference latency
               </p>
             </div>
 
@@ -511,7 +512,7 @@ export default function AdminQueuePage() {
                 <span className="text-xs font-normal">RPM</span>
               </p>
               <p className="text-[10px] text-muted-foreground">
-                Strictly &lt; 15 RPM limit
+                {pacing?.rpmLimit ? `Strictly < ${pacing.rpmLimit} RPM limit` : "Uncapped local throughput"}
               </p>
             </div>
 
@@ -538,8 +539,7 @@ export default function AdminQueuePage() {
               <span>Worker Concurrency, Safety & Lock Specifications</span>
             </CardTitle>
             <CardDescription className="text-xs">
-              PostgreSQL durable job runner architecture and Gemini API quota
-              spacing
+              PostgreSQL durable job runner architecture and AI Gateway quota pacing
             </CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
@@ -559,10 +559,10 @@ export default function AdminQueuePage() {
                 Rate Limiting Guard
               </span>
               <p className="font-semibold text-emerald-500">
-                15 RPM Ceiling (~{pacing?.effectiveRpm ?? 9.1} RPM Active)
+                {pacing?.rpmLimit ? `${pacing.rpmLimit} RPM Ceiling (~${pacing?.effectiveRpm ?? 9.1} RPM Active)` : `Uncapped (~${pacing?.effectiveRpm ?? 40} RPM Active)`}
               </p>
               <p className="text-[10px] text-muted-foreground">
-                Dynamic Google 429 retry backoff
+                {pacing?.provider === "local" ? "Local direct inference" : "Dynamic provider rate limiter & backoff"}
               </p>
             </div>
             <div className="p-3 rounded-xl bg-muted/30 border border-border/40 space-y-1">
@@ -600,7 +600,7 @@ export default function AdminQueuePage() {
                 <span>Live Job Stream & Queue Inspector</span>
               </CardTitle>
               <CardDescription className="text-xs">
-                Real-time visibility into active Gemini inferences, queued
+                Real-time visibility into active AI Gateway inferences, queued
                 items, and failure diagnostics
               </CardDescription>
             </div>

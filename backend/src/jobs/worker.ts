@@ -243,15 +243,20 @@ async function handleJobFailure(
     );
   }
 
+  const config = getConfig();
+  const fallbackProvider = config.aiProvider || "google";
+  const fallbackModel = config.aiClassifyModel || "gemini-3.5-flash-lite";
+
   await pool.query(
     `INSERT INTO ai_processing_metrics
      (job_id, feedback_id, provider, model_name, success, retry_count, parse_failure, error_code,
       prompt_version, schema_version, analysis_version)
-     VALUES ($1::uuid,$2::uuid,'google',$3::text,FALSE,$4::integer,TRUE,$5::text,$6::text,$7::text,$8::text)`,
+     VALUES ($1::uuid,$2::uuid,$3::text,$4::text,FALSE,$5::integer,TRUE,$6::text,$7::text,$8::text,$9::text)`,
     [
       job.id,
       feedbackId || null,
-      MODEL_PLACEHOLDER,
+      fallbackProvider,
+      fallbackModel,
       Math.max(0, job.attempts - 1),
       "analysis_error",
       PROMPT_VERSION,
@@ -260,8 +265,6 @@ async function handleJobFailure(
     ],
   );
 }
-
-const MODEL_PLACEHOLDER = "gemini-3.5-flash-lite";
 
 async function workerLoop(workerId: string): Promise<void> {
   const pool = getPool();
@@ -289,9 +292,17 @@ async function workerLoop(workerId: string): Promise<void> {
         activeWorkers--;
       }
 
-      // Safe pacing sleep for Gemini Free Tier limit (15 RPM maximum)
-      // 4500ms interval ensures worker runs at ~10-12 RPM, comfortably within quota
-      await sleep(4500);
+      // Dynamic model & provider pacing delay:
+      // Local LLM (Ollama/vLLM): minimal cooperative yield (50ms)
+      // Paid Cloud (PAYG): fast throughput pacing (500ms)
+      // Free Tier: 4500ms spacing to strictly abide by 15 RPM quota
+      const pacingDelayMs =
+        getConfig().aiProvider === "local"
+          ? 50
+          : getConfig().geminiTier === "payg"
+            ? 500
+            : 4500;
+      await sleep(pacingDelayMs);
     } catch (err) {
       logger.error("Worker loop error", {
         error: err instanceof Error ? err.message : "unknown",

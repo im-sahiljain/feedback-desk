@@ -1,9 +1,8 @@
-import { GoogleGenAI, Type } from "@google/genai";
-
 import { getConfig } from "../config/env.js";
 import { logger } from "../logging/logger.js";
 
 import { sanitizeForAi } from "./sanitize.js";
+import { getAiGateway, rateLimiter, estimateCostUsd } from "./gateway/index.js";
 
 import {
   ANALYSIS_VERSION,
@@ -28,98 +27,100 @@ export type {
 } from "./types.js";
 
 export { ANALYSIS_VERSION, SCHEMA_VERSION, PROMPT_VERSION } from "./types.js";
-
-const MODEL_NAME = "gemini-3.5-flash-lite";
-
-let geminiThrottleChain: Promise<void> = Promise.resolve();
-let lastGeminiCallFinished = 0;
-const MIN_GEMINI_INTERVAL_MS = 4500; // ~13.3 calls/min, safely under Gemini Free Tier 15 RPM limit
+export { estimateCostUsd } from "./gateway/index.js";
 
 /**
- * Parses Gemini error messages to extract exact requested backoff seconds (with safety buffer),
- * or computes adaptive backoff for transient server spikes (503 / UNAVAILABLE).
+ * Backward-compatible helper that delegates to provider rate limiter.
  */
 export function extractRetryDelayMs(errorMsg: string, attempt: number = 1): number {
-  // Check for JSON or text retryDelay e.g. "retryDelay": "22s" or "retryDelay": "22.5s"
-  const jsonMatch = errorMsg.match(/["']?retryDelay["']?\s*:\s*["']?(\d+(?:\.\d+)?)s?["']?/i);
-  if (jsonMatch && jsonMatch[1]) {
-    const sec = parseFloat(jsonMatch[1]);
-    if (!isNaN(sec) && sec > 0) {
-      return Math.ceil(sec * 1000) + 2000; // Add 2s safety buffer
-    }
-  }
-
-  // Check for text e.g. "Please retry in 22.25s" or "retry after 20s"
-  const textMatch = errorMsg.match(/retry (?:in|after) (\d+(?:\.\d+)?)s/i);
-  if (textMatch && textMatch[1]) {
-    const sec = parseFloat(textMatch[1]);
-    if (!isNaN(sec) && sec > 0) {
-      return Math.ceil(sec * 1000) + 2000;
-    }
-  }
-
-  // For 503 / Service Unavailable / High demand spikes, back off adaptively (e.g. 8s, 16s, 24s)
-  if (/503|UNAVAILABLE|high demand|service unavailable/i.test(errorMsg)) {
-    return Math.min(30000, attempt * 8000);
-  }
-
-  // Default conservative fallback (25s) for Gemini Free Tier replenishment window
-  return 25000;
+  return rateLimiter.extractRetryDelayMs("google", errorMsg, attempt);
 }
 
 export function notifyRateLimitCooldown(delayMs: number): void {
-  lastGeminiCallFinished = Math.max(lastGeminiCallFinished, Date.now() + delayMs);
+  rateLimiter.notifyCooldown("google", delayMs);
 }
 
-async function throttleGeminiRequest(): Promise<void> {
-  const previous = geminiThrottleChain;
-  let release: () => void = () => {};
-  geminiThrottleChain = new Promise((resolve) => {
-    release = resolve;
-  });
-
-  await previous;
-  try {
-    const now = Date.now();
-    const waitTime = Math.max(0, MIN_GEMINI_INTERVAL_MS - (now - lastGeminiCallFinished));
-    if (waitTime > 0) {
-      await new Promise((resolve) => setTimeout(resolve, waitTime));
-    }
-  } finally {
-    lastGeminiCallFinished = Date.now();
-    release();
-  }
-}
-
-/**
- * Estimate cost in USD for model token usage.
- * Default pricing is based on Gemini 3.5 Flash-Lite rates:
- * - Input: $0.30 per 1M tokens ($0.00000030/token)
- * - Output: $2.50 per 1M tokens ($0.00000250/token)
- */
-export function estimateCostUsd(
-  modelName: string,
-  tokenInput: number = 0,
-  tokenOutput: number = 0
-): number {
-  const model = (modelName || "").toLowerCase();
-  let inputRatePerM = 0.30;
-  let outputRatePerM = 2.50;
-
-  if (model.includes("pro")) {
-    inputRatePerM = 3.50;
-    outputRatePerM = 10.50;
-  } else if (model.includes("flash-lite")) {
-    inputRatePerM = 0.30;
-    outputRatePerM = 2.50;
-  } else if (model.includes("flash")) {
-    inputRatePerM = 0.15;
-    outputRatePerM = 0.60;
-  }
-
-  const cost = (tokenInput * inputRatePerM + tokenOutput * outputRatePerM) / 1_000_000;
-  return Number(cost.toFixed(6));
-}
+/** Standard JSON Schema for customer feedback intelligence classification */
+export const CLASSIFICATION_JSON_SCHEMA: Record<string, unknown> = {
+  type: "object",
+  properties: {
+    primaryCategory: { type: "string" },
+    primaryCategoryConfidence: { type: "string", enum: ["low", "medium", "high"] },
+    matchedCategories: { type: "array", items: { type: "string" } },
+    overallSentiment: { type: "string", enum: ["Positive", "Negative", "Neutral", "Mixed"] },
+    sentimentConfidence: { type: "string", enum: ["low", "medium", "high"] },
+    intents: { type: "array", items: { type: "string" } },
+    topics: { type: "array", items: { type: "string" } },
+    issues: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          description: { type: "string" },
+          topic: { type: "string" },
+          severity: { type: "string", enum: ["low", "medium", "high", "critical", "none"] },
+          urgency: { type: "string", enum: ["low", "medium", "high", "immediate", "none"] },
+          evidence: { type: "array", items: { type: "string" } },
+        },
+        required: ["description", "severity", "urgency", "evidence"],
+      },
+    },
+    requestedCapabilities: { type: "array", items: { type: "string" } },
+    positiveAttributes: { type: "array", items: { type: "string" } },
+    severity: { type: "string", enum: ["low", "medium", "high", "critical", "none"] },
+    urgency: { type: "string", enum: ["low", "medium", "high", "immediate", "none"] },
+    priority: {
+      type: "string",
+      enum: ["Critical Priority", "High Priority", "Medium Priority", "Low Priority"],
+    },
+    priorityConfidence: { type: "string", enum: ["low", "medium", "high"] },
+    executiveSummary: { type: "string" },
+    rootCauseHypotheses: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          hypothesis: { type: "string" },
+          confidence: { type: "string", enum: ["low", "medium", "high"] },
+          evidence: { type: "array", items: { type: "string" } },
+        },
+        required: ["hypothesis", "confidence", "evidence"],
+      },
+    },
+    actionItems: { type: "array", items: { type: "string" } },
+    aspects: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          category: { type: "string" },
+          sentiment: { type: "string", enum: ["Positive", "Negative", "Neutral", "Mixed"] },
+          observation: { type: "string" },
+          severity: { type: "string", enum: ["low", "medium", "high", "critical", "none"] },
+          evidence: { type: "string" },
+        },
+        required: ["category", "sentiment", "observation"],
+      },
+    },
+  },
+  required: [
+    "primaryCategory",
+    "matchedCategories",
+    "overallSentiment",
+    "intents",
+    "topics",
+    "issues",
+    "requestedCapabilities",
+    "positiveAttributes",
+    "severity",
+    "urgency",
+    "priority",
+    "executiveSummary",
+    "actionItems",
+    "rootCauseHypotheses",
+    "aspects",
+  ],
+};
 
 /**
  * Individual-feedback analysis contract
@@ -622,16 +623,15 @@ export async function classifyImpactSingle(
     });
   }
 
-  const apiKey = getConfig().geminiApiKey;
+  const config = getConfig();
 
-  if (!apiKey) {
+  if (config.aiProvider === "google" && !config.geminiApiKey) {
     logger.warn("GEMINI_API_KEY not set; using heuristic analysis");
 
     return generateFallbackDeepAnalysis(sanitized, availableLabels);
   }
 
   try {
-    const ai = new GoogleGenAI({ apiKey });
 
     const prompt = `
 You are an AI Customer Feedback Intelligence analyst.
@@ -969,260 +969,22 @@ Before returning JSON verify:
 - Did I use configured category labels exactly?
 `;
 
-    const started = Date.now();
+    const gateway = getAiGateway();
+    const modelToUse = config.aiClassifyModel;
 
-    let response: any;
-    const MAX_RATE_LIMIT_RETRIES = 3;
-    for (let attempt = 1; attempt <= MAX_RATE_LIMIT_RETRIES; attempt++) {
-      try {
-        await throttleGeminiRequest();
-        response = await ai.models.generateContent({
-      model: MODEL_NAME,
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            primaryCategory: {
-              type: Type.STRING,
-            },
+    const genResult = await gateway.llm.generateStructured<any>({
+      prompt,
+      schema: CLASSIFICATION_JSON_SCHEMA,
+      model: modelToUse,
+    });
 
-            primaryCategoryConfidence: {
-              type: Type.STRING,
-              enum: ["low", "medium", "high"],
-            },
-
-            matchedCategories: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.STRING,
-              },
-            },
-
-            overallSentiment: {
-              type: Type.STRING,
-              enum: ["Positive", "Negative", "Neutral", "Mixed"],
-            },
-
-            sentimentConfidence: {
-              type: Type.STRING,
-              enum: ["low", "medium", "high"],
-            },
-
-            intents: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.STRING,
-              },
-            },
-
-            topics: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.STRING,
-              },
-            },
-
-            issues: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  description: {
-                    type: Type.STRING,
-                  },
-
-                  topic: {
-                    type: Type.STRING,
-                  },
-
-                  severity: {
-                    type: Type.STRING,
-                    enum: ["low", "medium", "high", "critical", "none"],
-                  },
-
-                  urgency: {
-                    type: Type.STRING,
-                    enum: ["low", "medium", "high", "immediate", "none"],
-                  },
-
-                  evidence: {
-                    type: Type.ARRAY,
-                    items: {
-                      type: Type.STRING,
-                    },
-                  },
-                },
-
-                required: ["description", "severity", "urgency", "evidence"],
-              },
-            },
-
-            requestedCapabilities: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.STRING,
-              },
-            },
-
-            positiveAttributes: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.STRING,
-              },
-            },
-
-            severity: {
-              type: Type.STRING,
-              enum: ["low", "medium", "high", "critical", "none"],
-            },
-
-            urgency: {
-              type: Type.STRING,
-              enum: ["low", "medium", "high", "immediate", "none"],
-            },
-
-            priority: {
-              type: Type.STRING,
-              enum: [
-                "Critical Priority",
-                "High Priority",
-                "Medium Priority",
-                "Low Priority",
-              ],
-            },
-
-            priorityConfidence: {
-              type: Type.STRING,
-              enum: ["low", "medium", "high"],
-            },
-
-            executiveSummary: {
-              type: Type.STRING,
-            },
-
-            rootCauseHypotheses: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  hypothesis: {
-                    type: Type.STRING,
-                  },
-                  confidence: {
-                    type: Type.STRING,
-                    enum: ["low", "medium", "high"],
-                  },
-                  evidence: {
-                    type: Type.ARRAY,
-                    items: {
-                      type: Type.STRING,
-                    },
-                  },
-                },
-                required: ["hypothesis", "confidence", "evidence"],
-              },
-            },
-
-            actionItems: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.STRING,
-              },
-            },
-
-            aspects: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  category: {
-                    type: Type.STRING,
-                  },
-                  sentiment: {
-                    type: Type.STRING,
-                    enum: ["Positive", "Negative", "Neutral", "Mixed"],
-                  },
-                  observation: {
-                    type: Type.STRING,
-                  },
-                  severity: {
-                    type: Type.STRING,
-                    enum: ["low", "medium", "high", "critical", "none"],
-                  },
-                  evidence: {
-                    type: Type.STRING,
-                  },
-                },
-                required: ["category", "sentiment", "observation"],
-              },
-            },
-          },
-
-          required: [
-            "primaryCategory",
-            "matchedCategories",
-            "overallSentiment",
-            "intents",
-            "topics",
-            "issues",
-            "requestedCapabilities",
-            "positiveAttributes",
-            "severity",
-            "urgency",
-            "priority",
-            "executiveSummary",
-            "actionItems",
-            "rootCauseHypotheses",
-            "aspects",
-          ],
-        },
-      },
-        });
-        break;
-      } catch (err) {
-        const errMsg = err instanceof Error ? err.message : "unknown";
-        const isRateLimit = errMsg.includes("429") || errMsg.includes("RESOURCE_EXHAUSTED") || errMsg.includes("quota");
-        const isServerUnavailable =
-          errMsg.includes("503") ||
-          errMsg.includes("UNAVAILABLE") ||
-          errMsg.includes("high demand") ||
-          errMsg.includes("Service Unavailable");
-
-        if ((isRateLimit || isServerUnavailable) && attempt < MAX_RATE_LIMIT_RETRIES) {
-          const delayMs = extractRetryDelayMs(errMsg, attempt);
-          const reason = isServerUnavailable
-            ? "Gemini temporary capacity spike (503)"
-            : "Gemini Free Tier rate limit (429)";
-          logger.warn(`${reason} encountered (attempt ${attempt}/${MAX_RATE_LIMIT_RETRIES}). Backing off for ${Math.round(delayMs / 1000)}s before retry...`, {
-            attempt,
-            delayMs,
-            error: errMsg.slice(0, 300),
-          });
-          notifyRateLimitCooldown(delayMs);
-          await new Promise((r) => setTimeout(r, delayMs));
-          continue;
-        }
-        throw err;
-      }
-    }
-
-    if (!response) {
-      throw new Error("No response received from Gemini model.");
-    }
-    const latency = Date.now() - started;
-    const promptTokens = response.usageMetadata?.promptTokenCount;
-    const candidateTokens = response.usageMetadata?.candidatesTokenCount;
-    const tokenInput = typeof promptTokens === "number" ? promptTokens : undefined;
-    const tokenOutput = typeof candidateTokens === "number" ? candidateTokens : undefined;
-    const estimatedCostUsd =
-      tokenInput !== undefined || tokenOutput !== undefined
-        ? estimateCostUsd(MODEL_NAME, tokenInput ?? 0, tokenOutput ?? 0)
-        : undefined;
-
-    const rawJson = response.text || "{}";
-    const parsed = JSON.parse(rawJson);
+    const latency = genResult.latencyMs;
+    const tokenInput = genResult.tokenInput;
+    const tokenOutput = genResult.tokenOutput;
+    const estimatedCostUsd = genResult.estimatedCostUsd;
+    const activeProvider = genResult.provider;
+    const activeModel = genResult.model;
+    const parsed = genResult.data;
 
     /**
      * Category validation
@@ -1366,16 +1128,16 @@ Before returning JSON verify:
       schema_version: SCHEMA_VERSION,
       prompt_version: PROMPT_VERSION,
 
-      model_provider: "google",
-      model_name: MODEL_NAME,
+      model_provider: activeProvider,
+      model_name: activeModel,
       token_input: tokenInput,
       token_output: tokenOutput,
       estimated_cost_usd: estimatedCostUsd,
     };
 
     logger.info("AI analysis completed", {
-      provider: "google",
-      model: MODEL_NAME,
+      provider: activeProvider,
+      model: activeModel,
       latencyMs: latency,
       analysisVersion: ANALYSIS_VERSION,
       issueCount: issues.length,

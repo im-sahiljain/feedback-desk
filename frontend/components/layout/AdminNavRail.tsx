@@ -45,7 +45,7 @@ const ICON_SLOT = "flex h-10 w-10 shrink-0 items-center justify-center rounded-x
 
 export const ADMIN_NAV_TABS = [
   { id: "overview", label: "Platform Pulse", url: "/admin", icon: Activity, description: "SaaS health & executive KPIs" },
-  { id: "ai-engine", label: "AI & Gemini Ops", url: "/admin/ai-engine", icon: Sparkles, description: "Latency, tokens & API burn rate" },
+  { id: "ai-engine", label: "AI Gateway & Ops", url: "/admin/ai-engine", icon: Sparkles, description: "Latency, tokens & multi-model burn" },
   { id: "queue", label: "Worker Queue", url: "/admin/queue", icon: Server, description: "Queue depth & worker health" },
   { id: "anti-spam", label: "Anti-Spam & Links", url: "/admin/anti-spam", icon: ShieldCheck, description: "QR conversion & fraud shield" },
   { id: "feedbacks", label: "Feedback Stream", url: "/admin/feedbacks", icon: Layers, description: "Global cross-tenant triage" },
